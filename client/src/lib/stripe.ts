@@ -13,7 +13,7 @@ export const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
   ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
   : Promise.resolve(null);
 
-export async function createSubscription(tier: SubscriptionTier): Promise<{ clientSecret: string }> {
+export async function createSubscription(tier: SubscriptionTier): Promise<{ sessionId: string; url: string }> {
   try {
     const response = await apiRequest("POST", API_ROUTES.subscription.create, { tier });
     

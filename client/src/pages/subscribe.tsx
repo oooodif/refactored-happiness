@@ -1,7 +1,5 @@
 import { useState, useEffect, useContext } from "react";
 import { useLocation, useSearch } from "wouter";
-import { useStripe, Elements, PaymentElement, useElements } from "@stripe/react-stripe-js";
-import { stripePromise } from "@/lib/stripe";
 import { createSubscription } from "@/lib/stripe";
 import { SubscriptionTier } from "@shared/schema";
 import { UserContext } from "@/App";
@@ -14,63 +12,7 @@ import { Button } from "@/components/ui/button";
 // Check if Stripe is properly initialized
 const isStripeAvailable = !!import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 
-// Payment form component
-const SubscribeForm = () => {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { toast } = useToast();
-  const [, navigate] = useLocation();
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!stripe || !elements) {
-      toast({
-        title: "Error",
-        description: "Stripe is not loaded yet. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsProcessing(true);
-
-    // Confirm the payment
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: window.location.origin + "/account",
-      },
-    });
-
-    if (error) {
-      toast({
-        title: "Payment Failed",
-        description: error.message || "An error occurred during payment processing.",
-        variant: "destructive",
-      });
-      setIsProcessing(false);
-    } 
-    // Success case is handled by the return_url
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <PaymentElement />
-      <Button 
-        type="submit" 
-        className="w-full" 
-        disabled={!stripe || !elements || isProcessing}
-      >
-        {isProcessing ? "Processing..." : "Subscribe Now"}
-      </Button>
-    </form>
-  );
-};
-
 export default function Subscribe() {
-  const [clientSecret, setClientSecret] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { session } = useContext(UserContext);
@@ -78,11 +20,12 @@ export default function Subscribe() {
   const search = useSearch();
   const params = new URLSearchParams(search);
   const tier = params.get("tier") as SubscriptionTier || SubscriptionTier.Basic;
+  const { toast } = useToast();
   
   useEffect(() => {
     // Redirect to login if not authenticated
     if (!session.isAuthenticated) {
-      navigate("/login");
+      navigate("/");
       return;
     }
     
@@ -93,15 +36,22 @@ export default function Subscribe() {
       return;
     }
     
-    // Create the subscription
+    // Create the subscription checkout session
     const setupSubscription = async () => {
       try {
-        const { clientSecret: secret } = await createSubscription(tier);
-        setClientSecret(secret);
+        // Create Stripe Checkout Session and redirect to it
+        const { url } = await createSubscription(tier);
+        
+        if (url) {
+          // Redirect to the checkout page
+          window.location.href = url;
+        } else {
+          setError("Failed to create checkout session");
+          setIsLoading(false);
+        }
       } catch (err) {
         console.error("Error creating subscription:", err);
         setError(err instanceof Error ? err.message : "Failed to create subscription");
-      } finally {
         setIsLoading(false);
       }
     };
@@ -118,6 +68,7 @@ export default function Subscribe() {
       <SiteLayout>
         <div className="h-screen flex items-center justify-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading"/>
+          <p className="ml-2">Preparing checkout...</p>
         </div>
       </SiteLayout>
     );
@@ -142,41 +93,21 @@ export default function Subscribe() {
     );
   }
   
-  if (!clientSecret) {
-    return (
-      <SiteLayout>
-        <div className="container mx-auto px-4 py-8">
-          <Card className="max-w-lg mx-auto">
-            <CardHeader>
-              <CardTitle>No Payment Required</CardTitle>
-              <CardDescription>Your subscription is already active</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 mb-4">
-                You already have an active subscription. No payment is required at this time.
-              </p>
-              <Button onClick={() => navigate("/account")}>Manage Subscription</Button>
-            </CardContent>
-          </Card>
-        </div>
-      </SiteLayout>
-    );
-  }
-  
-  const tierName = tier.charAt(0).toUpperCase() + tier.slice(1);
-  
+  // We should not reach here since we're redirecting to Stripe's checkout
+  // But just in case there's some issue with the redirect
   return (
     <SiteLayout>
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-lg mx-auto">
           <CardHeader>
-            <CardTitle>Subscribe to {tierName} Plan</CardTitle>
-            <CardDescription>Complete your subscription payment</CardDescription>
+            <CardTitle>Redirecting to Checkout</CardTitle>
+            <CardDescription>Please wait while we redirect you to the secure payment page</CardDescription>
           </CardHeader>
           <CardContent>
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <SubscribeForm />
-            </Elements>
+            <p className="text-gray-700 mb-4">
+              If you are not redirected automatically, please click the button below.
+            </p>
+            <Button onClick={() => navigate("/account")}>Return to Account</Button>
           </CardContent>
         </Card>
       </div>

@@ -8,7 +8,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
+  apiVersion: '2025-04-30.basil' as any, // Using latest API version
 });
 
 export const stripeService = {
@@ -196,11 +196,12 @@ export const stripeService = {
             }
           }
           
+          const periodEnd = (data as any).current_period_end;
           await storage.updateSubscription(userId, {
             stripeSubscriptionId: data.id,
             tier,
             subscriptionStatus: data.status,
-            currentPeriodEnd: new Date(data.current_period_end * 1000),
+            currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
           });
         }
         break;
