@@ -14,6 +14,7 @@ import RefillPage from "@/pages/refill";
 import DocumentHistory from "@/pages/document-history";
 import VerifyEmail from "@/pages/verify-email";
 import Success from "@/pages/success";
+import UIPlayground from "@/pages/ui-playground";
 import NotFound from "@/pages/not-found";
 
 // Components
@@ -69,6 +70,7 @@ function Router() {
       <Route path="/success" component={Success} />
       <Route path="/history" component={DocumentHistory} />
       <Route path="/verify-email" component={VerifyEmail} />
+      <Route path="/ui-playground" component={UIPlayground} />
       <Route component={NotFound} />
     </Switch>
   );
