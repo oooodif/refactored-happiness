@@ -36,32 +36,55 @@ export default function Header() {
         credentials: 'include',
         headers: {
           'Accept': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate'
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
         }
       });
+      
+      console.log("FORCE AUTH CHECK RESPONSE:", response.status);
       
       if (response.ok) {
         const data = await response.json();
         console.log("FORCE AUTH CHECK SUCCESS:", data);
         
-        // Update session with user data
-        setSession({
-          user: data.user,
-          isAuthenticated: true,
-          isLoading: false,
-          tier: data.user.subscriptionTier || SubscriptionTier.Free,
-          usage: {
-            current: data.user.monthlyUsage || 0,
-            limit: data.usageLimit || 3,
-            resetDate: data.user.usageResetDate || new Date().toISOString()
-          },
-          refillPackCredits: data.user.refillPackCredits || 0
-        });
+        if (data && data.user) {
+          // Update session with user data
+          setSession({
+            user: data.user,
+            isAuthenticated: true,
+            isLoading: false,
+            tier: data.user.subscriptionTier || SubscriptionTier.Free,
+            usage: {
+              current: data.user.monthlyUsage || 0,
+              limit: data.usageLimit || 3,
+              resetDate: data.user.usageResetDate || new Date().toISOString()
+            },
+            refillPackCredits: data.user.refillPackCredits || 0
+          });
+        } else {
+          console.log("No user data in response");
+          setSession(prev => ({
+            ...prev,
+            isAuthenticated: false,
+            isLoading: false
+          }));
+        }
       } else {
         console.log("FORCE AUTH CHECK FAILED:", response.status);
+        // User is not authenticated
+        setSession(prev => ({
+          ...prev,
+          isAuthenticated: false,
+          isLoading: false
+        }));
       }
     } catch (error) {
       console.error("FORCE AUTH CHECK ERROR:", error);
+      // On error, maintain current state but set loading to false
+      setSession(prev => ({
+        ...prev,
+        isLoading: false
+      }));
     }
   };
 
