@@ -78,7 +78,67 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
 
         {/* Monthly Subscription Plans */}
         <h3 className="text-lg font-medium text-gray-800 mt-4 mb-2">Monthly Subscription Plans</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        
+        {/* Mobile-friendly tab navigation for smaller screens */}
+        <div className="block md:hidden mb-4">
+          <div className="flex overflow-x-auto pb-2 space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className={session.tier === SubscriptionTier.Free ? "bg-blue-50 border-blue-300" : ""}
+              onClick={() => handleSelectPlan(SubscriptionTier.Free)}
+            >
+              Free
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className={session.tier === SubscriptionTier.Basic ? "bg-blue-50 border-blue-300" : ""}
+              onClick={() => handleSelectPlan(SubscriptionTier.Basic)}
+            >
+              Basic ($0.99)
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className={session.tier === SubscriptionTier.Tier2 ? "bg-blue-50 border-blue-300" : ""}
+              onClick={() => handleSelectPlan(SubscriptionTier.Tier2)}
+            >
+              Standard ($2.99)
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className={session.tier === SubscriptionTier.Pro ? "bg-blue-50 border-blue-300" : ""}
+              onClick={() => handleSelectPlan(SubscriptionTier.Pro)}
+            >
+              Pro ($6.99)
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className={session.tier === SubscriptionTier.Tier4 ? "bg-blue-50 border-blue-300" : ""}
+              onClick={() => handleSelectPlan(SubscriptionTier.Tier4)}
+            >
+              Advanced ($11.99)
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className={cn(
+                session.tier === SubscriptionTier.Power ? "bg-blue-50 border-blue-300" : "",
+                "relative"
+              )}
+              onClick={() => handleSelectPlan(SubscriptionTier.Power)}
+            >
+              Power ($19.99)
+              <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-[10px] px-1 py-0.5 rounded-full">Popular</span>
+            </Button>
+          </div>
+        </div>
+        
+        {/* Desktop view with cards */}
+        <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {/* Free Tier */}
           <SubscriptionPlanCard
             tier={SubscriptionTier.Free}
@@ -139,6 +199,63 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             isPopular={true}
             onSelect={handleSelectPlan}
           />
+        </div>
+        
+        {/* Mobile detailed view of selected plan */}
+        <div className="block md:hidden mt-4">
+          <div className="border rounded-lg p-6 bg-white">
+            <h3 className="text-lg font-medium text-gray-800">
+              {session.tier === SubscriptionTier.Free ? "Free" : 
+               session.tier === SubscriptionTier.Basic ? "Basic" :
+               session.tier === SubscriptionTier.Tier2 ? "Standard" :
+               session.tier === SubscriptionTier.Pro ? "Pro" :
+               session.tier === SubscriptionTier.Tier4 ? "Advanced" :
+               session.tier === SubscriptionTier.Power ? "Power" : "Free"} Plan
+            </h3>
+            
+            <p className="text-3xl font-bold mt-2">
+              ${tierPrices[session.tier || SubscriptionTier.Free].toFixed(2)}
+              <span className="text-base font-normal text-gray-600">/month</span>
+            </p>
+            
+            <p className="text-gray-600 mt-3">
+              {session.tier === SubscriptionTier.Free
+                ? "Basic access to get you started"
+                : session.tier === SubscriptionTier.Basic
+                ? "Perfect for students and hobbyists"
+                : "For professionals and power users"}
+            </p>
+            
+            <ul className="mt-6 space-y-4">
+              <li className="flex items-start">
+                <svg
+                  className="h-5 w-5 text-emerald-500 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                <span className="text-gray-700">
+                  {tierLimits[session.tier || SubscriptionTier.Free]} LaTeX generations/month
+                </span>
+              </li>
+            </ul>
+            
+            <Button
+              onClick={() => handleSelectPlan(session.tier || SubscriptionTier.Free)}
+              className="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={session.tier === (session.tier || SubscriptionTier.Free)}
+            >
+              {session.tier === (session.tier || SubscriptionTier.Free) ? "Current Plan" : "Select This Plan"}
+            </Button>
+          </div>
         </div>
 
         {/* Refill Pack Option - Only shown to paid subscribers */}

@@ -25,7 +25,7 @@ const validateRequest = (schema: z.ZodType<any, any>) => {
     }
   };
 };
-import { generateLatexSchema } from "@shared/schema";
+import { generateLatexSchema, SubscriptionTier, REFILL_PACK_CREDITS, REFILL_PACK_PRICE } from "@shared/schema";
 import { generateLatex, getAvailableModels, callProviderWithModel } from "./services/aiProvider";
 import { compileLatex, compileAndFixLatex } from "./services/latexService";
 import { 
@@ -934,6 +934,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
               subscriptionStatus: 'inactive'
             });
             
+            break;
+          }
+          
+          // Process successful refill pack payments
+          case 'payment_intent.succeeded': {
+            const paymentIntent = event.data.object as Stripe.PaymentIntent;
+            
+            // Only process if it's a refill pack purchase
+            if (paymentIntent.metadata?.type === 'refill_pack') {
+              const userId = parseInt(paymentIntent.metadata.userId || '0', 10);
+              const credits = parseInt(paymentIntent.metadata.credits || '0', 10);
+              
+              if (userId && credits) {
+                console.log(`Processing refill pack payment: adding ${credits} credits to user ${userId}`);
+                
+                try {
+                  // Add refill pack credits to the user's account
+                  const user = await storage.getUserById(userId);
+                  
+                  if (user) {
+                    const currentCredits = user.refillPackCredits || 0;
+                    const newCredits = currentCredits + credits;
+                    
+                    // Update user with new credits
+                    await storage.updateUserRefillCredits(userId, newCredits);
+                    
+                    console.log(`Successfully added ${credits} refill credits to user ${userId}, new total: ${newCredits}`);
+                  } else {
+                    console.error(`Refill credits payment: User ${userId} not found`);
+                  }
+                } catch (err) {
+                  console.error('Error adding refill credits to user:', err);
+                }
+              }
+            }
             break;
           }
           // Add more event types as needed

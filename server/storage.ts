@@ -488,6 +488,28 @@ export const storage = {
     }
   },
   
+  /**
+   * Update user's refill pack credits
+   * Used when a user purchases a refill pack
+   */
+  async updateUserRefillCredits(userId: number, newCredits: number): Promise<User | null> {
+    try {
+      // Update user with new refill pack credits
+      const [updatedUser] = await db.update(users)
+        .set({
+          refillPackCredits: newCredits,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      return updatedUser || null;
+    } catch (error) {
+      console.error('Update refill credits error:', error);
+      return null;
+    }
+  },
+
   // AI model info
   async getModelInfo(modelName: string): Promise<{ tier: SubscriptionTier } | null> {
     // Map model names to their tiers
