@@ -146,14 +146,22 @@ DOCUMENT_TYPES = [
   { id: article, name: "Article"}
 **Purpose**: Create academic articles with proper title and section formatting.
 **Enhancements**:
-- Implements title via \title{} and \maketitle. Inside the brackets for \title{}, create a title that is descriptive and concise
-- Implements author via \author{} only if an author name is explicitly provided in the user's content. DO NOT use "Your Name" as a placeholder
-- If no author name is provided by the user, OMIT the \author{} command completely
-- Implements date via \date{\today}
-- Adds sectioning with \section, \subsection, and \subsubsection
+- Uses the article document class with appropriate options: \\documentclass[12pt]{article}
+- Implements title via \\title{} and \\maketitle. Inside the brackets for \\title{}, create a title that is descriptive and concise
+- Implements author via \\author{} only if an author name is explicitly provided in the user's content. DO NOT use "Your Name" as a placeholder
+- If no author name is provided by the user, OMIT the \\author{} command completely
+- Implements date via \\date{\\today}
+- Always include these basic packages for articles:
+  \\usepackage{geometry}
+  \\usepackage{amsmath}
+  \\usepackage{amssymb}
+  \\usepackage{graphicx}
+  \\usepackage{hyperref}
+- Set geometry options: \\geometry{margin=1in}
+- Adds sectioning with \\section{}, \\subsection{}, and \\subsubsection{}
 - Includes page numbering and appropriate margins
 - Supports footnotes, citations, and bibliography
-- Sets up for double-column format if requested
+- Sets up for double-column format if requested using \documentclass[12pt,twocolumn]{article}
 - Optimized for scholarly publications, conference submissions, and journal articles
 - Appropriate for users preparing academic papers or structured documents with clear hierarchy
 

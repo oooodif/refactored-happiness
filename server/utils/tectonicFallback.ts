@@ -63,8 +63,28 @@ function extractMainContent(latexContent: string): string {
   const bodyMatch = latexContent.match(/\\begin{document}([\s\S]*?)\\end{document}/);
   
   if (bodyMatch && bodyMatch[1]) {
+    // Get the document content
+    let content = bodyMatch[1];
+    
+    // Extract and process title and author information for better display
+    let titleHtml = '';
+    const titleMatch = latexContent.match(/\\title{([^}]+)}/);
+    if (titleMatch && titleMatch[1]) {
+      titleHtml = `<h1 class="document-title">${titleMatch[1]}</h1>`;
+    }
+    
+    // Extract author if present
+    let authorHtml = '';
+    const authorMatch = latexContent.match(/\\author{([^}]+)}/);
+    if (authorMatch && authorMatch[1]) {
+      authorHtml = `<div class="document-author">${authorMatch[1]}</div>`;
+    }
+    
+    // Remove \maketitle command since we'll handle it with the HTML above
+    content = content.replace(/\\maketitle/, '');
+    
     // Process the extracted content to make it more MathJax-friendly
-    let content = bodyMatch[1]
+    content = content
       // Keep math environments as they are
       .replace(/\\begin{(equation|align|gather|multline)(\*?)}([\s\S]*?)\\end{\1\2}/g, (match) => match)
       .replace(/\\begin{(array|matrix|pmatrix|bmatrix|Bmatrix|vmatrix|Vmatrix)}([\s\S]*?)\\end{\1}/g, (match) => match)
@@ -75,6 +95,7 @@ function extractMainContent(latexContent: string): string {
       // Replace simple formatting
       .replace(/\\textbf{([^}]+)}/g, '<strong>$1</strong>')
       .replace(/\\textit{([^}]+)}/g, '<em>$1</em>')
+      .replace(/\\textsc{([^}]+)}/g, '<span style="font-variant: small-caps;">$1</span>')
       .replace(/\\underline{([^}]+)}/g, '<u>$1</u>')
       // Handle paragraphs
       .replace(/\n\n+/g, '<p></p>')
@@ -82,9 +103,16 @@ function extractMainContent(latexContent: string): string {
       .replace(/\\item\s/g, '<li>')
       // Replace itemize and enumerate environments
       .replace(/\\begin{itemize}([\s\S]*?)\\end{itemize}/g, '<ul>$1</ul>')
-      .replace(/\\begin{enumerate}([\s\S]*?)\\end{enumerate}/g, '<ol>$1</ol>');
-      
-    return content;
+      .replace(/\\begin{enumerate}([\s\S]*?)\\end{enumerate}/g, '<ol>$1</ol>')
+      // Handle figures and tables
+      .replace(/\\begin{figure}([\s\S]*?)\\end{figure}/g, '<div class="figure">$1</div>')
+      .replace(/\\begin{table}([\s\S]*?)\\end{table}/g, '<div class="table">$1</div>')
+      .replace(/\\caption{([^}]+)}/g, '<div class="caption">$1</div>')
+      // Replace footnotes with superscript numbers (simplified approach)
+      .replace(/\\footnote{([^}]+)}/g, '<sup class="footnote">[fn]</sup>');
+    
+    // Combine title, author and content
+    return titleHtml + authorHtml + content;
   }
   
   // If no document environment, just sanitize a bit and return as-is
