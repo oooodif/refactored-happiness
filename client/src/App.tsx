@@ -88,9 +88,9 @@ function App() {
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   
   // Create a reusable function to check and update session that can be passed down via context
-  const checkAndUpdateSession = useCallback(async () => {
+  const checkAndUpdateSession = useCallback(async (retryCount = 0, maxRetries = 2) => {
     try {
-      console.log("MANUAL SESSION CHECK TRIGGERED");
+      console.log(`MANUAL SESSION CHECK TRIGGERED (attempt ${retryCount + 1}/${maxRetries + 1})`);
       // First make a hard call to the server to check the actual session state
       const res = await fetch('/api/auth/me', {
         method: 'GET',
@@ -98,7 +98,8 @@ function App() {
         headers: {
           'Accept': 'application/json',
           'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
+          'Pragma': 'no-cache',
+          'X-Request-Time': Date.now().toString() // Add timestamp to prevent caching
         }
       });
       
@@ -124,12 +125,33 @@ function App() {
             },
             refillPackCredits: authData.user.refillPackCredits || 0
           });
+          
+          // Update local storage as a backup
+          localStorage.setItem('userLoggedIn', 'true');
+          localStorage.setItem('userData', JSON.stringify({
+            username: authData.user.username,
+            lastChecked: Date.now()
+          }));
+          
           return;
         }
+      } else if (res.status === 401 && retryCount < maxRetries) {
+        // Might be a temporary session issue, retry after a short delay
+        console.log(`SESSION CHECK FAILED (${res.status}), retrying in 1 second...`);
+        setTimeout(() => {
+          checkAndUpdateSession(retryCount + 1, maxRetries);
+        }, 1000); // 1 second delay before retry
+        return;
       }
       
-      // Not authenticated or error
+      // Not authenticated or max retries reached
       console.log("SESSION CHECK - NOT AUTHENTICATED");
+      
+      // Clear any local storage session data
+      localStorage.removeItem('userLoggedIn');
+      localStorage.removeItem('userData');
+      sessionStorage.removeItem('userLoggedIn');
+      
       setSession({
         user: null,
         isAuthenticated: false,
@@ -145,6 +167,14 @@ function App() {
     } catch (error) {
       console.error("SESSION CHECK ERROR:", error);
       setSession(prev => ({...prev, isLoading: false}));
+      
+      // Retry on network errors
+      if (retryCount < maxRetries) {
+        console.log(`SESSION CHECK ERROR, retrying in 1 second... (${retryCount + 1}/${maxRetries + 1})`);
+        setTimeout(() => {
+          checkAndUpdateSession(retryCount + 1, maxRetries);
+        }, 1000);
+      }
     }
   }, []);
   
