@@ -22,17 +22,6 @@ export default function LatexInput({
 }: LatexInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isReady, setIsReady] = useState(true);
-  const [isFocused, setIsFocused] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-
-  // Detect iOS on component mount
-  useEffect(() => {
-    const checkIsIOS = () => {
-      const userAgent = window.navigator.userAgent.toLowerCase();
-      return /iphone|ipad|ipod/.test(userAgent);
-    };
-    setIsIOS(checkIsIOS());
-  }, []);
 
   const insertTemplate = (templateId: string) => {
     if (!textareaRef.current) return;
@@ -150,31 +139,15 @@ export default function LatexInput({
         </div>
       </div>
       <div className="flex-1 overflow-auto p-4 bg-gray-50">
-        {isIOS ? (
-          <textarea
-            ref={textareaRef}
-            className={`w-full p-3 rounded-md border border-gray-300 glass-card font-mono text-sm resize-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg ${
-              isFocused ? 'h-[70vh]' : 'h-[120px]'
-            }`}
-            placeholder={documentType === 'presentation' 
-              ? "Describe your slide show here, paste report or paper here, or design your slides using the buttons above. Use the 'New Slide' button to add slides."
-              : "Enter your content here. Use the buttons above to insert templates, or use tags like <MATHEQ>E = mc^2</MATHEQ> for math equations. No LaTeX knowledge required!"}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-          />
-        ) : (
-          <textarea
-            ref={textareaRef}
-            className="w-full h-full p-3 rounded-md border border-gray-300 glass-card font-mono text-sm resize-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg"
-            placeholder={documentType === 'presentation' 
-              ? "Describe your slide show here, paste report or paper here, or design your slides using the buttons above. Use the 'New Slide' button to add slides."
-              : "Enter your content here. Use the buttons above to insert templates, or use tags like <MATHEQ>E = mc^2</MATHEQ> for math equations. No LaTeX knowledge required!"}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-          />
-        )}
+        <textarea
+          ref={textareaRef}
+          className="w-full h-full p-3 rounded-md border border-gray-300 glass-card font-mono text-sm resize-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg"
+          placeholder={documentType === 'presentation' 
+            ? "Describe your slide show here, paste report or paper here, or design your slides using the buttons above. Use the 'New Slide' button to add slides."
+            : "Enter your content here. Use the buttons above to insert templates, or use tags like <MATHEQ>E = mc^2</MATHEQ> for math equations. No LaTeX knowledge required!"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
       </div>
       <div className="p-4 glass border-t border-gray-200">
         <div className="flex items-center justify-between">
