@@ -685,38 +685,40 @@ export default function Home() {
       return;
     }
     
-    // Guest mode is disabled - non-authenticated users cannot compile PDFs
-    
-    // If user is not authenticated, show auth prompt
+    // Check anonymous user status for non-authenticated users
     if (!session.isAuthenticated) {
-      console.log("User not authenticated, showing auth prompt for PDF compilation");
-      
-      try {
-        // Show auth required dialog
-        setShowAuthPrompt(true);
+      // Check if this is an anonymous user with remaining free usage
+      if (isAnonymous && hasRemainingAnonymousUsage) {
+        // Anonymous user with remaining usage, allow PDF compilation
+        console.log("Anonymous user with remaining usage, allowing PDF compilation");
+      } else {
+        console.log("User not authenticated, showing auth prompt for PDF compilation");
         
-        // Force a dialog to appear (fallback)
-        toast({
-          title: "Authentication Required",
-          description: "Please sign in or create an account to compile to PDF.",
-          action: (
-            <div className="flex gap-2 mt-2">
-              <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
-                Login
-              </Button>
-              <Button size="sm" onClick={() => navigate("/register")}>
-                Create Account
-              </Button>
-            </div>
-          ),
-        });
-      } catch (err) {
-        console.error("Error showing auth prompt:", err);
+        try {
+          // Show auth required dialog
+          setShowAuthPrompt(true);
+          
+          // Force a dialog to appear (fallback)
+          toast({
+            title: "Authentication Required",
+            description: "Please sign in or create an account to compile to PDF.",
+            action: (
+              <div className="flex gap-2 mt-2">
+                <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
+                  Login
+                </Button>
+                <Button size="sm" onClick={() => navigate("/register")}>
+                  Create Account
+                </Button>
+              </div>
+            ),
+          });
+        } catch (err) {
+          console.error("Error showing auth prompt:", err);
+        }
+        return;
       }
-      return;
     }
-    
-    // Guest mode has been disabled
 
     try {
       // Call the compile endpoint to generate PDF from current LaTeX
@@ -900,6 +902,13 @@ export default function Home() {
   
   return (
     <SiteLayout seoTitle="AI LaTeX Generator - Create Professional LaTeX Documents with AI">
+      {/* Show banner for anonymous users with top positioning */}
+      {isAnonymous && (
+        <div className="container mx-auto px-4 py-2">
+          <AnonymousUserBanner usageRemaining={hasRemainingAnonymousUsage} />
+        </div>
+      )}
+      
       <div className="h-full flex flex-col md:flex-row bg-gradient-soft">
         
         {/* Left Panel (Input) */}
