@@ -205,12 +205,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: "Email is required" });
     }
     
+    console.log(`Resend verification request for email: ${email}`);
+    
     try {
       // Find user by email
       const user = await storage.getUserByEmail(email);
       
       if (!user) {
         // For security reasons, still return success even if user doesn't exist
+        console.log(`User with email ${email} not found in database`);
         return res.status(200).json({
           success: true,
           message: "If your email is registered, a verification link has been sent"
@@ -219,12 +222,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If already verified, no need to resend
       if (user.emailVerified) {
+        console.log(`User with email ${email} is already verified`);
         return res.status(200).json({
           success: true,
           message: "Your email is already verified, please log in"
         });
       }
       
+      console.log(`Generating new verification token for user: ${user.id}`);
       // Generate new verification token
       const verificationToken = await generateVerificationToken();
       

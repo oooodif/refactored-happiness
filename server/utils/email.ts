@@ -56,6 +56,8 @@ export async function sendVerificationEmail(
       message: 'Email service not available' 
     };
   }
+  
+  console.log(`Sending verification email to ${email} with token ${verificationToken.substring(0, 8)}...`);
 
   try {
     // Determine the base URL based on the environment
@@ -69,16 +71,27 @@ export async function sendVerificationEmail(
       To: email,
       Subject: 'Verify your AITexGen account',
       HtmlBody: `
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
-          <h1 style="color: #2563eb; margin-bottom: 24px;">Verify your email address</h1>
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; border: 1px solid #e5e7eb; border-radius: 8px;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <img src="https://aitexgen.com/logo.png" alt="AITexGen Logo" style="max-width: 120px; height: auto;" onerror="this.style.display='none'">
+          </div>
+          <h1 style="color: #2563eb; margin-bottom: 24px; text-align: center;">Verify your email address</h1>
           <p style="margin-bottom: 24px; font-size: 16px; line-height: 24px;">
             Thank you for signing up for AITexGen! Please click the button below to verify your email address.
           </p>
           <div style="text-align: center; margin: 32px 0;">
-            <a href="${verificationLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+            <a href="${verificationLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
               Verify my email
             </a>
           </div>
+          
+          <div style="margin-top: 24px; padding: 16px; background-color: #f3f4f6; border-radius: 4px;">
+            <p style="margin: 0; font-size: 14px; color: #374151;">
+              <strong>⚠️ Important:</strong> This email might end up in your spam/junk folder. 
+              Please check there if you don't see it in your inbox.
+            </p>
+          </div>
+          
           <p style="margin-top: 24px; font-size: 14px; color: #6b7280;">
             If you didn't create an account, you can safely ignore this email.
           </p>

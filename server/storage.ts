@@ -73,6 +73,23 @@ export const storage = {
       };
     } catch (error) {
       console.error('Create user error:', error);
+      
+      // Check for duplicate email error (PostgreSQL error code 23505)
+      const pgError = error as any;
+      if (pgError.code === '23505') {
+        if (pgError.detail && pgError.detail.includes('(email)=')) {
+          return {
+            success: false,
+            error: 'Email address already registered. Please use a different email or try to log in.'
+          };
+        } else if (pgError.detail && pgError.detail.includes('(username)=')) {
+          return {
+            success: false,
+            error: 'Username already taken. Please choose a different username.'
+          };
+        }
+      }
+      
       return {
         success: false,
         error: 'Failed to create user'
