@@ -184,9 +184,9 @@ export default function LatexInput({
             )}
             {isMobile && isKeyboardVisible && (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="text-xs glass-card border border-gray-300 text-gray-700"
+                className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
                 onClick={() => {
                   if (textareaRef.current) {
                     textareaRef.current.blur();

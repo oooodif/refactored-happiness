@@ -23,6 +23,7 @@
 
 .mobile-keyboard-open textarea {
   animation: expandTextarea 0.3s ease-in-out forwards;
+  padding-bottom: 50px !important; /* Extra bottom padding to prevent text from being hidden behind the keyboard */
 }
 
 @keyframes fadeIn {
@@ -31,6 +32,18 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+/* iOS-specific adjustments */
+@supports (-webkit-touch-callout: none) {
+  .mobile-keyboard-open textarea {
+    padding-bottom: 100px !important; /* Even more padding for iOS devices */
+  }
+  
+  /* Keep buttons visible for iPhone X+ with safe area */
+  .mobile-keyboard-open {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
   }
 }
 
