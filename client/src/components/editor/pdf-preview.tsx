@@ -125,7 +125,7 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
   // If no PDF data is available, show a placeholder with Generate PDF button
   if (!pdfData) {
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-subtle-rose p-4">
+      <div className="h-full flex flex-col items-center justify-center bg-white bg-opacity-60 p-4">
         <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md glass-card depth-3d">
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
@@ -185,7 +185,7 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
 
   // When we have PDF data
   return (
-    <div className="h-full flex flex-col bg-subtle-green">
+    <div className="h-full flex flex-col bg-white bg-opacity-60">
       <div className="flex-1 overflow-auto p-4">
         <div className="flex flex-col items-center">
           <div className="w-full max-w-4xl bg-white shadow-md rounded-md overflow-hidden mb-4 glass-card depth-3d">

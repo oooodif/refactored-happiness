@@ -8,7 +8,7 @@ interface SiteLayoutProps {
 
 export default function SiteLayout({ children, fullHeight = true }: SiteLayoutProps) {
   return (
-    <div className={`flex flex-col ${fullHeight ? 'h-screen' : 'min-h-screen'}`}>
+    <div className={`flex flex-col app-background ${fullHeight ? 'h-screen' : 'min-h-screen'}`}>
       <Header />
       <main className={fullHeight ? "flex-1 overflow-y-auto" : "flex-1"}>
         {children}

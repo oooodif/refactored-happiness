@@ -138,7 +138,7 @@ export default function LatexInput({
           )}
         </div>
       </div>
-      <div className="flex-1 overflow-auto p-4 bg-subtle-purple bg-opacity-30">
+      <div className="flex-1 overflow-auto p-4 bg-white bg-opacity-60">
         <textarea
           ref={textareaRef}
           className="w-full h-full p-3 rounded-md border border-gray-300 glass-card font-mono text-sm resize-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg"
@@ -149,7 +149,7 @@ export default function LatexInput({
           onChange={(e) => onChange(e.target.value)}
         />
       </div>
-      <div className="p-4 glass border-t border-gray-200 bg-subtle-purple rounded-b-lg">
+      <div className="p-4 glass border-t border-gray-200 bg-white bg-opacity-80 rounded-b-lg">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
             <span className={isReady ? "text-emerald-600 pulse-animation" : "text-amber-600"}>● </span>
@@ -165,7 +165,7 @@ export default function LatexInput({
               Clear
             </Button>
             <Button
-              className="bg-gradient-to-r from-blue-500 to-blue-700 text-white transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
+              className="bg-gradient-to-r from-orange-500 to-orange-700 text-white transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
               onClick={onGenerate}
               disabled={!isReady || generating}
             >
