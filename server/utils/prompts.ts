@@ -167,6 +167,7 @@ DOCUMENT_TYPES = [
 - Formats bullet points and supports progressive reveals using overlays
 - Handles overlay specifications for simple animations or incremental reveals
 - Optimizes images and diagrams for projection
+- Max 10 lines per slide!
 - Implements title slides with titlepage and section dividers
 - STRICTLY enforces maximum 10 lines of text per slide unless explicitly requested otherwise
 - Splits slides at natural breaks in content to maintain coherent topics per slide
