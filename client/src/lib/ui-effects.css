@@ -231,10 +231,11 @@
 }
 
 .bg-subtle-purple {
-  background: linear-gradient(135deg, rgba(243, 232, 255, 0.6), rgba(233, 213, 255, 0.4), rgba(216, 180, 254, 0.3), rgba(243, 232, 255, 0.6));
+  /* Light purple: #ecf2fb */
+  background: linear-gradient(135deg, rgba(236, 242, 251, 0.6), rgba(220, 230, 250, 0.4), rgba(204, 218, 246, 0.3), rgba(236, 242, 251, 0.6));
   background-size: 300% 300%;
   animation: subtleGradientPurple 18s ease infinite;
-  border: 1px solid rgba(233, 213, 255, 0.8);
+  border: 1px solid rgba(220, 230, 250, 0.8);
 }
 
 @keyframes subtleGradientPurple {
@@ -246,10 +247,11 @@
 }
 
 .bg-subtle-green {
-  background: linear-gradient(135deg, rgba(236, 253, 245, 0.7), rgba(209, 250, 229, 0.5), rgba(167, 243, 208, 0.3), rgba(236, 253, 245, 0.7));
+  /* Light teal/green: #e3f6ed */
+  background: linear-gradient(135deg, rgba(227, 246, 237, 0.7), rgba(209, 240, 225, 0.5), rgba(191, 233, 213, 0.3), rgba(227, 246, 237, 0.7));
   background-size: 300% 300%;
   animation: subtleGradientGreen 20s ease infinite;
-  border: 1px solid rgba(209, 250, 229, 0.8);
+  border: 1px solid rgba(209, 240, 225, 0.8);
 }
 
 @keyframes subtleGradientGreen {

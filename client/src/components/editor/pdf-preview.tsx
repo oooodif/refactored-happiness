@@ -125,7 +125,7 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
   // If no PDF data is available, show a placeholder with Generate PDF button
   if (!pdfData) {
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-subtle-rose p-4">
+      <div className="h-full flex flex-col items-center justify-center bg-subtle-green p-4">
         <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md glass-card depth-3d">
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
@@ -273,14 +273,14 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
                 </Button>
               </div>
             ) : isGenerating ? (
-              <div className="flex items-center justify-center h-[650px] bg-subtle-blue">
+              <div className="flex items-center justify-center h-[650px] bg-subtle-green">
                 <div className="text-center glass-card p-6 rounded-lg depth-3d">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600 mb-2"></div>
                   <p className="text-gray-500">Loading PDF...</p>
                 </div>
               </div>
             ) : (
-              <div className="pdf-container w-full h-[650px] bg-subtle-blue">
+              <div className="pdf-container w-full h-[650px] bg-subtle-green">
                 {isHtml ? (
                   <iframe 
                     key={`html-frame-${iframeKey}`}
