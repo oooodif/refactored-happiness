@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { UserContext } from "@/App";
 import { API_ROUTES } from "@/lib/constants";
