@@ -1,18 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { TextPlugin } from 'gsap/TextPlugin';
-import Splitting from 'splitting';
-import 'splitting/dist/splitting.css';
-import 'splitting/dist/splitting-cells.css';
-// Import only the necessary libraries for our animation
-// Removed Barba.js as it's causing conflicts with React
-import LocomotiveScroll from 'locomotive-scroll';
-import * as THREE from 'three';
 import './HyperIntro.css';
 
-// Register GSAP plugins
-gsap.registerPlugin(ScrollTrigger, TextPlugin);
+// Ultra-modern intro component with ultraviolent anthropomorphized afterglow effect
 
 interface HyperIntroProps {
   onComplete?: () => void;
@@ -22,45 +12,11 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
   // References for DOM elements
   const introContainerRef = useRef<HTMLDivElement>(null);
   const textContainerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<HTMLDivElement>(null);
-  
-  // Reference for Three.js scene
-  const threeScene = useRef<{
-    scene?: THREE.Scene;
-    camera?: THREE.PerspectiveCamera;
-    renderer?: THREE.WebGLRenderer;
-    geometry?: THREE.TorusGeometry;
-    material?: THREE.MeshNormalMaterial;
-    torus?: THREE.Mesh;
-    animate?: () => void;
-  }>({});
+  const orbContainerRef = useRef<HTMLDivElement>(null);
 
-  // Initialize Splitting.js for text effects
+  // Create a custom particle system with ultraviolent aesthetic
   useEffect(() => {
-    Splitting({
-      target: '[data-splitting]',
-      by: 'chars',
-      key: null
-    });
-    
-    // Initialize LocomotiveScroll for smooth scrolling
-    const scrollContainer = document.querySelector('[data-scroll-container]');
-    const scroll = new LocomotiveScroll({
-      el: scrollContainer as HTMLElement,
-      smooth: true,
-      smartphone: {
-        smooth: true
-      },
-      tablet: {
-        smooth: true
-      }
-    });
-
-    // Update scroll when window resizes
-    window.addEventListener('resize', () => scroll.update());
-
-    // Create a custom particle system with ultraviolent aesthetic
     if (particlesRef.current) {
       // Clear any existing content
       const particlesContainer = particlesRef.current;
@@ -178,79 +134,24 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
       });
     }
 
-    // Initialize THREE.js scene
-    if (canvasRef.current) {
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      const renderer = new THREE.WebGLRenderer({
-        canvas: canvasRef.current,
-        alpha: true,
-        antialias: true
-      });
+    // Create the glowing orb effect
+    if (orbContainerRef.current) {
+      const container = orbContainerRef.current;
+      container.innerHTML = '';
       
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(window.devicePixelRatio);
+      // Central orb
+      const orb = document.createElement('div');
+      orb.className = 'glowing-orb';
+      container.appendChild(orb);
       
-      // Create glowing torus geometry
-      const geometry = new THREE.TorusGeometry(6, 1.5, 16, 100, Math.PI * 2);
-      const material = new THREE.MeshNormalMaterial({
-        wireframe: true
-      });
-      
-      const torus = new THREE.Mesh(geometry, material);
-      scene.add(torus);
-      camera.position.z = 15;
-      
-      // Animation function
-      const animate = () => {
-        requestAnimationFrame(animate);
-        
-        torus.rotation.x += 0.01;
-        torus.rotation.y += 0.005;
-        torus.rotation.z += 0.01;
-        
-        renderer.render(scene, camera);
-      };
-      
-      // Store references to objects
-      threeScene.current.scene = scene;
-      threeScene.current.camera = camera;
-      threeScene.current.renderer = renderer;
-      threeScene.current.geometry = geometry;
-      threeScene.current.material = material;
-      threeScene.current.torus = torus;
-      threeScene.current.animate = animate;
-      
-      // Begin animation
-      animate();
-      
-      // Handle window resize
-      const handleResize = () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      };
-      
-      window.addEventListener('resize', handleResize);
-      
-      // Cleanup function
-      return () => {
-        window.removeEventListener('resize', handleResize);
-        window.removeEventListener('resize', () => scroll.update());
-        scroll.destroy();
-        
-        // Clean up THREE.js resources
-        geometry.dispose();
-        material.dispose();
-        renderer.dispose();
-        
-        // Call onComplete callback if provided
-        if (onComplete) {
-          onComplete();
-        }
-      };
+      // Pulsing rings
+      for (let i = 0; i < 3; i++) {
+        const ring = document.createElement('div');
+        ring.className = `glowing-orb-ring ring${i+1}`;
+        container.appendChild(ring);
+      }
     }
-  }, [onComplete]);
+  }, []);
 
   // Text animation sequence with GSAP
   useEffect(() => {
@@ -259,54 +160,55 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
         defaults: { duration: 1, ease: "power3.out" }
       });
       
-      timeline
-        // Animate in the first text line
-        .from(".hero-text-1 .char", {
-          opacity: 0,
-          y: 100,
-          rotateX: -90,
-          stagger: 0.04,
-          duration: 1.2
-        })
-        // Glitch effect
-        .to(".hero-text-1 .char", {
-          color: "#ff00ff",
-          textShadow: "0 0 15px rgba(255, 0, 255, 0.8)",
-          stagger: 0.02,
-          duration: 0.2
-        })
-        .to(".hero-text-1 .char", {
-          color: "white",
-          textShadow: "0 0 0px rgba(255, 255, 255, 0)",
-          stagger: 0.02,
-          duration: 0.2
-        })
-        // Animate in the second text line
-        .from(".hero-text-2 .char", {
-          opacity: 0,
-          scale: 0,
-          filter: "blur(10px)",
-          stagger: 0.03,
-          duration: 1
-        }, "-=0.5")
-        // Animate in the third text line
-        .from(".hero-text-3 .char", {
-          opacity: 0,
-          x: -100,
-          stagger: 0.02,
-          duration: 0.8
-        }, "-=0.3")
-        // Add a colored glow pulsating effect
-        .to(".hero-text-container", {
-          boxShadow: "0 0 40px rgba(156, 39, 176, 0.7)",
-          duration: 2,
-          repeat: -1,
-          yoyo: true
-        }, "-=0.5");
+      // Create text animation for each heading
+      const title = textContainerRef.current.querySelector('.hero-text-1');
+      const subtitle = textContainerRef.current.querySelector('.hero-text-2');
+      const subsubtitle = textContainerRef.current.querySelector('.hero-text-3');
+      const cta = textContainerRef.current.querySelector('.cta-button');
+      
+      if (title && subtitle && subsubtitle && cta) {
+        timeline
+          .from(title, {
+            opacity: 0,
+            y: 50,
+            duration: 1.2
+          })
+          .to(title, {
+            color: "#ff00ff",
+            textShadow: "0 0 15px rgba(255, 0, 255, 0.8)",
+            duration: 0.2
+          })
+          .to(title, {
+            color: "white",
+            textShadow: "0 0 0px rgba(255, 255, 255, 0)",
+            duration: 0.2
+          })
+          .from(subtitle, {
+            opacity: 0,
+            y: 30,
+            duration: 1
+          }, "-=0.5")
+          .from(subsubtitle, {
+            opacity: 0,
+            y: 30,
+            duration: 0.8
+          }, "-=0.3")
+          .from(cta, {
+            opacity: 0,
+            scale: 0.8,
+            duration: 0.8
+          }, "-=0.2")
+          .to(".hero-text-container", {
+            boxShadow: "0 0 40px rgba(156, 39, 176, 0.7)",
+            duration: 2,
+            repeat: -1,
+            yoyo: true
+          }, "-=0.5");
+      }
     }
   }, []);
 
-  // Page transitions using GSAP instead of Barba.js
+  // Page transitions using GSAP
   useEffect(() => {
     // Create fade-in animation on component mount
     if (introContainerRef.current) {
@@ -328,11 +230,23 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
     };
   }, []);
 
+  // Handle click on Enter button
+  const handleEnterClick = () => {
+    if (onComplete && introContainerRef.current) {
+      // Create exit animation
+      gsap.to(introContainerRef.current, {
+        opacity: 0, 
+        duration: 0.8,
+        ease: "power2.in",
+        onComplete: onComplete
+      });
+    }
+  };
+
   return (
     <div 
       ref={introContainerRef} 
       className="hyper-intro-container"
-      data-scroll-container
     >
       {/* Custom particle background */}
       <div 
@@ -340,55 +254,28 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
         className="ultraviolent-particles-container"
       ></div>
       
-      {/* THREE.js canvas */}
-      <canvas 
-        ref={canvasRef} 
-        className="three-canvas"
-      ></canvas>
-      
-      {/* Text content with splitting.js */}
+      {/* Text content */}
       <div 
         ref={textContainerRef} 
         className="hero-text-container"
-        data-scroll
-        data-scroll-speed="2"
       >
-        <h1 
-          className="hero-text-1" 
-          data-splitting
-        >
+        <h1 className="hero-text-1">
           Unleash LaTeX Power
         </h1>
-        <h2 
-          className="hero-text-2" 
-          data-splitting
-        >
+        <h2 className="hero-text-2">
           With Artificial Intelligence
         </h2>
-        <h3 
-          className="hero-text-3" 
-          data-splitting
-        >
+        <h3 className="hero-text-3">
           From Thought to Publication in Seconds
         </h3>
         
         {/* Glowing orb effect - represents the "ultraviolent afterglow" */}
-        <div className="glowing-orb-container">
-          <div className="glowing-orb"></div>
-          <div className="glowing-orb-ring ring1"></div>
-          <div className="glowing-orb-ring ring2"></div>
-          <div className="glowing-orb-ring ring3"></div>
-        </div>
+        <div ref={orbContainerRef} className="glowing-orb-container"></div>
         
-        <div 
-          className="cta-container"
-          data-scroll
-          data-scroll-speed="1"
-          data-scroll-delay="0.1"
-        >
+        <div className="cta-container">
           <button 
             className="cta-button pulse-effect"
-            onClick={() => onComplete && onComplete()}
+            onClick={handleEnterClick}
             aria-label="Generate LaTeX with AI"
           >
             Generate Brilliance
@@ -398,11 +285,7 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
       
       {/* Animated info cards */}
       <div className="info-cards-container">
-        <div 
-          className="info-card"
-          data-scroll
-          data-scroll-speed="1.2"
-        >
+        <div className="info-card">
           <div className="card-icon">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M9 7H7V9H9V7Z" fill="currentColor" />
@@ -417,11 +300,7 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
           <p>Advanced AI algorithms transform your ideas into flawless LaTeX equations and structures instantly</p>
         </div>
         
-        <div 
-          className="info-card"
-          data-scroll
-          data-scroll-speed="1.5"
-        >
+        <div className="info-card">
           <div className="card-icon">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5C17 19.5 21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5ZM12 17C9.24 17 7 14.76 7 12C7 9.24 9.24 7 12 7C14.76 7 17 9.24 17 12C17 14.76 14.76 17 12 17ZM12 9C10.34 9 9 10.34 9 12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12C15 10.34 13.66 9 12 9Z" fill="currentColor" />
@@ -431,11 +310,7 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
           <p>Our AI understands the way you think, adapting to your research style and academic preferences over time</p>
         </div>
         
-        <div 
-          className="info-card"
-          data-scroll
-          data-scroll-speed="1.8"
-        >
+        <div className="info-card">
           <div className="card-icon">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M21 3H3C1.9 3 1 3.9 1 5V19C1 20.1 1.9 21 3 21H21C22.1 21 23 20.1 23 19V5C23 3.9 22.1 3 21 3ZM21 19H3V5H21V19Z" fill="currentColor" />
@@ -454,12 +329,7 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
       </div>
       
       {/* Scroll indicator */}
-      <div 
-        className="scroll-indicator"
-        data-scroll
-        data-scroll-speed="3"
-        data-scroll-position="bottom"
-      >
+      <div className="scroll-indicator">
         <span>ENTER THE VOID</span>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"></line>
