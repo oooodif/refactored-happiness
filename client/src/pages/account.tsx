@@ -360,40 +360,23 @@ export default function Account() {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button
-                  variant="outline"
-                  onClick={handleCancelSubscription}
-                  disabled={isLoading || session.tier === SubscriptionTier.Free}
-                >
-                  Cancel Subscription
-                </Button>
-                <div className="space-x-2">
-                  {session.tier === SubscriptionTier.Free ? (
-                    <Button
-                      onClick={() => setIsSubscriptionModalOpen(true)}
-                      disabled={isLoading}
-                    >
-                      Upgrade Plan
-                    </Button>
-                  ) : (
-                    <>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsSubscriptionModalOpen(true)}
-                        disabled={isLoading}
-                      >
-                        Change Plan
-                      </Button>
-                      <Button
-                        onClick={handleManageSubscription}
-                        disabled={isLoading}
-                      >
-                        Manage Subscription
-                      </Button>
-                    </>
-                  )}
-                </div>
+              <CardFooter className="flex justify-center">
+                {session.tier === SubscriptionTier.Free ? (
+                  <Button
+                    onClick={() => setIsSubscriptionModalOpen(true)}
+                    disabled={isLoading}
+                  >
+                    Upgrade Plan
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleManageSubscription}
+                    disabled={isLoading}
+                    className="px-8"
+                  >
+                    Manage Subscription
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           </div>
