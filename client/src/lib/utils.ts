@@ -191,3 +191,62 @@ export function isMobileDevice(): boolean {
   }
   return false;
 }
+
+/**
+ * Parse notes that may contain OMIT tags and determine processing strategy
+ * @param notes User's modification notes that might contain OMIT tags
+ * @returns Object with processed notes content and processing flags
+ */
+export function parseNotesWithOmitTags(notes: string): {
+  processedNotes: string;
+  containsOmitTags: boolean;
+  isStrictOmit: boolean;
+} {
+  if (!notes) {
+    return {
+      processedNotes: "",
+      containsOmitTags: false,
+      isStrictOmit: false
+    };
+  }
+
+  // Check if the entire content is wrapped in OMIT tags (strict omit case)
+  // Using dot-all pattern without 's' flag for better compatibility
+  const strictOmitPattern = /^\s*<OMIT>([\s\S]*?)<\/OMIT>\s*$/;
+  const strictOmitMatch = notes.match(strictOmitPattern);
+  
+  if (strictOmitMatch) {
+    return {
+      processedNotes: strictOmitMatch[1].trim(),
+      containsOmitTags: true,
+      isStrictOmit: true
+    };
+  }
+  
+  // Check for embedded OMIT tags in a mixed content request
+  const omitTagPattern = /<OMIT>([\s\S]*?)<\/OMIT>/g;
+  const hasOmitTags = omitTagPattern.test(notes);
+  
+  if (hasOmitTags) {
+    // Reset regex after testing
+    omitTagPattern.lastIndex = 0;
+    
+    // Replace OMIT tags with clearer instructions
+    const processedNotes = notes.replace(omitTagPattern, (match, content) => {
+      return `[REMOVE THIS CONTENT: "${content.trim()}"]`;
+    });
+    
+    return {
+      processedNotes,
+      containsOmitTags: true,
+      isStrictOmit: false
+    };
+  }
+  
+  // No OMIT tags found, return original notes
+  return {
+    processedNotes: notes,
+    containsOmitTags: false,
+    isStrictOmit: false
+  };
+}

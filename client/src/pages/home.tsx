@@ -8,7 +8,7 @@ import LatexOutput from "@/components/editor/latex-output";
 import PDFPreview from "@/components/editor/pdf-preview";
 import ErrorNotification from "@/components/dialogs/error-notification";
 import { generateLatex, compileLatex, saveDocument, extractTitleFromLatex, modifyLatex } from "@/lib/aiProvider";
-import { downloadPdf } from "@/lib/utils";
+import { downloadPdf, parseNotesWithOmitTags } from "@/lib/utils";
 import { TabItem, EditorState, ErrorNotificationData } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -490,8 +490,18 @@ export default function Home() {
     setEditorState(prev => ({ ...prev, isGenerating: true }));
     
     try {
-      // Call the API to modify the LaTeX with the existing content and modification notes
-      const result = await modifyLatex(editorState.latexContent, notes, isOmit);
+      // Parse notes for OMIT tags, including mixed content with both regular edits and OMIT tags
+      const { processedNotes, containsOmitTags, isStrictOmit } = parseNotesWithOmitTags(notes);
+      
+      // Use the parsed information to determine the right operation mode
+      // If isOmit is true from UI button click, respect it
+      // Otherwise use our smart detection to handle mixed content
+      const effectiveIsOmit = isOmit || isStrictOmit;
+      
+      console.log(`Modification request: isOmit=${isOmit}, containsOmitTags=${containsOmitTags}, isStrictOmit=${isStrictOmit}`);
+      
+      // Call the API to modify the LaTeX with the existing content and processed modification notes
+      const result = await modifyLatex(editorState.latexContent, processedNotes, effectiveIsOmit);
       
       setEditorState(prev => ({
         ...prev,
@@ -501,10 +511,12 @@ export default function Home() {
       }));
       
       toast({
-        title: isOmit ? "Content Removed" : "Content Modified",
-        description: isOmit 
+        title: effectiveIsOmit ? "Content Removed" : (containsOmitTags ? "Mixed Modification" : "Content Modified"),
+        description: effectiveIsOmit 
           ? "The specified content has been removed from your LaTeX." 
-          : "Your LaTeX has been modified according to your instructions.",
+          : (containsOmitTags 
+              ? "Your LaTeX has been modified with both regular changes and removals." 
+              : "Your LaTeX has been modified according to your instructions."),
       });
       
     } catch (error) {
