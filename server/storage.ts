@@ -152,6 +152,67 @@ export const storage = {
     }
   },
   
+  async getUserByVerificationToken(token: string): Promise<User | null> {
+    try {
+      const user = await db.query.users.findFirst({
+        where: (users) => eq(users.verificationToken, token)
+      });
+      
+      return user || null;
+    } catch (error) {
+      console.error('Get user by verification token error:', error);
+      return null;
+    }
+  },
+  
+  async verifyUserEmail(token: string): Promise<{
+    success: boolean;
+    user?: User;
+    error?: string;
+  }> {
+    try {
+      // Find user with the token
+      const user = await this.getUserByVerificationToken(token);
+      
+      if (!user) {
+        return {
+          success: false,
+          error: 'Invalid verification token'
+        };
+      }
+      
+      // Check if token is expired
+      if (user.verificationTokenExpiry && new Date(user.verificationTokenExpiry) < new Date()) {
+        return {
+          success: false,
+          error: 'Verification token expired'
+        };
+      }
+      
+      // Update user to mark email as verified and clear token
+      const [updatedUser] = await db.update(users)
+        .set({
+          emailVerified: true,
+          verificationToken: null,
+          verificationTokenExpiry: null,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, user.id))
+        .returning();
+      
+      return {
+        success: true,
+        user: updatedUser
+      };
+    } catch (error) {
+      console.error('Verify user email error:', error);
+      return {
+        success: false,
+        error: 'Failed to verify email'
+      };
+    }
+  },
+  
   async getUserByStripeCustomerId(customerId: string): Promise<User | null> {
     try {
       const user = await db.query.users.findFirst({
