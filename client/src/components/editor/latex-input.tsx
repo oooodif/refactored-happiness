@@ -129,8 +129,9 @@ export default function LatexInput({
               }`}
               onClick={() => {
                 if (notes.trim() && onModify && hasLatexContent) {
-                  // Call modify with isOmit=true
-                  onModify(notes.trim(), true);
+                  // Wrap the content in <OMIT> tags and send
+                  const omitContent = `<OMIT>${notes.trim()}</OMIT>`;
+                  onModify(omitContent, false);
                   setNotes("");
                 }
               }}
@@ -140,17 +141,15 @@ export default function LatexInput({
             </Button>
             <div className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 -top-16 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10 w-64 text-center">
               {hasLatexContent 
-                ? "Removes specific content from LaTeX. Use by typing text to remove in the notes field." 
+                ? "Marks specific content to be removed from your LaTeX document" 
                 : "Generate LaTeX content first to enable the OMIT function"}
               <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-800"></div>
             </div>
           </div>
           <div className="relative group">
             <Button
-              variant="outline"
-              size="sm"
-              className={`text-xs glass-card border border-gray-300 rounded px-3 py-1 transition-all duration-300 hover:shadow-md ${
-                hasLatexContent ? "hover:bg-blue-50 hover:border-blue-300 text-gray-700" : "text-gray-400 bg-gray-50 cursor-not-allowed"
+              className={`text-sm bg-gradient-to-r from-blue-500 to-blue-700 text-white transition-all duration-300 hover:shadow-md hover:translate-y-[-1px] ${
+                !hasLatexContent || !notes.trim() || generating ? "opacity-50 cursor-not-allowed" : ""
               }`}
               onClick={() => {
                 if (notes.trim() && onModify && hasLatexContent) {
@@ -161,12 +160,12 @@ export default function LatexInput({
               }}
               disabled={!notes.trim() || generating || !hasLatexContent}
             >
-              <span className={`font-mono mr-1 ${hasLatexContent ? "text-blue-600" : "text-gray-400"}`}>✏️</span> MODIFY
+              SEND
             </Button>
             <div className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 -top-16 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10 w-64 text-center">
               {hasLatexContent 
-                ? "Applies changes to LaTeX based on your instructions. Type what you want to change in the notes field." 
-                : "Generate LaTeX content first to enable the MODIFY function"}
+                ? "Sends your notes to update the LaTeX document" 
+                : "Generate LaTeX content first to enable this function"}
               <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-800"></div>
             </div>
           </div>
@@ -177,8 +176,8 @@ export default function LatexInput({
           ref={textareaRef}
           className="w-full h-full p-3 rounded-md border border-gray-300 glass-card font-mono text-sm resize-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg"
           placeholder={documentType === 'presentation' 
-            ? "Describe your slide presentation here. Our AI will convert your text into professional LaTeX slides. After generating, use the Notes field above to make specific modifications or remove content."
-            : "Enter your content in plain text - no LaTeX knowledge needed! After generating, use the Notes field to request changes (with MODIFY) or remove specific content (with OMIT). The AI handles all the LaTeX code for you."}
+            ? "Enter your presentation content here—paste it in or type away. No LaTeX knowledge needed! Our AI instantly converts your words into beautifully formatted slides; hit PDF Preview to generate a polished presentation in seconds.\n\nNeed a tiny tweak or omission? Drop a note in the field above after your LaTeX is generated."
+            : "Enter your content here—paste it in or type away. No LaTeX knowledge needed! Our AI instantly converts your words into clean, production-ready code; hit PDF Preview to generate a polished, fully formatted PDF in seconds.\n\nNeed a tiny tweak or omission? Drop a note in the field above after your LaTeX is generated."}
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
@@ -199,9 +198,12 @@ export default function LatexInput({
               Clear
             </Button>
             <Button
-              className="bg-gradient-to-r from-blue-500 to-blue-700 text-white transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
+              className={`bg-gradient-to-r from-blue-500 to-blue-700 text-white transition-all duration-300 hover:shadow-md hover:translate-y-[-1px] ${
+                (notes.trim() && hasLatexContent) ? "opacity-50 cursor-not-allowed" : ""
+              }`}
               onClick={onGenerate}
-              disabled={!isReady || generating}
+              disabled={!isReady || generating || (notes.trim() && hasLatexContent)}
+              title={notes.trim() && hasLatexContent ? "Clear notes field or use SEND to update existing LaTeX" : "Generate new LaTeX from input"}
             >
               {generating ? "Generating..." : "Generate LaTeX"}
             </Button>
