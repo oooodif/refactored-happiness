@@ -18,6 +18,13 @@ node scripts/prepare-railway-deploy.js
 - Updates the .npmignore file to exclude Docker-related patterns
 - Creates a log file for easy restoration
 
+**Files Found in This Project:**
+In our project, we've identified Docker-related files in the following locations:
+- `/node_modules/knex/scripts/docker-compose.yml`
+- `/node_modules/knex/scripts/stress-test/docker-compose.yml`
+
+These files were causing Railway to incorrectly use Docker instead of Nixpacks.
+
 ### 2. restore-railway-files.js
 
 This script restores renamed Docker files after deployment:
@@ -30,6 +37,22 @@ node scripts/restore-railway-files.js
 - Reads the log file created by prepare-railway-deploy.js
 - Restores all renamed files to their original names
 - Deletes the log file if all files were successfully restored
+
+## Technical Notes
+
+Both scripts are written as ES modules since the project is configured with `"type": "module"` in package.json. They use:
+
+```javascript
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get current script directory with ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+```
+
+This pattern is needed because `__dirname` and `__filename` are not available in ES modules by default.
 
 ## Deployment Process
 

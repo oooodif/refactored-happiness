@@ -3,8 +3,13 @@
  * by the prepare-railway-deploy.js script
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get current script directory with ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Path to the log file with renamed files
 const logFile = path.join(__dirname, 'railway-renamed-files.json');
