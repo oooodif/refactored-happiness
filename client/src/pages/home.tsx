@@ -574,7 +574,7 @@ export default function Home() {
   ];
 
   return (
-    <SiteLayout>
+    <SiteLayout seoTitle="AI LaTeX Generator - Create Professional LaTeX Documents with AI">
       <div className="h-full flex flex-col md:flex-row bg-gradient-soft">
         {/* Left Panel (Input) */}
         <div className="w-full md:w-1/2 h-full relative">
