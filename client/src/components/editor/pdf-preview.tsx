@@ -20,8 +20,18 @@ function formatData(pdfData: string | null, isHtml: boolean = false): string | n
     }
     
     // When data comes directly from the server, it might include characters that need to be fixed for base64
-    // Ensure we're working with clean base64 
+    // Ensure we're working with clean base64 - remove all whitespace, newlines, and any non-base64 chars
     let cleanBase64 = pdfData.replace(/[\r\n\s]/g, '');
+    
+    // Check if the cleaned base64 string is valid
+    try {
+      // This will throw if the string isn't valid base64
+      atob(cleanBase64);
+    } catch (error) {
+      console.error("Invalid base64 HTML data detected, attempting recovery");
+      // If there's an error, try a more aggressive cleaning
+      cleanBase64 = pdfData.replace(/[^A-Za-z0-9+/=]/g, '');
+    }
     
     // Add the prefix
     return `data:text/html;base64,${cleanBase64}`;
@@ -34,8 +44,18 @@ function formatData(pdfData: string | null, isHtml: boolean = false): string | n
   }
   
   // When data comes directly from the server, it might include characters that need to be fixed for base64
-  // Ensure we're working with clean base64
+  // Ensure we're working with clean base64 - remove all whitespace, newlines, and any non-base64 chars
   let cleanBase64 = pdfData.replace(/[\r\n\s]/g, '');
+  
+  // Check if the cleaned base64 string is valid
+  try {
+    // This will throw if the string isn't valid base64
+    atob(cleanBase64);
+  } catch (error) {
+    console.error("Invalid base64 data detected, attempting recovery");
+    // If there's an error, try a more aggressive cleaning
+    cleanBase64 = pdfData.replace(/[^A-Za-z0-9+/=]/g, '');
+  }
   
   // Add the prefix
   return `data:application/pdf;base64,${cleanBase64}`;
@@ -138,15 +158,38 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
                   {new Date().toLocaleString()}
                 </p>
               </div>
-              {errorMessage && (
-                <Button 
-                  onClick={handleGeneratePdf}
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
-                  disabled={isGenerating}
-                >
-                  {isGenerating ? "Regenerating..." : "Try Regenerating PDF"}
-                </Button>
-              )}
+              <div className="flex space-x-2">
+                {pdfData && !errorMessage && !isGenerating && (
+                  <Button 
+                    onClick={() => {
+                      try {
+                        const filename = title || "GeneratedDocument";
+                        import('@/lib/utils').then(({ downloadPdf }) => {
+                          downloadPdf(pdfData, filename, isHtml);
+                        });
+                      } catch (err) {
+                        console.error("Error during PDF download:", err);
+                        setErrorMessage("Failed to download document");
+                      }
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white text-sm"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    {isHtml ? "Download HTML" : "Download PDF"}
+                  </Button>
+                )}
+                {errorMessage && (
+                  <Button 
+                    onClick={handleGeneratePdf}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                    disabled={isGenerating}
+                  >
+                    {isGenerating ? "Regenerating..." : "Try Regenerating PDF"}
+                  </Button>
+                )}
+              </div>
             </div>
             
             {/* Different content based on state */}
