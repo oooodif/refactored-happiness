@@ -102,7 +102,7 @@ export default function Login() {
   };
 
   return (
-    <SiteLayout fullHeight={false}>
+    <SiteLayout fullHeight={false} seoTitle="Sign In to AI LaTeX Generator - Access Your Account">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-md mx-auto">
           <Card>

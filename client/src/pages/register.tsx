@@ -135,7 +135,7 @@ export default function Register() {
   };
 
   return (
-    <SiteLayout fullHeight={false}>
+    <SiteLayout fullHeight={false} seoTitle="Register for AI LaTeX Generator - Create an Account">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-md mx-auto">
           <Card>
