@@ -158,17 +158,93 @@ export default function Home() {
     }
   }, []);
   
-  // Monitor keyboard visibility changes (for debugging purposes only)
+  // Beautiful keyboard dismissal animation with parallax effects
   useEffect(() => {
-    // Only run this on mobile devices
-    if (window.innerWidth >= 768) return;
+    // Only run on mobile devices in portrait mode
+    const isMobilePortrait = () => {
+      return window.innerWidth < 768 && window.innerHeight > window.innerWidth;
+    };
+    
+    if (!isMobilePortrait()) return;
     
     // Variables to track keyboard state
     let isKeyboardVisible = false;
     let previousHeight = window.innerHeight;
+    let initialHeight = window.innerHeight;
+    
+    // Function to apply smooth scroll & parallax animations
+    function animateKeyboardDismiss() {
+      // Get elements that should have parallax effects
+      const header = document.querySelector('header');
+      const mainContainer = document.querySelector('main');
+      const floatingRect1 = document.getElementById('FloatingRectInput');
+      const floatingRect2 = document.getElementById('FloatingRectOutput');
+      
+      // Apply parallax animations to different elements with varying depths
+      if (header) {
+        header.classList.add('header-parallax-animate');
+        header.classList.add('stagger-item-1');
+        
+        // Remove animation classes after animation completes
+        setTimeout(() => {
+          header.classList.remove('header-parallax-animate');
+          header.classList.remove('stagger-item-1');
+        }, 800);
+      }
+      
+      if (mainContainer) {
+        mainContainer.classList.add('parallax-container');
+        
+        // Remove after animation completes
+        setTimeout(() => {
+          mainContainer.classList.remove('parallax-container');
+        }, 800);
+      }
+      
+      // Apply beautiful scroll reveal animation to the floating UI elements
+      if (floatingRect1) {
+        floatingRect1.classList.add('scroll-reveal-animate');
+        floatingRect1.classList.add('stagger-item-2');
+        floatingRect1.classList.add('parallax-layer-0');
+        
+        // Add subtle ripple effect
+        floatingRect1.classList.add('ripple-out-animate');
+        
+        // Remove animation classes after animation completes
+        setTimeout(() => {
+          floatingRect1.classList.remove('scroll-reveal-animate');
+          floatingRect1.classList.remove('stagger-item-2');
+          floatingRect1.classList.remove('parallax-layer-0');
+          floatingRect1.classList.remove('ripple-out-animate');
+        }, 800);
+      }
+      
+      if (floatingRect2) {
+        floatingRect2.classList.add('scroll-reveal-animate');
+        floatingRect2.classList.add('stagger-item-3');
+        floatingRect2.classList.add('parallax-layer-1');
+        
+        // Remove animation classes after animation completes
+        setTimeout(() => {
+          floatingRect2.classList.remove('scroll-reveal-animate');
+          floatingRect2.classList.remove('stagger-item-3');
+          floatingRect2.classList.remove('parallax-layer-1');
+        }, 800);
+      }
+      
+      // Perform smooth scroll to top with easing
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'smooth'
+      });
+    }
     
     // Detect keyboard appearance/disappearance by monitoring window height changes
     function checkKeyboard() {
+      // Only run checks in portrait mode
+      if (!isMobilePortrait()) return;
+      
       // If the window height suddenly decreased significantly, keyboard appeared
       if (window.innerHeight < previousHeight * 0.75) {
         if (!isKeyboardVisible) {
@@ -178,8 +254,11 @@ export default function Home() {
       } 
       // If the window height increased back close to original, keyboard disappeared
       else if (isKeyboardVisible && window.innerHeight > previousHeight * 0.9) {
-        console.log("Keyboard disappeared");
+        console.log("Keyboard disappeared - triggering animations");
         isKeyboardVisible = false;
+        
+        // Trigger the beautiful parallax animation when keyboard is dismissed
+        animateKeyboardDismiss();
       }
       
       previousHeight = window.innerHeight;
@@ -189,9 +268,27 @@ export default function Home() {
     // Use multiple event types for better detection
     window.addEventListener('resize', checkKeyboard);
     
+    // Also detect keyboard dismissal via input blur events
+    const inputFields = document.querySelectorAll('input, textarea');
+    inputFields.forEach(input => {
+      input.addEventListener('blur', () => {
+        // When focus leaves any input on mobile, keyboard likely dismissed
+        if (isKeyboardVisible && isMobilePortrait()) {
+          console.log("Input blur detected - keyboard likely dismissed");
+          isKeyboardVisible = false;
+          
+          // Small delay to ensure keyboard is fully dismissed before animation
+          setTimeout(animateKeyboardDismiss, 100);
+        }
+      });
+    });
+    
     // Clean up event listeners
     return () => {
       window.removeEventListener('resize', checkKeyboard);
+      inputFields.forEach(input => {
+        input.removeEventListener('blur', () => {});
+      });
     };
   }, []);
   
