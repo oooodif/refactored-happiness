@@ -98,7 +98,7 @@ export default function AuthRequiredDialog() {
             </Button>
             <Button 
               onClick={handleSignUp}
-              className="flex-1 sm:flex-auto"
+              className="flex-1 sm:flex-auto bg-primary text-white hover:bg-primary/90"
             >
               Create Account
             </Button>
