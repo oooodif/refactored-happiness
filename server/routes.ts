@@ -141,6 +141,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next();
     });
   }
+  // Anonymous user status endpoint
+  app.get("/api/anonymous/status", trackAnonymousUser, async (req: Request, res: Response) => {
+    try {
+      // If user is authenticated, they're not anonymous
+      if (req.session.userId) {
+        return res.status(200).json({
+          isAnonymous: false,
+          hasRemainingUsage: false
+        });
+      }
+      
+      // Check fingerprint
+      const fingerprint = req.headers["x-device-fingerprint"] as string;
+      
+      if (!fingerprint) {
+        return res.status(200).json({
+          isAnonymous: true,
+          hasRemainingUsage: true, // Default to true if we can't track them
+          noFingerprint: true
+        });
+      }
+      
+      // Check if anonymous user has remaining usage
+      const hasRemainingUsage = await storage.hasRemainingAnonymousUsage(fingerprint);
+      
+      return res.status(200).json({
+        isAnonymous: true,
+        hasRemainingUsage
+      });
+    } catch (error) {
+      console.error("Error checking anonymous status:", error);
+      return res.status(500).json({ message: "Error checking anonymous status" });
+    }
+  });
+  
   // Authentication routes
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     const { username, email, password } = req.body;

@@ -101,7 +101,8 @@ export const getQueryFn: <T>(options: {
             headers: {
               'Accept': 'application/json',
               'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma': 'no-cache'
+              'Pragma': 'no-cache',
+              'X-Device-Fingerprint': fingerprint // Add fingerprint to identify anonymous users
             }
           });
           
