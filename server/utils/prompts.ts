@@ -163,13 +163,16 @@ DOCUMENT_TYPES = [
 **Enhancements**:
 - Uses beamer document class instead of article
 - Creates frame environments for each slide
-- Adds appropriate theme, color scheme, and navigation
-- Formats bullet points and progressive reveals
-- Handles overlay specifications for animations
+- Adds appropriate theme, color scheme, and navigation elements
+- Formats bullet points and supports progressive reveals using overlays
+- Handles overlay specifications for simple animations or incremental reveals
 - Optimizes images and diagrams for projection
-- Implements title slides and section dividers
+- Implements title slides with titlepage and section dividers
+- Automatically splits large text into multiple slides to avoid overcrowding
+- Maintains logical flow by creating slide titles such as Part I, Part II, etc.
+- Encourages the use of short paragraphs or bullet points per slide
 - Perfect for academic talks, business presentations, or lecture materials
-- Ideal for users who need to convert content outlines into presentation format
+- Ideal for users who need to convert content outlines or longer documents into structured presentations
 
 ### Report Document Type
 DOCUMENT_TYPES = [
