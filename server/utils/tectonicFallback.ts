@@ -75,7 +75,7 @@ function extractMainContent(latexContent: string): string {
       // Replace simple formatting
       .replace(/\\textbf{([^}]+)}/g, '<strong>$1</strong>')
       .replace(/\\textit{([^}]+)}/g, '<em>$1</em>')
-      .replace(/\\\underline{([^}]+)}/g, '<u>$1</u>')
+      .replace(/\\underline{([^}]+)}/g, '<u>$1</u>')
       // Handle paragraphs
       .replace(/\n\n+/g, '<p></p>')
       // Replace \item with list items

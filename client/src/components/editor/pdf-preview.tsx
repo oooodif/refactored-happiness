@@ -19,8 +19,12 @@ function formatData(pdfData: string | null, isHtml: boolean = false): string | n
       return pdfData;
     }
     
+    // When data comes directly from the server, it might include characters that need to be fixed for base64
+    // Ensure we're working with clean base64 
+    let cleanBase64 = pdfData.replace(/[\r\n\s]/g, '');
+    
     // Add the prefix
-    return `data:text/html;base64,${pdfData}`;
+    return `data:text/html;base64,${cleanBase64}`;
   } 
   
   // For PDF content
@@ -29,8 +33,12 @@ function formatData(pdfData: string | null, isHtml: boolean = false): string | n
     return pdfData;
   }
   
+  // When data comes directly from the server, it might include characters that need to be fixed for base64
+  // Ensure we're working with clean base64
+  let cleanBase64 = pdfData.replace(/[\r\n\s]/g, '');
+  
   // Add the prefix
-  return `data:application/pdf;base64,${pdfData}`;
+  return `data:application/pdf;base64,${cleanBase64}`;
 }
 
 export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = false }: PDFPreviewProps) {
