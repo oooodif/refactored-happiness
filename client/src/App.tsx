@@ -10,6 +10,7 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 import Account from "@/pages/account";
 import Subscribe from "@/pages/subscribe";
+import RefillPage from "@/pages/refill";
 import DocumentHistory from "@/pages/document-history";
 import VerifyEmail from "@/pages/verify-email";
 import Success from "@/pages/success";
@@ -64,6 +65,7 @@ function Router() {
       <Route path="/register" component={Register} />
       <Route path="/account" component={Account} />
       <Route path="/subscribe" component={Subscribe} />
+      <Route path="/refill" component={RefillPage} />
       <Route path="/success" component={Success} />
       <Route path="/history" component={DocumentHistory} />
       <Route path="/verify-email" component={VerifyEmail} />
