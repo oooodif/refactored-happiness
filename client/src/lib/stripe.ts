@@ -4,13 +4,13 @@ import { apiRequest } from "./queryClient";
 import { SubscriptionTier } from "@shared/schema";
 
 // Check for Stripe key but don't throw an error
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  console.warn('No Stripe key found (VITE_STRIPE_PUBLIC_KEY). Payment features will be limited.');
+if (!import.meta.env.STRIPE_PUBLISHABLE_KEY) {
+  console.warn('No Stripe key found (STRIPE_PUBLISHABLE_KEY). Payment features will be limited.');
 }
 
 // Create a dummy promise for development if no key is available
-export const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
+export const stripePromise = import.meta.env.STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(import.meta.env.STRIPE_PUBLISHABLE_KEY)
   : Promise.resolve(null);
 
 export async function createSubscription(tier: SubscriptionTier): Promise<{ sessionId: string; url: string }> {
