@@ -186,6 +186,26 @@ export default function Header() {
   // Perform a force check when the header mounts
   useEffect(() => {
     forceAuthCheck();
+    
+    // Set up periodic checks
+    const intervalId = setInterval(() => {
+      console.log("Performing periodic auth check");
+      forceAuthCheck();
+    }, 60000); // Check every minute
+    
+    // Check on window focus
+    const handleFocus = () => {
+      console.log("Window focused - checking auth");
+      forceAuthCheck();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    // Clean up
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -310,17 +330,29 @@ export default function Header() {
           </Button>
         </div>
         <div className="flex items-center space-x-4">
-          {session.isAuthenticated ? (
+          {session.isLoading ? (
+            // Loading state
             <>
-              <span className={`text-sm ${getUsageColor(session.usage.current, session.usage.limit)}`}>
-                {session.usage.current} / {session.usage.limit} generations
+              <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+              <span className="text-sm text-gray-600">Loading...</span>
+            </>
+          ) : session.isAuthenticated && session.user ? (
+            // Authenticated state
+            <>
+              <span className={`text-sm ${getUsageColor(
+                session.usage?.current || 0, 
+                session.usage?.limit || 3
+              )}`}>
+                {session.usage?.current || 0} / {session.usage?.limit || 3} generations
               </span>
+              
               {location !== "/history" && (
                 <Link href="/history" className="text-sm text-gray-600 hover:text-gray-800 font-medium">
                   History
                 </Link>
               )}
-              {/* Simple buttons for logged-in user actions */}
+              
+              {/* Account button with username */}
               <Button
                 variant="ghost"
                 className="text-sm text-gray-600 hover:text-gray-800 font-medium"
@@ -329,6 +361,7 @@ export default function Header() {
                 {session.user?.username || "My Account"}
               </Button>
               
+              {/* Logout button */}
               <Button
                 type="button" 
                 variant="ghost"
@@ -337,14 +370,17 @@ export default function Header() {
               >
                 Logout
               </Button>
+              
+              {/* Plan button */}
               <Button 
                 onClick={() => setShowSubscriptionModal(true)}
-                className={session.tier === "free" ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"}
+                className={session.tier === SubscriptionTier.Free ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"}
               >
-                {session.tier === "free" ? "Upgrade" : "Manage Plan"}
+                {session.tier === SubscriptionTier.Free ? "Upgrade" : "Manage Plan"}
               </Button>
             </>
           ) : (
+            // Not authenticated state
             <>
               <span className="text-sm text-gray-600">
                 3 generations left

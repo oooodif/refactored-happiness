@@ -216,11 +216,37 @@ function App() {
   useEffect(() => {
     console.log("INITIAL AUTH CHECK STARTED");
     
-    // Perform initial check
+    // Check if we have data in localStorage as a quick temporary solution
+    try {
+      const userLoggedIn = localStorage.getItem('userLoggedIn');
+      const userDataStr = localStorage.getItem('userData');
+      
+      if (userLoggedIn === 'true' && userDataStr) {
+        // We have some basic data - set a temporary session while we verify
+        const userData = JSON.parse(userDataStr);
+        console.log("Found user data in localStorage:", userData);
+        
+        // Set a temporary authenticated session with minimal data
+        // This prevents UI flickering while we do a proper check
+        setSession(prev => ({
+          ...prev,
+          isAuthenticated: true,
+          isLoading: true, // Still loading, but at least authenticated
+          user: {
+            ...prev.user,
+            username: userData.username
+          }
+        }));
+      }
+    } catch (e) {
+      console.error("Error reading from localStorage:", e);
+    }
+    
+    // Perform proper server-side check immediately
     checkAndUpdateSession();
     
     // Setup polling for auth status (backup mechanism)
-    const checkIntervalMs = 10000; // 10 seconds
+    const checkIntervalMs = 60000; // 1 minute (reduced frequency)
     const intervalId = window.setInterval(checkAndUpdateSession, checkIntervalMs);
     
     // Proper cleanup
