@@ -66,6 +66,12 @@ export const stripeService = {
         userId: userId.toString(),
         tier,
       },
+      subscription_data: {
+        metadata: {
+          userId: userId.toString(),
+          tier,
+        }
+      },
     });
 
     return session;
@@ -113,6 +119,12 @@ export const stripeService = {
       metadata: {
         userId: userId.toString(),
         tier,
+      },
+      subscription_data: {
+        metadata: {
+          userId: userId.toString(),
+          tier,
+        }
       },
     });
 
