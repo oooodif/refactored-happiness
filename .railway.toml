@@ -3,8 +3,10 @@
 [build]
 builder       = "NIXPACKS"
 buildCommand  = "npm run build"          # runs: vite build
+# This command runs AFTER build finishes. We'll verify Tectonic installed:
+postBuildCommand = "which tectonic && tectonic --version"
 
-# Tell Nixpacks to install Tectonic
+# Tell Nixpacks to install Tectonic from the Nix package repository
 [build.nixpacks]
 pkgs = ["tectonic"]
 
@@ -16,7 +18,7 @@ preDeployCommand = "npm run db:push"
 startCommand  = "NODE_ENV=production tsx server/index.ts"
 
 # 3. Healthcheck + restart policy
-healthcheckPath        = "/health"
-healthcheckTimeout     = 180            # seconds
-restartPolicyType      = "ON_FAILURE"
+healthcheckPath         = "/health"
+healthcheckTimeout      = 180            # seconds
+restartPolicyType       = "ON_FAILURE"
 restartPolicyMaxRetries = 10
