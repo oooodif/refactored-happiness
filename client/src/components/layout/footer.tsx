@@ -84,10 +84,6 @@ export default function Footer() {
             <Link href="/auth" className="text-sm text-gray-600 hover:text-gray-800">
               Sign In / Register
             </Link>
-            <span className="text-gray-400">|</span>
-            <Link href="/privacy-policy" className="text-sm text-gray-600 hover:text-gray-800">
-              Privacy Policy
-            </Link>
           </div>
         </div>
       </div>
