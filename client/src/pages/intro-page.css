@@ -1,0 +1,47 @@
+/* Intro Page Container */
+.intro-page-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #0f0514;
+  transition: opacity 1s ease-out;
+}
+
+/* Fade out animation when complete */
+.intro-page-container.fade-out {
+  opacity: 0;
+}
+
+/* Skip intro button */
+.skip-intro-button {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  padding: 0.5rem 1.25rem;
+  background: rgba(25, 10, 41, 0.4);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(174, 77, 255, 0.3);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 50px;
+  z-index: 10;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.skip-intro-button:hover {
+  background: rgba(174, 77, 255, 0.3);
+  box-shadow: 0 0 15px rgba(174, 77, 255, 0.5);
+}
+
+/* Media query for mobile devices */
+@media (max-width: 768px) {
+  .skip-intro-button {
+    top: 1rem;
+    right: 1rem;
+    padding: 0.4rem 1rem;
+    font-size: 0.8rem;
+  }
+}
