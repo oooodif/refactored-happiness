@@ -29,6 +29,57 @@
       // Run on page load and when screen size changes
       window.addEventListener('DOMContentLoaded', updateViewportSettings);
       window.addEventListener('resize', updateViewportSettings);
+      
+      // Global iOS keyboard scroll fix (supplements React component-specific fixes)
+      document.addEventListener('DOMContentLoaded', function() {
+        // Only apply on mobile devices
+        if (window.innerWidth >= 768) return;
+        
+        // Variables to track keyboard visibility
+        let isKeyboardVisible = false;
+        let initialViewportHeight = window.innerHeight;
+        
+        // Smooth scroll function with native animation
+        function smoothScrollToTop() {
+          window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'smooth'
+          });
+        }
+        
+        // Track input field focus/blur events
+        const inputFields = document.querySelectorAll('input, textarea');
+        
+        // Handle input field focus
+        inputFields.forEach(input => {
+          input.addEventListener('focus', () => {
+            isKeyboardVisible = true;
+          });
+          
+          input.addEventListener('blur', () => {
+            // When blurring any input, keyboard is probably hiding
+            if (isKeyboardVisible) {
+              isKeyboardVisible = false;
+              // Delay for iOS keyboard animation
+              setTimeout(smoothScrollToTop, 50);
+            }
+          });
+        });
+        
+        // Listen for resize events which might indicate keyboard appearance/disappearance
+        window.addEventListener('resize', () => {
+          // If height returns to normal (keyboard dismissed)
+          if (isKeyboardVisible && window.innerHeight >= initialViewportHeight * 0.9) {
+            isKeyboardVisible = false;
+            setTimeout(smoothScrollToTop, 50);
+          } 
+          // If height decreases significantly (keyboard appeared)
+          else if (window.innerHeight < initialViewportHeight * 0.75) {
+            isKeyboardVisible = true;
+          }
+        });
+      });
     </script>
     <title>AI LaTeX Generator - Create Academic Documents & Presentations</title>
     <meta name="description" content="Generate professional LaTeX documents with AI assistance. Create papers, slides, and academic content with ease using our LaTeX generator tool." />

@@ -158,6 +158,63 @@ export default function Home() {
     }
   }, []);
   
+  // Fix for iOS Safari keyboard scroll issue
+  useEffect(() => {
+    // Only run this on mobile devices
+    if (window.innerWidth >= 768) return;
+    
+    // Variables to track keyboard state
+    let isKeyboardVisible = false;
+    let previousHeight = window.innerHeight;
+    
+    // Function to smoothly scroll to top
+    function smoothScrollToTop() {
+      const scrollOptions = {
+        top: 0,
+        left: 0,
+        behavior: 'smooth' as const
+      };
+      
+      window.scrollTo(scrollOptions);
+    }
+    
+    // Detect keyboard appearance/disappearance by monitoring window height changes
+    function checkKeyboard() {
+      // If the window height suddenly decreased significantly, keyboard appeared
+      if (window.innerHeight < previousHeight * 0.75) {
+        isKeyboardVisible = true;
+      } 
+      // If the window height increased back close to original, keyboard disappeared
+      else if (isKeyboardVisible && window.innerHeight > previousHeight * 0.9) {
+        isKeyboardVisible = false;
+        
+        // Add a small delay to ensure the OS keyboard animations complete
+        setTimeout(() => {
+          smoothScrollToTop();
+        }, 50);
+      }
+      
+      previousHeight = window.innerHeight;
+    }
+    
+    // iOS Safari doesn't consistently fire resize events during keyboard show/hide
+    // Use multiple event types for better detection
+    window.addEventListener('resize', checkKeyboard);
+    document.addEventListener('focusout', () => {
+      // When focus leaves inputs (keyboard likely dismissed)
+      if (isKeyboardVisible) {
+        isKeyboardVisible = false;
+        setTimeout(smoothScrollToTop, 50);
+      }
+    });
+    
+    // Clean up event listeners
+    return () => {
+      window.removeEventListener('resize', checkKeyboard);
+      document.removeEventListener('focusout', () => {});
+    };
+  }, []);
+  
   // Check localStorage for preselected template when coming from template URL
   const getInitialDocumentType = () => {
     try {
