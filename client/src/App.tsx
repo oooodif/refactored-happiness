@@ -17,6 +17,7 @@ import Success from "@/pages/success";
 import UIPlayground from "@/pages/ui-playground";
 import TemplateRedirect from "@/pages/template-redirect";
 import PrivacyPolicy from "@/pages/privacy-policy";
+import IntroPage from "@/pages/intro-page";
 import NotFound from "@/pages/not-found";
 
 // Components
@@ -64,6 +65,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/intro" component={IntroPage} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/account" component={Account} />
