@@ -8,7 +8,7 @@ buildCommand  = "chmod +x ./build.sh && ./build.sh"  # Run our custom script tha
 preDeployCommand = "npm run db:push"
 
 # 2. Boot your server (tsx compiles TypeScript onthefly)
-startCommand  = "NODE_ENV=production tsx server/index.ts"
+startCommand  = "npx tsx server/index.ts"
 
 # 3. Healthcheck + restart policy
 healthcheckPath        = "/health"
@@ -19,3 +19,4 @@ restartPolicyMaxRetries = 10
 # 4. Environment variables for Railway-specific build
 [variables]
 NIXPACKS_PKGS = "fontconfig fontconfig-dev harfbuzz harfbuzz-dev freetype freetype-dev icu texlive-fonts-recommended texlive-fonts-extra texlive-latex-base texlive-latex-recommended"
+NODE_ENV = "production"
