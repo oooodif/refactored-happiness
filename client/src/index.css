@@ -47,10 +47,7 @@
 .stagger-item-4 { animation-delay: 0.3s; }
 .stagger-item-5 { animation-delay: 0.4s; }
 
-/* Parallax layers */
-.parallax-layer-0 { transform: translateZ(0); }
-.parallax-layer-1 { transform: translateZ(-10px); }
-.parallax-container { perspective: 1000px; }
+/* Removed parallax effects as requested */
 
 /* Locomotive Scroll styles */
 html.has-scroll-smooth {

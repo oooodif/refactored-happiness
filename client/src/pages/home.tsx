@@ -158,44 +158,90 @@ export default function Home() {
     }
   }, []);
   
-  // Ultra-robust keyboard dismissal detection and scrolling with Locomotive Scroll
+  // Simple keyboard dismissal and auto scroll effect without any complex libraries
   useEffect(() => {
-    // Import dynamically to avoid SSR issues
-    import('../lib/mobile-keyboard-helper').then((module) => {
-      const getMobileKeyboardHelper = module.default;
-      
-      // Add animation attributes to UI elements
-      const header = document.querySelector('header');
-      const inputPanel = document.getElementById('FloatingRectInput');
-      const outputPanel = document.getElementById('FloatingRectOutput');
-      
-      if (header) header.setAttribute('data-animate-on-keyboard-dismiss', 'true');
-      if (inputPanel) {
-        inputPanel.setAttribute('data-animate-on-keyboard-dismiss', 'true');
-        inputPanel.setAttribute('data-stagger', 'true');
-      }
-      if (outputPanel) {
-        outputPanel.setAttribute('data-animate-on-keyboard-dismiss', 'true');
-        outputPanel.setAttribute('data-stagger', 'true');
-      }
-      
-      // Configure and initialize the keyboard helper
-      const keyboardHelper = getMobileKeyboardHelper({
-        debug: true, // Enable debug logs
-        mobileBreakpoint: 768,
-        animationDuration: 800,
-        animateUI: true,
-        useLocomotiveScroll: true
+    // Only run on mobile
+    if (window.innerWidth >= 768) return;
+    
+    console.log("Setting up simple keyboard dismissal detection");
+    
+    // Variables to track keyboard state
+    let isKeyboardOpen = false;
+    let initialHeight = window.innerHeight;
+    let keyboardDismissed = false;
+    
+    // Simple vanilla scroll to top function
+    const scrollToTop = () => {
+      // Scroll smoothly to the top - simple but effective
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'smooth'
       });
       
-      // Initialize the helper
-      keyboardHelper.init();
+      // Fallback to ensure we get to the top
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0; // For Safari
+        document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE
+      }, 200);
+    };
+    
+    // DETECTION METHOD 1: Input focus/blur
+    document.addEventListener('focusin', (e) => {
+      if (e.target instanceof HTMLElement && 
+         (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+        console.log("Input focused - keyboard likely visible");
+        isKeyboardOpen = true;
+      }
+    }, true);
+    
+    document.addEventListener('focusout', (e) => {
+      if (e.target instanceof HTMLElement && 
+         (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+        console.log("Input blurred - keyboard likely dismissed");
+        
+        // Wait a moment to ensure keyboard is dismissed
+        setTimeout(() => {
+          if (isKeyboardOpen) {
+            isKeyboardOpen = false;
+            keyboardDismissed = true;
+            scrollToTop();
+          }
+        }, 150);
+      }
+    }, true);
+    
+    // DETECTION METHOD 2: Window resize for keyboard
+    window.addEventListener('resize', () => {
+      // Keyboard appearing
+      if (!isKeyboardOpen && window.innerHeight < initialHeight * 0.8) {
+        console.log("Window height decreased - keyboard detected");
+        isKeyboardOpen = true;
+      }
       
-      // Clean up on component unmount
-      return () => {
-        keyboardHelper.destroy();
-      };
+      // Keyboard disappearing
+      if (isKeyboardOpen && window.innerHeight > initialHeight * 0.9) {
+        console.log("Window height increased - keyboard dismissed");
+        isKeyboardOpen = false;
+        keyboardDismissed = true;
+        scrollToTop();
+      }
     });
+    
+    // Keep track of initial height (updated periodically)
+    setInterval(() => {
+      if (!isKeyboardOpen) {
+        initialHeight = window.innerHeight;
+      }
+    }, 2000);
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener('focusin', () => {});
+      document.removeEventListener('focusout', () => {});
+      window.removeEventListener('resize', () => {});
+    };
   }, []);
   
   // Check localStorage for preselected template when coming from template URL
