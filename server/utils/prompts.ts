@@ -147,7 +147,8 @@ DOCUMENT_TYPES = [
 **Purpose**: Create academic articles with proper title and section formatting.
 **Enhancements**:
 - Implements title via \title{} and \maketitle. Inside the brackets for \title{}, create a title that is descriptive and concise
-- Implements author via \author{}
+- Implements author via \author{} only if an author name is explicitly provided in the user's content. DO NOT use "Your Name" as a placeholder
+- If no author name is provided by the user, OMIT the \author{} command completely
 - Implements date via \date{\today}
 - Adds sectioning with \section, \subsection, and \subsubsection
 - Includes page numbering and appropriate margins

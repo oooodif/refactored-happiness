@@ -170,7 +170,7 @@ export default function Home() {
     } catch (error) {
       console.error("Error reading from localStorage:", error);
     }
-    return "basic"; // Default document type
+    return "article"; // Default document type is now Article instead of Basic
   };
 
   const [editorState, setEditorState] = useState<EditorState>({
