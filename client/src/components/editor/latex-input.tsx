@@ -1,7 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { DOCUMENT_TYPES, LATEX_TEMPLATES } from "@/lib/constants";
+import { UserContext } from "@/App";
+import { useAnonymousStatus } from "@/hooks/use-anonymous-status";
+import AnonymousUserPopup from "@/components/dialogs/anonymous-user-popup";
 
 interface LatexInputProps {
   value: string;
@@ -28,6 +31,16 @@ export default function LatexInput({
   const notesInputRef = useRef<HTMLInputElement>(null);
   const [isReady, setIsReady] = useState(true);
   const [notes, setNotes] = useState("");
+  
+  // Anonymous user popup state
+  const [showAnonymousPopup, setShowAnonymousPopup] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const { session } = useContext(UserContext);
+  const anonymousStatus = useAnonymousStatus();
+  
+  // Check if the user is anonymous
+  const isAnonymous = !session?.user && anonymousStatus.data?.isAnonymous;
+  const hasRemainingUsage = anonymousStatus.data?.hasRemainingUsage ?? false;
 
   const insertTemplate = (templateId: string) => {
     if (!textareaRef.current) return;
@@ -67,6 +80,24 @@ export default function LatexInput({
   useEffect(() => {
     setIsReady(value.trim().length > 0);
   }, [value]);
+  
+  // Handle anonymous user popup display
+  const handleTextareaFocus = () => {
+    // Only show popup for anonymous users who haven't interacted yet
+    if (isAnonymous && !hasInteracted) {
+      setShowAnonymousPopup(true);
+      setHasInteracted(true);
+      
+      // Store in localStorage that the user has seen the popup
+      localStorage.setItem('anonymous_popup_shown', 'true');
+    }
+  };
+  
+  // Check if popup has been shown previously
+  useEffect(() => {
+    const popupShown = localStorage.getItem('anonymous_popup_shown') === 'true';
+    setHasInteracted(popupShown);
+  }, []);
 
   return (
     <div className="w-full h-full flex flex-col border-r border-gray-200">
@@ -197,7 +228,16 @@ export default function LatexInput({
             : "Paste or type your content here—no LaTeX knowledge required! Our AI will instantly convert it into clean, publication-ready LaTeX code. Click Generate LaTeX and preview your fully formatted PDF in seconds.\n\nNeed a quick tweak or omission? Simply add a note above after generating your LaTeX."}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={handleTextareaFocus}
         />
+        
+        {/* Anonymous User Popup */}
+        {showAnonymousPopup && isAnonymous && (
+          <AnonymousUserPopup 
+            usageRemaining={hasRemainingUsage}
+            onClose={() => setShowAnonymousPopup(false)}
+          />
+        )}
       </div>
       <div className="p-4 glass border-t border-gray-200">
         <div className="flex items-center justify-between">

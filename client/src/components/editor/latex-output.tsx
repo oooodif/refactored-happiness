@@ -58,15 +58,7 @@ export default function LatexOutput({
       <div className="flex-1 overflow-auto p-4 bg-gray-50">
         <pre className="h-full rounded-md border border-gray-300 bg-gray-900 overflow-auto p-4 m-0 shadow-inner depth-3d-dark">
           <code ref={codeRef} className="language-latex font-mono text-sm whitespace-pre">
-            {latexContent || 
-              isAnonymous ? 
-              `// Generated LaTeX will appear here
-
-Welcome to AI LaTeX Generator!
-You're currently using the free anonymous mode which allows for 1 free LaTeX conversion. Sign up from the header to get more conversions and access to all features!` 
-              : 
-              `// Generated LaTeX will appear here`
-            }
+            {latexContent || `// Generated LaTeX will appear here`}
           </code>
         </pre>
       </div>
