@@ -64,7 +64,7 @@ export default function LatexInput({
 
   return (
     <div className="w-full h-full flex flex-col border-r border-gray-200">
-      <div className="p-4 border-b border-gray-200 glass">
+      <div className="p-4 border-b border-gray-200 glass bg-subtle-purple rounded-t-lg">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold enhanced-heading">Input</h2>
           <div className="flex items-center space-x-2">
@@ -138,7 +138,7 @@ export default function LatexInput({
           )}
         </div>
       </div>
-      <div className="flex-1 overflow-auto p-4 bg-gray-50">
+      <div className="flex-1 overflow-auto p-4 bg-subtle-purple bg-opacity-30">
         <textarea
           ref={textareaRef}
           className="w-full h-full p-3 rounded-md border border-gray-300 glass-card font-mono text-sm resize-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg"
@@ -149,7 +149,7 @@ export default function LatexInput({
           onChange={(e) => onChange(e.target.value)}
         />
       </div>
-      <div className="p-4 glass border-t border-gray-200">
+      <div className="p-4 glass border-t border-gray-200 bg-subtle-purple rounded-b-lg">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
             <span className={isReady ? "text-emerald-600 pulse-animation" : "text-amber-600"}>● </span>
