@@ -5,12 +5,25 @@ interface PDFPreviewProps {
   pdfData: string | null;
   title: string;
   onCompilePdf?: () => void;
+  isHtml?: boolean;
 }
 
-// Helper function to safely format PDF data
-function formatPdfData(pdfData: string | null): string | null {
+// Helper function to safely format data
+function formatData(pdfData: string | null, isHtml: boolean = false): string | null {
   if (!pdfData) return null;
   
+  // For HTML content
+  if (isHtml) {
+    // Check if already has the data URL prefix
+    if (pdfData.startsWith('data:text/html;base64,')) {
+      return pdfData;
+    }
+    
+    // Add the prefix
+    return `data:text/html;base64,${pdfData}`;
+  } 
+  
+  // For PDF content
   // Check if already has the data URL prefix
   if (pdfData.startsWith('data:application/pdf;base64,')) {
     return pdfData;
@@ -20,14 +33,14 @@ function formatPdfData(pdfData: string | null): string | null {
   return `data:application/pdf;base64,${pdfData}`;
 }
 
-export default function PDFPreview({ pdfData, title, onCompilePdf }: PDFPreviewProps) {
+export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = false }: PDFPreviewProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
-  // Format PDF data for iframe
-  const formattedPdfData = pdfData ? formatPdfData(pdfData) : null;
+  // Format data for iframe based on content type
+  const formattedData = pdfData ? formatData(pdfData, isHtml) : null;
 
-  // Reset generating state when PDF data changes
+  // Reset generating state when data changes
   useEffect(() => {
     if (pdfData) {
       setIsGenerating(false);
@@ -180,9 +193,10 @@ export default function PDFPreview({ pdfData, title, onCompilePdf }: PDFPreviewP
             ) : (
               <div className="pdf-container w-full h-[650px] bg-gray-100">
                 <iframe 
-                  src={formattedPdfData || "about:blank"}
+                  src={formattedData || "about:blank"}
                   className="w-full h-full border-0"
-                  title="PDF Viewer"
+                  title={isHtml ? "HTML Preview" : "PDF Viewer"}
+                  sandbox={isHtml ? "allow-scripts" : ""}
                 />
               </div>
             )}

@@ -4,6 +4,14 @@ import path from 'path';
 import os from 'os';
 import { v4 as uuidv4 } from 'uuid';
 import { generateLatex } from '../services/aiProvider';
+import { 
+  isTectonicAvailable, 
+  generateHTMLPreview, 
+  createTectonicBackupPDF 
+} from './tectonicFallback';
+
+// Check for Railway deployment environment
+const isRailwayDeployment = process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_SERVICE_ID;
 
 /**
  * Compile LaTeX to PDF using Tectonic
@@ -13,8 +21,38 @@ export async function compileTex(latexContent: string): Promise<{
   pdf?: string;
   error?: string;
   errorDetails?: { line: number; message: string }[];
+  isHtml?: boolean;
 }> {
   console.log('[LATEX DEBUG] Starting PDF compilation process');
+  
+  // Check if Tectonic is available in this environment
+  const tectonicAvailable = await isTectonicAvailable();
+  
+  // If we're in Railway deployment and Tectonic isn't available, use fallback mechanism
+  if (isRailwayDeployment && !tectonicAvailable) {
+    console.log('[LATEX DEBUG] Running in Railway environment with Tectonic unavailable, using fallback');
+    
+    // Try backup PDF creation method first
+    const backupPdf = await createTectonicBackupPDF(latexContent);
+    
+    if (backupPdf) {
+      console.log('[LATEX DEBUG] Successfully created PDF using backup method');
+      return {
+        success: true,
+        pdf: backupPdf
+      };
+    }
+    
+    // If backup PDF creation fails, generate HTML preview
+    console.log('[LATEX DEBUG] Backup PDF creation failed, generating HTML preview');
+    const htmlPreview = await generateHTMLPreview(latexContent);
+    
+    return {
+      success: true,
+      pdf: htmlPreview,
+      isHtml: true
+    };
+  }
   
   // Create temporary directory
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'latex-'));
@@ -49,6 +87,32 @@ export async function compileTex(latexContent: string): Promise<{
       const errorDetails = parseErrorLog(compilationResult.error || '');
       console.log('[LATEX DEBUG] Parsed error details:', errorDetails);
       
+      // If in Railway deployment and compilation fails, try fallback
+      if (isRailwayDeployment) {
+        console.log('[LATEX DEBUG] Attempting fallback mechanisms after compilation failure');
+        
+        // Try backup PDF creation method first
+        const backupPdf = await createTectonicBackupPDF(latexContent);
+        
+        if (backupPdf) {
+          console.log('[LATEX DEBUG] Successfully created PDF using backup method');
+          return {
+            success: true,
+            pdf: backupPdf
+          };
+        }
+        
+        // If backup PDF creation fails, generate HTML preview
+        console.log('[LATEX DEBUG] Backup PDF creation failed, generating HTML preview');
+        const htmlPreview = await generateHTMLPreview(latexContent);
+        
+        return {
+          success: true,
+          pdf: htmlPreview,
+          isHtml: true
+        };
+      }
+      
       return {
         success: false,
         error: compilationResult.error,
@@ -66,6 +130,19 @@ export async function compileTex(latexContent: string): Promise<{
     
     if (!pdfExists) {
       console.log('[LATEX DEBUG] PDF file was not found after successful compilation');
+      
+      // If in Railway deployment and PDF wasn't created, use fallback
+      if (isRailwayDeployment) {
+        console.log('[LATEX DEBUG] PDF not found in Railway environment, using fallback');
+        const htmlPreview = await generateHTMLPreview(latexContent);
+        
+        return {
+          success: true,
+          pdf: htmlPreview,
+          isHtml: true
+        };
+      }
+      
       return {
         success: false,
         error: 'Compilation completed but PDF file was not created'
@@ -87,6 +164,19 @@ export async function compileTex(latexContent: string): Promise<{
     };
   } catch (error) {
     console.error('Error during LaTeX compilation:', error);
+    
+    // If in Railway deployment and there's an error, use fallback
+    if (isRailwayDeployment) {
+      console.log('[LATEX DEBUG] Error in Railway environment, using fallback');
+      const htmlPreview = await generateHTMLPreview(latexContent);
+      
+      return {
+        success: true,
+        pdf: htmlPreview,
+        isHtml: true
+      };
+    }
+    
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error during compilation'

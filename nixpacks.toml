@@ -1,0 +1,32 @@
+# nixpacks.toml - Configuration for Railway deployment
+
+[phases.setup]
+nixPkgs = [
+  # Tectonic and its dependencies
+  "tectonic",
+  "fontconfig",
+  "harfbuzz",
+  "openssl",
+  # Ensure necessary fonts are available
+  "dejavu_fonts",
+  "cm_unicode",
+  "lmodern",
+  "latin-modern-math",
+  # Required for certain LaTeX operations
+  "poppler_utils",
+  "ghostscript"
+]
+
+[phases.build]
+cmds = [
+  "npm install",
+  "npm run build"
+]
+
+[phases.deploy]
+cmds = [
+  "npm run db:push"
+]
+
+[start]
+cmd = "NODE_ENV=production NODE_PATH=. tsx server/index.ts"
