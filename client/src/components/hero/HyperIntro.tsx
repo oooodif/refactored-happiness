@@ -355,20 +355,28 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
           className="hero-text-1" 
           data-splitting
         >
-          Transform Plain Text
+          Unleash LaTeX Power
         </h1>
         <h2 
           className="hero-text-2" 
           data-splitting
         >
-          Into Beautiful LaTeX
+          With Artificial Intelligence
         </h2>
         <h3 
           className="hero-text-3" 
           data-splitting
         >
-          Powered by AI
+          From Thought to Publication in Seconds
         </h3>
+        
+        {/* Glowing orb effect - represents the "ultraviolent afterglow" */}
+        <div className="glowing-orb-container">
+          <div className="glowing-orb"></div>
+          <div className="glowing-orb-ring ring1"></div>
+          <div className="glowing-orb-ring ring2"></div>
+          <div className="glowing-orb-ring ring3"></div>
+        </div>
         
         <div 
           className="cta-container"
@@ -376,8 +384,12 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
           data-scroll-speed="1"
           data-scroll-delay="0.1"
         >
-          <button className="cta-button pulse-effect">
-            Try It Now
+          <button 
+            className="cta-button pulse-effect"
+            onClick={() => onComplete && onComplete()}
+            aria-label="Generate LaTeX with AI"
+          >
+            Generate Brilliance
           </button>
         </div>
       </div>
@@ -399,8 +411,8 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
               <path d="M17 7V9H11V7H17Z" fill="currentColor" />
             </svg>
           </div>
-          <h4>Smart Formatting</h4>
-          <p>Automatically formats your content with proper LaTeX structure</p>
+          <h4>Mathematical Perfection</h4>
+          <p>Advanced AI algorithms transform your ideas into flawless LaTeX equations and structures instantly</p>
         </div>
         
         <div 
@@ -413,8 +425,8 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
               <path d="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5C17 19.5 21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5ZM12 17C9.24 17 7 14.76 7 12C7 9.24 9.24 7 12 7C14.76 7 17 9.24 17 12C17 14.76 14.76 17 12 17ZM12 9C10.34 9 9 10.34 9 12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12C15 10.34 13.66 9 12 9Z" fill="currentColor" />
             </svg>
           </div>
-          <h4>Instant Preview</h4>
-          <p>See your LaTeX and PDF output in real-time as you type</p>
+          <h4>Anthropomorphic Intelligence</h4>
+          <p>Our AI understands the way you think, adapting to your research style and academic preferences over time</p>
         </div>
         
         <div 
@@ -429,9 +441,14 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
               <path d="M5 17H14L11.5 13.5L9.5 16L8 14.5L5 17Z" fill="currentColor" />
             </svg>
           </div>
-          <h4>Template Gallery</h4>
-          <p>Choose from our library of professional LaTeX templates</p>
+          <h4>Ultraviolent Speed</h4>
+          <p>Destroy writer's block instantly with text-to-LaTeX conversion that's faster than human thought</p>
         </div>
+      </div>
+      
+      {/* Animated glitch text */}
+      <div className="glitch-text-container">
+        <div className="glitch-text" data-text="AI LATEX GENERATOR">AI LATEX GENERATOR</div>
       </div>
       
       {/* Scroll indicator */}
@@ -441,7 +458,7 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
         data-scroll-speed="3"
         data-scroll-position="bottom"
       >
-        <span>Scroll to explore</span>
+        <span>ENTER THE VOID</span>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <polyline points="19 12 12 19 5 12"></polyline>
