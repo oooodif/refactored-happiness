@@ -36,6 +36,60 @@ export default function Account() {
   const [isLoading, setIsLoading] = useState(false);
   const [pageIsLoading, setPageIsLoading] = useState(true);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  
+  // SEO enhancement for the account page
+  useEffect(() => {
+    // Update page title and meta description
+    document.title = "My Account - AI LaTeX Generator";
+    
+    // Update meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 
+        "Manage your AI LaTeX Generator account, subscription plan, and usage statistics. Access your saved documents and templates.");
+    }
+    
+    // Add JSON-LD structured data for the account dashboard
+    const head = document.querySelector('head');
+    if (head) {
+      const existingSchema = document.querySelector('script#account-schema');
+      if (existingSchema) {
+        existingSchema.remove();
+      }
+      
+      const schemaScript = document.createElement('script');
+      schemaScript.type = 'application/ld+json';
+      schemaScript.id = 'account-schema';
+      
+      // WebPage schema for account dashboard
+      const schemaData = {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "My Account - AI LaTeX Generator",
+        "description": "Manage your AI LaTeX Generator account, subscription plan, and usage statistics.",
+        "breadcrumb": {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://aitexgen.com/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "My Account",
+              "item": "https://aitexgen.com/account"
+            }
+          ]
+        }
+      };
+      
+      schemaScript.textContent = JSON.stringify(schemaData);
+      head.appendChild(schemaScript);
+    }
+  }, []);
 
   // Force a session check when the component mounts
   useEffect(() => {

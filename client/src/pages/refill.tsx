@@ -20,6 +20,55 @@ export default function RefillPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
+  // SEO enhancement for refill page
+  useEffect(() => {
+    // Update page title and meta description
+    document.title = "Buy Credits - AI LaTeX Generator";
+    
+    // Update meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 
+        `Purchase additional credits for AI LaTeX Generator. Get ${REFILL_PACK_CREDITS} additional document generations for only $${REFILL_PACK_PRICE.toFixed(2)}.`);
+    }
+    
+    // Add JSON-LD structured data for the refill page
+    const head = document.querySelector('head');
+    if (head) {
+      const existingSchema = document.querySelector('script#refill-schema');
+      if (existingSchema) {
+        existingSchema.remove();
+      }
+      
+      const schemaScript = document.createElement('script');
+      schemaScript.type = 'application/ld+json';
+      schemaScript.id = 'refill-schema';
+      
+      // Product schema for refill pack
+      const schemaData = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": "AI LaTeX Generator Credit Pack",
+        "description": `Get ${REFILL_PACK_CREDITS} additional document generations at any time. Credits never expire.`,
+        "offers": {
+          "@type": "Offer",
+          "price": REFILL_PACK_PRICE.toFixed(2),
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+          "url": "https://aitexgen.com/refill"
+        },
+        "category": "Digital Credits",
+        "brand": {
+          "@type": "Brand",
+          "name": "AI LaTeX Generator"
+        }
+      };
+      
+      schemaScript.textContent = JSON.stringify(schemaData);
+      head.appendChild(schemaScript);
+    }
+  }, []);
+  
   useEffect(() => {
     // Redirect to login if not authenticated
     if (!session.isAuthenticated) {

@@ -22,6 +22,56 @@ export default function Subscribe() {
   const tier = params.get("tier") as SubscriptionTier || SubscriptionTier.Basic;
   const { toast } = useToast();
   
+  // SEO enhancement for the subscription page
+  useEffect(() => {
+    // Update page title and meta description
+    document.title = "Upgrade Your Plan - AI LaTeX Generator";
+    
+    // Update meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 
+        "Upgrade your AI LaTeX Generator subscription plan. Choose from Basic, Pro, and Power plans to unlock more document generations per month.");
+    }
+    
+    // Add JSON-LD structured data for the subscription page
+    const head = document.querySelector('head');
+    if (head) {
+      const existingSchema = document.querySelector('script#subscription-schema');
+      if (existingSchema) {
+        existingSchema.remove();
+      }
+      
+      const schemaScript = document.createElement('script');
+      schemaScript.type = 'application/ld+json';
+      schemaScript.id = 'subscription-schema';
+      
+      // Subscription Product schema
+      const schemaData = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": "AI LaTeX Generator Subscription",
+        "description": "Subscribe to AI LaTeX Generator and create professional LaTeX documents with AI assistance",
+        "offers": {
+          "@type": "AggregateOffer",
+          "lowPrice": "0.99",
+          "highPrice": "19.99",
+          "priceCurrency": "USD",
+          "offerCount": "5"
+        },
+        "category": "Software Subscription",
+        "image": "https://aitexgen.com/subscription.png",
+        "brand": {
+          "@type": "Brand",
+          "name": "AI LaTeX Generator"
+        }
+      };
+      
+      schemaScript.textContent = JSON.stringify(schemaData);
+      head.appendChild(schemaScript);
+    }
+  }, []);
+  
   useEffect(() => {
     // Redirect to login if not authenticated
     if (!session.isAuthenticated) {
