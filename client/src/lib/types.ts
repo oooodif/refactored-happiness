@@ -18,7 +18,7 @@ export interface GenerateLatexResponse {
 }
 
 export interface UserSession {
-  user: User | null;
+  user: (User & { id: number }) | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   tier: SubscriptionTier;

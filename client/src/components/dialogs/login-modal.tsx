@@ -181,8 +181,18 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       }
       
       // Set the session with the user data for successful login
+      // Ensure we have valid user data with required fields
+      if (!data.user || !data.user.id) {
+        console.error("Invalid user data received from server:", data);
+        throw new Error("Invalid user data received from server");
+      }
+      
+      // Set session with validated data
       setSession({
-        user: data.user,
+        user: {
+          ...data.user,
+          id: data.user.id
+        },
         isAuthenticated: true,
         isLoading: false,
         tier: data.user.subscriptionTier || SubscriptionTier.Free,
