@@ -220,6 +220,28 @@ export const stripeSync = {
         };
       }
       
+      // Check if there are multiple active subscriptions
+      if (subscriptions.data.length > 1) {
+        console.log(`User ${userId} has ${subscriptions.data.length} active subscriptions. Will use the most recent and cancel others.`);
+        
+        // Sort subscriptions by creation date (newest first)
+        subscriptions.data.sort((a, b) => b.created - a.created);
+        
+        // Cancel all but the most recent subscription
+        const keepSubscription = subscriptions.data[0];
+        for (let i = 1; i < subscriptions.data.length; i++) {
+          const subscription = subscriptions.data[i];
+          try {
+            await stripe.subscriptions.update(subscription.id, {
+              cancel_at_period_end: true,
+            });
+            console.log(`SyncUserSubscriptions: Canceled subscription ${subscription.id} for user ${userId}`);
+          } catch (error) {
+            console.error(`Error canceling subscription ${subscription.id}:`, error);
+          }
+        }
+      }
+      
       // Get the most recent active subscription
       const latestSubscription = subscriptions.data[0];
       
@@ -244,7 +266,7 @@ export const stripeSync = {
       
       // Only update if the tier or subscription ID has changed
       if (user.subscriptionTier !== tier || user.stripeSubscriptionId !== latestSubscription.id) {
-        const periodEnd = latestSubscription.current_period_end;
+        const periodEnd = (latestSubscription as any).current_period_end;
         await storage.updateSubscription(userId, {
           stripeSubscriptionId: latestSubscription.id,
           tier,

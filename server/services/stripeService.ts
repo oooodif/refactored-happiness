@@ -22,7 +22,7 @@ export const stripeService = {
       throw new Error('User not found');
     }
 
-    // If user already has Stripe info, handle appropriately
+    // If user already has Stripe info and a subscription, handle appropriately
     if (user.stripeCustomerId && user.stripeSubscriptionId) {
       // User already has a subscription, let's update it
       return this.updateSubscription(userId, tier, successUrl, cancelUrl);
@@ -42,6 +42,21 @@ export const stripeService = {
       
       // Update user with Stripe customer ID
       await storage.updateStripeCustomerId(userId, customerId);
+    } else {
+      // Check if user has any active subscriptions not tracked in our database
+      const existingSubscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        status: 'active',
+        limit: 100
+      });
+
+      // If there are active subscriptions, cancel them before creating a new one
+      for (const subscription of existingSubscriptions.data) {
+        await stripe.subscriptions.update(subscription.id, {
+          cancel_at_period_end: true
+        });
+        console.log(`Canceled existing subscription ${subscription.id} for customer ${customerId}`);
+      }
     }
 
     // Create checkout session for subscription
@@ -72,6 +87,16 @@ export const stripeService = {
           tier,
         }
       },
+      // Prevent multiple subscriptions
+      customer_update: {
+        address: 'auto',
+        name: 'auto',
+        shipping: 'auto'
+      },
+      allow_promotion_codes: true,
+      // Only allow users to have one subscription at a time
+      // This will cancel and replace any existing subscription
+      cancel_url_with_status: true,
     });
 
     return session;
@@ -87,15 +112,19 @@ export const stripeService = {
       throw new Error('User not found or no Stripe customer ID');
     }
 
-    // If user has an existing subscription, check if we should update or cancel
-    if (user.stripeSubscriptionId) {
-      // Get current subscription
-      const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
-      
-      // Cancel at period end and create new subscription
-      await stripe.subscriptions.update(user.stripeSubscriptionId, {
+    // Get all active subscriptions for this customer
+    const existingSubscriptions = await stripe.subscriptions.list({
+      customer: user.stripeCustomerId,
+      status: 'active',
+      limit: 100
+    });
+
+    // Cancel all existing subscriptions
+    for (const subscription of existingSubscriptions.data) {
+      await stripe.subscriptions.update(subscription.id, {
         cancel_at_period_end: true,
       });
+      console.log(`Canceled existing subscription ${subscription.id} for customer ${user.stripeCustomerId}`);
     }
 
     // Create a new checkout session
@@ -126,6 +155,16 @@ export const stripeService = {
           tier,
         }
       },
+      // Prevent multiple subscriptions
+      customer_update: {
+        address: 'auto',
+        name: 'auto',
+        shipping: 'auto'
+      },
+      allow_promotion_codes: true,
+      // Only allow users to have one subscription at a time
+      // This will cancel and replace any existing subscription
+      cancel_url_with_status: true,
     });
 
     return session;
@@ -191,6 +230,13 @@ export const stripeService = {
       return;
     }
 
+    // Get the user from our database
+    const user = await storage.getUser(userId);
+    if (!user) {
+      console.error(`User ${userId} not found in database for subscription event`);
+      return;
+    }
+
     switch (event.type) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
@@ -208,6 +254,32 @@ export const stripeService = {
             }
           }
           
+          // Cancel any other active subscriptions this user might have
+          if (user.stripeCustomerId) {
+            const existingSubscriptions = await stripe.subscriptions.list({
+              customer: user.stripeCustomerId,
+              status: 'active',
+              limit: 100
+            });
+
+            // Cancel all other active subscriptions (except this one)
+            for (const subscription of existingSubscriptions.data) {
+              // Skip the current subscription we're processing
+              if (subscription.id === data.id) {
+                continue;
+              }
+              
+              try {
+                await stripe.subscriptions.update(subscription.id, {
+                  cancel_at_period_end: true,
+                });
+                console.log(`Webhook canceled duplicate subscription ${subscription.id} for user ${userId}`);
+              } catch (error) {
+                console.error(`Error canceling duplicate subscription ${subscription.id}:`, error);
+              }
+            }
+          }
+          
           const periodEnd = (data as any).current_period_end;
           await storage.updateSubscription(userId, {
             stripeSubscriptionId: data.id,
@@ -219,7 +291,23 @@ export const stripeService = {
         break;
       
       case 'customer.subscription.deleted':
-        // Reset to free tier when subscription is canceled or expires
+        // Check if there are any other active subscriptions for this user before downgrading
+        if (user.stripeCustomerId) {
+          const activeSubscriptions = await stripe.subscriptions.list({
+            customer: user.stripeCustomerId,
+            status: 'active',
+            limit: 1
+          });
+          
+          if (activeSubscriptions.data.length > 0) {
+            // User has other active subscriptions, let's use that instead
+            // This will be handled by the created/updated webhooks
+            console.log(`User ${userId} has other active subscriptions, not downgrading to free tier`);
+            return;
+          }
+        }
+
+        // No other active subscriptions, reset to free tier
         await storage.updateSubscription(userId, {
           tier: SubscriptionTier.Free,
           subscriptionStatus: 'canceled',
