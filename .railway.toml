@@ -19,4 +19,3 @@ restartPolicyMaxRetries = 10
 # 4. Environment variables for Railway-specific build
 [variables]
 NIXPACKS_PKGS = "fontconfig fontconfig-dev harfbuzz harfbuzz-dev freetype freetype-dev icu texlive-fonts-recommended texlive-fonts-extra texlive-latex-base texlive-latex-recommended"
-VITE_APP_CHUNK_SIZE_WARNING_LIMIT = "1000"
