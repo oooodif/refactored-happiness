@@ -26,6 +26,28 @@
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+/* Animated gradient background (with reduced opacity) */
+.gradient-animation {
+  background: linear-gradient(-45deg, rgba(238, 119, 82, 0.05), rgba(231, 60, 126, 0.05), rgba(35, 166, 213, 0.05), rgba(35, 213, 171, 0.05));
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 /* Animation keyframes for mobile keyboard dismissal effects */
 @keyframes parallax-rise {
   0% { transform: translateY(0); opacity: 1; }
