@@ -118,7 +118,7 @@ export default function RefillPage() {
   
   if (isLoading) {
     return (
-      <SiteLayout>
+      <SiteLayout seoTitle="Purchase LaTeX Generation Credits - AI LaTeX Generator">
         <div className="h-screen flex items-center justify-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading"/>
           <p className="ml-2">Preparing checkout...</p>
@@ -129,7 +129,7 @@ export default function RefillPage() {
   
   if (error) {
     return (
-      <SiteLayout>
+      <SiteLayout seoTitle="Payment Error - AI LaTeX Generator">
         <div className="container mx-auto px-4 py-8">
           <Card className="max-w-lg mx-auto">
             <CardHeader>
@@ -149,7 +149,7 @@ export default function RefillPage() {
   // We should not reach here since we're redirecting to Stripe's checkout
   // But just in case there's some issue with the redirect
   return (
-    <SiteLayout>
+    <SiteLayout seoTitle="Purchase LaTeX Generation Credits - AI LaTeX Generator">
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-lg mx-auto">
           <CardHeader>

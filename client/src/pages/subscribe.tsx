@@ -126,7 +126,7 @@ export default function Subscribe() {
   
   if (error) {
     return (
-      <SiteLayout>
+      <SiteLayout seoTitle="Subscription Error - AI LaTeX Generator">
         <div className="container mx-auto px-4 py-8">
           <Card className="max-w-lg mx-auto">
             <CardHeader>
