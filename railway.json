@@ -1,14 +1,17 @@
-
 {
   "$schema": "https://railway.app/railway.schema.json",
+
   "build": {
     "builder": "NIXPACKS",
     "buildCommand": "npm run build",
     "packages": ["tectonic"]
   },
+
   "deploy": {
-    "numReplicas": 1,
-    "startCommand": "node dist/index.js",
+    "preDeployCommand": "npm run build && npm run db:push",
+    "startCommand": "NODE_ENV=production NODE_PATH=. tsx server/index.ts",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 180,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
