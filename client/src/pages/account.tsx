@@ -56,28 +56,71 @@ export default function Account() {
               limit: authData.usageLimit || 3,
               resetDate: authData.user.usageResetDate || new Date().toISOString()
             },
-            refillPackCredits: authData.user.refillPackCredits || 0
+            refillPackCredits: authData.user.refillPackCredits || 0,
+            lastAuthCheck: Date.now()
           });
         } else {
           console.log("Account page: Not authenticated");
-          navigate("/login");
+          toast({
+            title: "Session Expired",
+            description: "Your session has expired. Please log in again.",
+            variant: "destructive"
+          });
+          navigate("/");
         }
       } catch (error) {
         console.error("Account page: Error verifying session:", error);
+        toast({
+          title: "Error Loading Account",
+          description: "There was a problem loading your account information. Please try again.",
+          variant: "destructive"
+        });
+        navigate("/");
       } finally {
         setPageIsLoading(false);
       }
     };
     
+    // Add a timeout to ensure the page doesn't hang indefinitely
+    const loadingTimeout = setTimeout(() => {
+      if (pageIsLoading) {
+        console.log("Account page: Loading timeout reached");
+        setPageIsLoading(false);
+        toast({
+          title: "Loading Timeout",
+          description: "Account information took too long to load. Please try again.",
+          variant: "destructive"
+        });
+        navigate("/");
+      }
+    }, 10000); // 10 seconds timeout
+    
     verifySession();
+    
+    // Clean up the timeout
+    return () => clearTimeout(loadingTimeout);
   }, []);
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    console.log("Account page session:", session);
+    console.log("Account page session state:", {
+      isLoading: session.isLoading,
+      isAuthenticated: session.isAuthenticated,
+      hasUser: !!session.user,
+      userDetails: session.user ? {
+        id: session.user.id,
+        username: session.user.username,
+        email: session.user.email
+      } : null
+    });
+    
     if (!session.isLoading && !session.isAuthenticated) {
-      console.log("Not authenticated, redirecting to login");
-      navigate("/login");
+      console.log("Not authenticated, redirecting to login page");
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to view your account",
+      });
+      navigate("/");
     }
   }, [session.isLoading, session.isAuthenticated, navigate]);
 
@@ -99,12 +142,27 @@ export default function Account() {
 
   // Return null if not authenticated
   if (!session.isAuthenticated || !session.user) {
-    return null;
+    console.log("Account page: No authenticated user found in session, showing error");
+    return (
+      <SiteLayout fullHeight={false}>
+        <div className="flex h-[50vh] items-center justify-center">
+          <div className="text-center">
+            <p className="text-lg font-semibold text-red-600 mb-2">Authentication Required</p>
+            <p className="text-gray-600 mb-4">Please log in to view your account information.</p>
+            <Button onClick={() => navigate("/")}>Return to Home</Button>
+          </div>
+        </div>
+      </SiteLayout>
+    );
   }
 
+  // Safe access to session properties
+  const current = session.usage?.current || 0;
+  const limit = session.usage?.limit || 3;
+  
   const usagePercentage = Math.min(
     100,
-    Math.round((session.usage.current / session.usage.limit) * 100)
+    Math.round((current / limit) * 100)
   );
 
   const handleManageSubscription = async () => {
@@ -212,7 +270,7 @@ export default function Account() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-lg font-medium">
-                          {session.tier.charAt(0).toUpperCase() + session.tier.slice(1)} Plan
+                          {(session.tier || SubscriptionTier.Free).charAt(0).toUpperCase() + (session.tier || SubscriptionTier.Free).slice(1)} Plan
                         </h3>
                         {session.tier !== SubscriptionTier.Free && session.user.stripeSubscriptionId && (
                           <p className="text-sm text-gray-500">
@@ -221,7 +279,7 @@ export default function Account() {
                         )}
                       </div>
                       <div className="text-right">
-                        <span className="text-2xl font-bold">${tierPrices[session.tier]}</span>
+                        <span className="text-2xl font-bold">${tierPrices[session.tier || SubscriptionTier.Free]}</span>
                         <span className="text-gray-500">/month</span>
                       </div>
                     </div>
@@ -230,13 +288,13 @@ export default function Account() {
                   <div className="pt-2">
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-sm font-medium">Monthly Usage</span>
-                      <span className={`text-sm ${getUsageColor(session.usage.current, session.usage.limit)}`}>
-                        {session.usage.current} / {session.usage.limit} generations
+                      <span className={`text-sm ${getUsageColor(current, limit)}`}>
+                        {current} / {limit} generations
                       </span>
                     </div>
                     <Progress value={usagePercentage} className="h-2" />
                     <p className="text-xs text-gray-500 mt-1">
-                      Resets on {formatDate(session.usage.resetDate)}
+                      Resets on {formatDate(session.usage?.resetDate || new Date().toISOString())}
                     </p>
                   </div>
                 </div>
