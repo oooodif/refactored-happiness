@@ -214,3 +214,92 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
+
+/* === PARALLAX EFFECTS FOR KEYBOARD DISMISSAL === */
+
+/* Main container for parallax elements */
+.parallax-container {
+  perspective: 1000px;
+  overflow-x: hidden;
+  transform-style: preserve-3d;
+}
+
+/* Define different parallax layers with varying depths */
+.parallax-layer-0 {
+  transform: translateZ(0);
+  z-index: 10;
+}
+
+.parallax-layer-1 {
+  transform: translateZ(-5px) scale(1.5);
+  z-index: 5;
+}
+
+.parallax-layer-2 {
+  transform: translateZ(-10px) scale(2);
+  z-index: 3;
+}
+
+.parallax-layer-3 {
+  transform: translateZ(-15px) scale(2.5);
+  z-index: 1;
+}
+
+/* Special animation for keyboard dismissal on mobile */
+@keyframes smoothScrollReveal {
+  0% {
+    opacity: 0.7;
+    transform: translateY(25px);
+  }
+  30% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Apply to elements during keyboard dismissal */
+.scroll-reveal-animate {
+  animation: smoothScrollReveal 0.6s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+/* Parallax header effect during keyboard dismissal */
+@keyframes headerParallaxReveal {
+  0% {
+    opacity: 0.7;
+    transform: translateY(15px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.header-parallax-animate {
+  animation: headerParallaxReveal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Staggered animation for UI elements */
+.stagger-item-1 { animation-delay: 0.05s; }
+.stagger-item-2 { animation-delay: 0.1s; }
+.stagger-item-3 { animation-delay: 0.15s; }
+.stagger-item-4 { animation-delay: 0.2s; }
+
+/* Ripple-out effect for emphasized elements */
+@keyframes rippleOut {
+  0% {
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+  }
+  70% {
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.ripple-out-animate {
+  animation: rippleOut 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
