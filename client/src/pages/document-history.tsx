@@ -145,7 +145,7 @@ export default function DocumentHistory() {
   }
 
   return (
-    <SiteLayout fullHeight={false}>
+    <SiteLayout fullHeight={false} seoTitle="Document History - Your LaTeX Document Archive">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">

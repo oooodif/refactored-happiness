@@ -313,7 +313,7 @@ export default function Account() {
   };
 
   return (
-    <SiteLayout fullHeight={false}>
+    <SiteLayout fullHeight={false} seoTitle="Your Account - AI LaTeX Generator Settings">
       {/* Subscription modal */}
       <SubscriptionModal 
         isOpen={isSubscriptionModalOpen} 
