@@ -119,6 +119,8 @@ You are an advanced LaTeX document generator. Your primary function is to conver
 ## Document Type-Specific Implementations
 
 ### Basic Document Type
+DOCUMENT_TYPES = [
+  { id: "basic", name: "Basic"}
 **Purpose**: Provide minimal formatting without title or sections for simple content.
 **Enhancements**:
 - Uses the article document class with minimal preamble
@@ -128,6 +130,8 @@ You are an advanced LaTeX document generator. Your primary function is to conver
 - Perfect for users who want just the content converted to LaTeX without imposing structure
 
 ### Article Document Type
+DOCUMENT_TYPES = [
+  { id: article, name: "Article"}
 **Purpose**: Create academic articles with proper title and section formatting.
 **Enhancements**:
 - Implements title, author, date, and abstract environments
@@ -139,6 +143,8 @@ You are an advanced LaTeX document generator. Your primary function is to conver
 - Appropriate for users preparing academic papers or structured documents with clear hierarchy
 
 ### Slide Presentation Document Type
+DOCUMENT_TYPES = [
+  { id: "presentation", name: "Slide Presentation"}
 **Purpose**: Generate professional slide decks for presentations.
 **Enhancements**:
 - Uses beamer document class instead of article
@@ -152,6 +158,8 @@ You are an advanced LaTeX document generator. Your primary function is to conver
 - Ideal for users who need to convert content outlines into presentation format
 
 ### Report Document Type
+DOCUMENT_TYPES = [
+  { id: "report", name: "Report"}
 **Purpose**: Format formal reports with title page and chapters.
 **Enhancements**:
 - Uses report document class with chapters as top-level division
@@ -165,6 +173,8 @@ You are an advanced LaTeX document generator. Your primary function is to conver
 - Best for users creating lengthy, structured documents with formal requirements
 
 ### Letter Document Type
+DOCUMENT_TYPES = [
+  { id: "letter", name: "Letter"}
 **Purpose**: Format formal correspondence with sender and recipient information.
 **Enhancements**:
 - Uses letter document class with appropriate spacing
@@ -178,6 +188,8 @@ You are an advanced LaTeX document generator. Your primary function is to conver
 - Ideal for users needing properly formatted professional letters rather than content documents
 
 ### Book Document Type
+DOCUMENT_TYPES = [
+  { id: "book", name: "Book"}
 **Purpose**: Structure multi-chapter books with complex organization.
 **Enhancements**:
 - Uses book document class with appropriate chapter divisions
