@@ -8,6 +8,7 @@ import { createBillingPortalSession, cancelSubscription } from "@/lib/stripe";
 import { formatDate, getUsageColor } from "@/lib/utils";
 import { tierLimits, tierPrices, SubscriptionTier } from "@shared/schema";
 import { checkAuthStatus } from "@/lib/queryClient";
+import SubscriptionModal from "@/components/dialogs/subscription-modal";
 
 import {
   Card,
@@ -34,6 +35,7 @@ export default function Account() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [pageIsLoading, setPageIsLoading] = useState(true);
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
 
   // Force a session check when the component mounts
   useEffect(() => {
@@ -236,6 +238,12 @@ export default function Account() {
 
   return (
     <SiteLayout fullHeight={false}>
+      {/* Subscription modal */}
+      <SubscriptionModal 
+        isOpen={isSubscriptionModalOpen} 
+        onClose={() => setIsSubscriptionModalOpen(false)} 
+      />
+
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Account Settings</h1>
@@ -354,9 +362,9 @@ export default function Account() {
                           <Button 
                             size="sm" 
                             variant={session.tier === 'free' ? "default" : "outline"}
-                            onClick={() => session.tier === 'free' ? navigate("/subscribe") : navigate("/subscribe?upgrade=true")}
+                            onClick={() => setIsSubscriptionModalOpen(true)}
                           >
-                            {session.tier === 'free' ? 'Upgrade Plan' : 'Upgrade to Higher Plan'}
+                            {session.tier === 'free' ? 'Upgrade Plan' : 'View All Plans'}
                           </Button>
                         </div>
                       </div>
@@ -375,18 +383,27 @@ export default function Account() {
                 <div className="space-x-2">
                   {session.tier === SubscriptionTier.Free ? (
                     <Button
-                      onClick={() => navigate("/subscribe")}
+                      onClick={() => setIsSubscriptionModalOpen(true)}
                       disabled={isLoading}
                     >
                       Upgrade Plan
                     </Button>
                   ) : (
-                    <Button
-                      onClick={handleManageSubscription}
-                      disabled={isLoading}
-                    >
-                      Manage Subscription
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsSubscriptionModalOpen(true)}
+                        disabled={isLoading}
+                      >
+                        Change Plan
+                      </Button>
+                      <Button
+                        onClick={handleManageSubscription}
+                        disabled={isLoading}
+                      >
+                        Manage Subscription
+                      </Button>
+                    </>
                   )}
                 </div>
               </CardFooter>

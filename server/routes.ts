@@ -29,6 +29,7 @@ import { generateLatexSchema, SubscriptionTier, REFILL_PACK_CREDITS, REFILL_PACK
 import { generateLatex, getAvailableModels, callProviderWithModel } from "./services/aiProvider";
 import { compileLatex, compileAndFixLatex } from "./services/latexService";
 import { stripeService } from "./services/stripeService";
+import { stripeSync } from "./services/stripeSync";
 import { testPostmarkConnection, generateVerificationToken, sendVerificationEmail } from "./utils/email";
 import Stripe from "stripe";
 import session from "express-session";
@@ -896,6 +897,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (err) {
         console.error('Webhook error:', err);
         return res.status(400).send(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      }
+    }
+  );
+
+  // API route for syncing user subscription with Stripe
+  app.post("/api/stripe/sync-subscription", 
+    authenticateUser,
+    async (req: Request, res: Response) => {
+      try {
+        const userId = req.session.userId;
+        if (!userId) {
+          return res.status(401).json({ message: "Not authenticated" });
+        }
+        
+        // First, sync the user to Stripe to ensure we have a customer
+        const customerSync = await stripeSync.syncUserToStripe(userId);
+        
+        if (!customerSync.success) {
+          return res.status(500).json({ 
+            message: "Failed to sync user with Stripe", 
+            error: customerSync.message
+          });
+        }
+        
+        // Then sync their subscriptions
+        const subscriptionSync = await stripeSync.syncUserSubscriptions(userId);
+        
+        // Return user data with fresh subscription info
+        const user = await storage.getUserById(userId);
+        const usageLimit = await storage.getUserUsageLimit(user);
+        
+        return res.status(200).json({
+          success: true,
+          message: subscriptionSync.message,
+          user,
+          usageLimit,
+          tierUpdated: subscriptionSync.tierUpdated
+        });
+      } catch (error) {
+        console.error("Sync subscription error:", error);
+        return res.status(500).json({ message: "Failed to sync subscription", error: String(error) });
       }
     }
   );
