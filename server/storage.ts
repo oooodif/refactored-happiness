@@ -2,10 +2,13 @@ import { db } from "@db";
 import { 
   users, 
   documents, 
+  anonymousUsers,
   User, 
   Document, 
+  AnonymousUser,
   insertUserSchema, 
   insertDocumentSchema,
+  insertAnonymousUserSchema,
   SubscriptionTier,
   tierLimits
 } from "@shared/schema";

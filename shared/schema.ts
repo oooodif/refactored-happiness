@@ -47,6 +47,17 @@ export const documents = pgTable("documents", {
   metadata: json("metadata").$type<Record<string, unknown>>(),
 });
 
+export const anonymousUsers = pgTable("anonymous_users", {
+  id: serial("id").primaryKey(),
+  fingerprint: text("fingerprint").notNull().unique(),
+  sessionId: text("session_id"),
+  ipAddress: text("ip_address"),
+  usageCount: integer("usage_count").default(0).notNull(),
+  lastUsed: timestamp("last_used").defaultNow().notNull(),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({
   documents: many(documents)
 }));
@@ -82,11 +93,18 @@ export const generateLatexSchema = z.object({
   }).optional(),
 });
 
+// Create schema for anonymous users
+export const insertAnonymousUserSchema = createInsertSchema(anonymousUsers, {
+  fingerprint: (schema) => schema.min(5, "Fingerprint must be at least 5 characters"),
+}).omit({ id: true, createdAt: true, usageCount: true, lastUsed: true });
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
+export type InsertAnonymousUser = z.infer<typeof insertAnonymousUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Document = typeof documents.$inferSelect;
+export type AnonymousUser = typeof anonymousUsers.$inferSelect;
 export type LoginCredentials = z.infer<typeof loginSchema>;
 export type GenerateLatexRequest = z.infer<typeof generateLatexSchema>;
 
