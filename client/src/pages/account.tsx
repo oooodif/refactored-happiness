@@ -324,6 +324,43 @@ export default function Account() {
                     <p className="text-xs text-gray-500 mt-1">
                       Resets on {formatDate(session.usage?.resetDate || new Date().toISOString())}
                     </p>
+                    
+                    {/* Show refill credits if user has any */}
+                    {session.refillPackCredits > 0 && (
+                      <div className="mt-3 p-2 bg-blue-50 rounded-md">
+                        <p className="text-sm text-blue-700">
+                          <span className="font-medium">Bonus Credits:</span> {session.refillPackCredits} additional generations available
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Show refill or upgrade option if out of credits */}
+                    {current >= limit && (
+                      <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                        <p className="text-sm text-amber-800 mb-2">
+                          You've used all your monthly generations.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          {session.tier !== 'free' && (
+                            <Button 
+                              size="sm" 
+                              variant="default"
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                              onClick={() => navigate("/refill")}
+                            >
+                              Refill 100 Credits for $0.99
+                            </Button>
+                          )}
+                          <Button 
+                            size="sm" 
+                            variant={session.tier === 'free' ? "default" : "outline"}
+                            onClick={() => session.tier === 'free' ? navigate("/subscribe") : navigate("/subscribe?upgrade=true")}
+                          >
+                            {session.tier === 'free' ? 'Upgrade Plan' : 'Upgrade to Higher Plan'}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>

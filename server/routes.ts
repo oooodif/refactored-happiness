@@ -786,7 +786,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
   
-  // Purchase refill pack endpoint
+  // Create payment intent for refill pack
+  app.post("/api/subscription/refill/create", 
+    requireAuth,
+    async (req: Request, res: Response) => {
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe is not configured" });
+      }
+      
+      const userId = req.session.userId;
+      
+      try {
+        const user = await storage.getUserById(userId);
+        
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        // Only allow paid subscribers to purchase refill packs
+        if (user.subscriptionTier === SubscriptionTier.Free) {
+          return res.status(403).json({ 
+            message: "Refill packs are only available for paid subscribers. Please upgrade to a paid plan first." 
+          });
+        }
+        
+        // Create a payment intent for the refill pack
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: Math.round(REFILL_PACK_PRICE * 100), // Convert to cents
+          currency: "usd",
+          customer: user.stripeCustomerId,
+          metadata: {
+            userId: userId.toString(),
+            type: "refill_pack",
+            credits: REFILL_PACK_CREDITS.toString()
+          }
+        });
+        
+        return res.status(200).json({ clientSecret: paymentIntent.client_secret });
+      } catch (error) {
+        console.error("Error creating refill payment intent:", error);
+        return res.status(500).json({ message: "Failed to create payment intent" });
+      }
+    }
+  );
+  
+  // Process refill pack purchase webhook
   app.post("/api/subscription/refill", 
     requireAuth,
     async (req: Request, res: Response) => {

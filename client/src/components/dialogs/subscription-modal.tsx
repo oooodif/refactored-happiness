@@ -2,7 +2,13 @@ import { useContext } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { UserContext } from "@/App";
 import { useLocation } from "wouter";
-import { SubscriptionTier, tierLimits, tierPrices } from "@shared/schema";
+import { 
+  SubscriptionTier, 
+  tierLimits, 
+  tierPrices, 
+  REFILL_PACK_CREDITS, 
+  REFILL_PACK_PRICE 
+} from "@shared/schema";
 import { SUBSCRIPTION_FEATURES } from "@/lib/constants";
 
 import {
@@ -70,48 +76,156 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+        {/* Monthly Subscription Plans */}
+        <h3 className="text-lg font-medium text-gray-800 mt-4 mb-2">Monthly Subscription Plans</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {/* Free Tier */}
           <SubscriptionPlanCard
             tier={SubscriptionTier.Free}
             name="Free"
             price={0}
-            features={SUBSCRIPTION_FEATURES[SubscriptionTier.Free]}
+            features={[`${tierLimits[SubscriptionTier.Free]} LaTeX generations/month`]}
             isCurrentPlan={session.tier === SubscriptionTier.Free}
             onSelect={handleSelectPlan}
           />
 
-          {/* Basic Tier */}
+          {/* Basic Tier (Tier 1) */}
           <SubscriptionPlanCard
             tier={SubscriptionTier.Basic}
             name="Basic"
             price={0.99}
-            features={SUBSCRIPTION_FEATURES[SubscriptionTier.Basic]}
+            features={[`${tierLimits[SubscriptionTier.Basic]} LaTeX generations/month`]}
             isCurrentPlan={session.tier === SubscriptionTier.Basic}
             onSelect={handleSelectPlan}
           />
 
-          {/* Pro Tier */}
+          {/* Tier 2 */}
+          <SubscriptionPlanCard
+            tier={SubscriptionTier.Tier2}
+            name="Standard"
+            price={2.99}
+            features={[`${tierLimits[SubscriptionTier.Tier2]} LaTeX generations/month`]}
+            isCurrentPlan={session.tier === SubscriptionTier.Tier2}
+            onSelect={handleSelectPlan}
+          />
+
+          {/* Pro Tier (Tier 3) */}
           <SubscriptionPlanCard
             tier={SubscriptionTier.Pro}
             name="Pro"
             price={6.99}
-            features={SUBSCRIPTION_FEATURES[SubscriptionTier.Pro]}
+            features={[`${tierLimits[SubscriptionTier.Pro]} LaTeX generations/month`]}
             isCurrentPlan={session.tier === SubscriptionTier.Pro}
             onSelect={handleSelectPlan}
           />
           
-          {/* Power Tier */}
+          {/* Tier 4 */}
+          <SubscriptionPlanCard
+            tier={SubscriptionTier.Tier4}
+            name="Advanced"
+            price={11.99}
+            features={[`${tierLimits[SubscriptionTier.Tier4]} LaTeX generations/month`]}
+            isCurrentPlan={session.tier === SubscriptionTier.Tier4}
+            onSelect={handleSelectPlan}
+          />
+          
+          {/* Power Tier (Tier 5) */}
           <SubscriptionPlanCard
             tier={SubscriptionTier.Power}
             name="Power"
             price={19.99}
-            features={SUBSCRIPTION_FEATURES[SubscriptionTier.Power]}
+            features={[`${tierLimits[SubscriptionTier.Power]} LaTeX generations/month`]}
             isCurrentPlan={session.tier === SubscriptionTier.Power}
             isPopular={true}
             onSelect={handleSelectPlan}
           />
         </div>
+
+        {/* Refill Pack Option - Only shown to paid subscribers */}
+        {session.isAuthenticated && session.tier !== 'free' && (
+          <>
+            <h3 className="text-lg font-medium text-gray-800 mt-8 mb-2">One-Time Refill Pack</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="border rounded-lg p-6 bg-white col-span-1 md:col-span-3 lg:col-span-2 flex flex-col">
+                <div className="flex-1">
+                  <h3 className="text-lg font-medium text-gray-800">LaTeX Generation Refill</h3>
+                  <p className="text-3xl font-bold mt-2">
+                    ${REFILL_PACK_PRICE.toFixed(2)}
+                    <span className="text-base font-normal text-gray-600"> one-time</span>
+                  </p>
+                  <p className="text-gray-600 mt-3">
+                    Add extra generation credits without changing your subscription
+                  </p>
+
+                  <ul className="mt-6 space-y-4">
+                    <li className="flex items-start">
+                      <svg
+                        className="h-5 w-5 text-emerald-500 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        ></path>
+                      </svg>
+                      <span className="text-gray-700">{REFILL_PACK_CREDITS} additional LaTeX generations</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg
+                        className="h-5 w-5 text-emerald-500 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        ></path>
+                      </svg>
+                      <span className="text-gray-700">Credits never expire</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg
+                        className="h-5 w-5 text-emerald-500 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        ></path>
+                      </svg>
+                      <span className="text-gray-700">Used after monthly credits are exhausted</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <Button
+                  onClick={() => {
+                    // Navigate to refill purchase page
+                    onClose();
+                    navigate("/refill");
+                  }}
+                  className="w-full mt-8 bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  Purchase Refill Pack
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
