@@ -81,16 +81,6 @@ export default function Header() {
               AI Latex Generator
             </h1>
           </Link>
-          
-          {/* Emergency reset button */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="ml-4 text-xs bg-red-50 text-red-600 hover:bg-red-100" 
-            onClick={handleEmergencyReset}
-          >
-            Reset App
-          </Button>
         </div>
         
         <div className="flex items-center space-x-4">

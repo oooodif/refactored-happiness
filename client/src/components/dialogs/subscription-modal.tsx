@@ -79,9 +79,8 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         {/* Monthly Subscription Plans */}
         <h3 className="text-lg font-medium text-gray-800 mt-4 mb-2">Monthly Subscription Plans</h3>
         
-        {/* Compact mobile grid view */}
-        <div className="block md:hidden">
-          <div className="grid grid-cols-2 gap-2">
+        {/* Compact mobile grid view - ensure this displays at appropriate widths */}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 md:hidden">
             {/* Free Tier */}
             <div 
               className={cn(
@@ -211,7 +210,6 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
               </div>
             </div>
           </div>
-        </div>
         
         {/* Desktop view with cards */}
         <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-4">
