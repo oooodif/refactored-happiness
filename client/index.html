@@ -11,7 +11,25 @@
       gtag('config', 'G-XKXW2YM1E5');
     </script>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" id="viewport-meta" />
+    <script>
+      // Handle viewport settings based on screen size
+      function updateViewportSettings() {
+        const viewportMeta = document.getElementById('viewport-meta');
+        
+        if (window.innerWidth < 768) {
+          // Mobile - strict no-zoom for better usability
+          viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+        } else {
+          // Desktop - allow normal zooming for accessibility
+          viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0');
+        }
+      }
+      
+      // Run on page load and when screen size changes
+      window.addEventListener('DOMContentLoaded', updateViewportSettings);
+      window.addEventListener('resize', updateViewportSettings);
+    </script>
     <title>AI LaTeX Generator - Create Academic Documents & Presentations</title>
     <meta name="description" content="Generate professional LaTeX documents with AI assistance. Create papers, slides, and academic content with ease using our LaTeX generator tool." />
     
