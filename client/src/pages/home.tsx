@@ -146,6 +146,18 @@ export default function Home() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
+  // SEO enhancement - set proper page title and description
+  useEffect(() => {
+    document.title = "AI LaTeX Generator - Create Professional Academic Documents";
+    
+    // Update meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 
+        "Generate professional LaTeX documents with AI assistance. Create papers, slides, and academic content with ease using our powerful LaTeX editor.");
+    }
+  }, []);
+  
   // Check localStorage for preselected template when coming from template URL
   const getInitialDocumentType = () => {
     try {
