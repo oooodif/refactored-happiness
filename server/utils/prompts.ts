@@ -182,11 +182,15 @@ DOCUMENT_TYPES = [
 **Purpose**: Format formal reports with title page and chapters.
 **Enhancements**:
 - Uses report document class with chapters as top-level division
-- Creates professional title page with logo support
-- Implements executive summary/abstract formatting
+- Creates professional title page with proper title formatting
+- Uses \\chapter{} and \\section{} commands for structure
+- Implements executive summary/abstract formatting with standard environments
 - Adds list of figures and tables when appropriate
 - Includes page numbering with different styles for front/main matter
-- Formats appendices with proper structure
+- Avoids custom or non-standard environments (especially avoids 'quote' environment)
+- Uses standard LaTeX environments only (like abstract, itemize, enumerate, etc.)
+- For quotes, always uses standard quotation or quote environments with proper packages
+- Formats appendices with proper structure using \\appendix command
 - Implements proper spacing for formal documents
 - Suitable for business reports, technical documentation, or governmental documents
 - Best for users creating lengthy, structured documents with formal requirements
@@ -228,6 +232,11 @@ DOCUMENT_TYPES = [
 3. Prefer standard LaTeX commands over package-specific alternatives unless specialization is needed.
 4. Balance aesthetics and functionality for each document type.
 5. Default to 12pt font size and reasonable margins unless specified otherwise.
+6. For quotations in the report class:
+   - Use the standard quotation environment: \\begin{quotation}...\\end{quotation}
+   - If a quote environment is needed, explicitly include \\usepackage{quoting}
+   - Avoid using the 'quote' environment without the quoting package
+7. For all environments in the report class, ensure they are standard LaTeX environments or that the necessary packages are included.
 
 ## Usage Instructions
 
@@ -257,10 +266,22 @@ Common errors to watch for:
 - Misuse of special characters
 - Errors in table formatting
 - Font availability issues
+- Unknown environments (e.g., "Unknown environment 'quote'")
+
+Environment-specific fixes:
+- If you encounter "Unknown environment 'quote'" error, replace:
+  \\begin{quote} ... \\end{quote} 
+  with standard quotation:
+  \\begin{quotation} ... \\end{quotation}
+  OR add \\usepackage{quoting} and keep the quote environment
+
+- For report class specifically, check carefully for any custom or undefined environments
+  and replace them with standard, well-supported environments
 
 Package replacement rules:
 - ALWAYS replace \\usepackage{math} with \\usepackage{amsmath}
 - For math content, use these standard packages: \\usepackage{amsmath,amssymb,amsthm,mathtools}
+- When using report class, ensure proper packages are loaded for any special environments
 - If using fontspec with Helvetica and getting "Font cannot be found" errors, replace fontspec with standard LaTeX font packages
 - For beamer presentations with font issues, modify theme configuration to use only default fonts
 - Instead of "\\usepackage{fontspec}\\setmainfont{Helvetica}", use "\\usepackage{helvet}\\renewcommand{\\familydefault}{\\sfdefault}"
