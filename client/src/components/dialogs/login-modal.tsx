@@ -45,7 +45,6 @@ const loginSchema = z.object({
 });
 
 const registerSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
@@ -60,24 +59,26 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [, navigate] = useLocation();
   const [showRegister, setShowRegister] = useState(false);
 
-  // Use the appropriate schema based on whether we're showing the register form
-  const currentSchema = showRegister ? registerSchema : loginSchema;
-  
-  // Form with dynamic schema resolution
-  const form = useForm<z.infer<typeof currentSchema>>({
-    resolver: zodResolver(currentSchema),
-    defaultValues: showRegister 
-      ? {
-          username: "",
-          email: "",
-          password: "",
-        }
-      : {
-          email: "",
-          password: "",
-          rememberMe: false,
-        },
+  // We need separate forms for register and login due to type issues
+  const registerForm = useForm<z.infer<typeof registerSchema>>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      email: "",
+      password: ""
+    }
   });
+  
+  const loginForm = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      rememberMe: false
+    }
+  });
+  
+  // Use the appropriate form based on whether we're showing the register form
+  const form = showRegister ? registerForm : loginForm;
 
   // Handles resending verification email
   const handleResendVerification = async () => {
@@ -127,7 +128,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       // Prepare the data we'll send to the server
       const requestData = showRegister 
         ? {
-            username: values.username,
+            username: values.email, // Use email as username
             email: values.email,
             password: values.password
           }
@@ -275,28 +276,6 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           <>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                {/* Username field - only show when registering */}
-                {showRegister && (
-                  <FormField
-                    control={form.control}
-                    name="username"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Username</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="yourname"
-                            type="text"
-                            autoComplete="username"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-                
                 <FormField
                   control={form.control}
                   name="email"
