@@ -216,9 +216,9 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           {/* Free Tier */}
           <div 
             className={cn(
-              "border rounded-lg p-5 relative flex flex-col w-48",
-              session.tier === SubscriptionTier.Free ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
-              "cursor-pointer hover:border-blue-300 transition-colors"
+              "border rounded-lg p-5 relative flex flex-col w-48 depth-3d",
+              session.tier === SubscriptionTier.Free ? "border-blue-500 bg-blue-50" : "glass-card",
+              "cursor-pointer transition-all duration-300"
             )}
             onClick={() => handleSelectPlan(SubscriptionTier.Free)}
           >
@@ -237,9 +237,9 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           {/* Basic Tier */}
           <div 
             className={cn(
-              "border rounded-lg p-5 relative flex flex-col w-48",
-              session.tier === SubscriptionTier.Basic ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
-              "cursor-pointer hover:border-blue-300 transition-colors"
+              "border rounded-lg p-5 relative flex flex-col w-48 depth-3d",
+              session.tier === SubscriptionTier.Basic ? "border-blue-500 bg-blue-50" : "glass-card",
+              "cursor-pointer transition-all duration-300"
             )}
             onClick={() => handleSelectPlan(SubscriptionTier.Basic)}
           >
@@ -258,9 +258,9 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           {/* Standard Tier */}
           <div 
             className={cn(
-              "border rounded-lg p-5 relative flex flex-col w-48",
-              session.tier === SubscriptionTier.Tier2 ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
-              "cursor-pointer hover:border-blue-300 transition-colors"
+              "border rounded-lg p-5 relative flex flex-col w-48 depth-3d",
+              session.tier === SubscriptionTier.Tier2 ? "border-blue-500 bg-blue-50" : "glass-card",
+              "cursor-pointer transition-all duration-300"
             )}
             onClick={() => handleSelectPlan(SubscriptionTier.Tier2)}
           >
@@ -279,9 +279,9 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           {/* Pro Tier */}
           <div 
             className={cn(
-              "border rounded-lg p-5 relative flex flex-col w-48",
-              session.tier === SubscriptionTier.Pro ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
-              "cursor-pointer hover:border-blue-300 transition-colors"
+              "border rounded-lg p-5 relative flex flex-col w-48 depth-3d",
+              session.tier === SubscriptionTier.Pro ? "border-blue-500 bg-blue-50" : "glass-card",
+              "cursor-pointer transition-all duration-300"
             )}
             onClick={() => handleSelectPlan(SubscriptionTier.Pro)}
           >
@@ -300,9 +300,9 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           {/* Advanced Tier */}
           <div 
             className={cn(
-              "border rounded-lg p-5 relative flex flex-col w-48",
-              session.tier === SubscriptionTier.Tier4 ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
-              "cursor-pointer hover:border-blue-300 transition-colors"
+              "border rounded-lg p-5 relative flex flex-col w-48 depth-3d",
+              session.tier === SubscriptionTier.Tier4 ? "border-blue-500 bg-blue-50" : "glass-card",
+              "cursor-pointer transition-all duration-300"
             )}
             onClick={() => handleSelectPlan(SubscriptionTier.Tier4)}
           >
@@ -321,9 +321,9 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           {/* Power Tier */}
           <div 
             className={cn(
-              "border rounded-lg p-5 relative flex flex-col w-48",
-              session.tier === SubscriptionTier.Power ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
-              "cursor-pointer hover:border-blue-300 transition-colors"
+              "border rounded-lg p-5 relative flex flex-col w-48 depth-3d",
+              session.tier === SubscriptionTier.Power ? "border-blue-500 bg-blue-50" : "glass-card",
+              "cursor-pointer transition-all duration-300"
             )}
             onClick={() => handleSelectPlan(SubscriptionTier.Power)}
           >
@@ -366,7 +366,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             {/* Desktop view for refill pack */}
             <div className="hidden md:flex md:justify-center">
               <div 
-                className="border border-emerald-200 rounded-lg p-5 bg-emerald-50 relative cursor-pointer flex flex-col max-w-sm"
+                className="border border-emerald-200 rounded-lg p-5 relative cursor-pointer flex flex-col max-w-sm depth-3d glass-card"
                 onClick={() => {
                   onClose();
                   navigate("/refill");
