@@ -13,6 +13,15 @@ import {
 // Check for Railway deployment environment
 const isRailwayDeployment = process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_SERVICE_ID;
 
+// Logging Railway environment for debugging
+if (isRailwayDeployment) {
+  console.log('[LATEX DEBUG] Running in Railway environment');
+  console.log('[LATEX DEBUG] RAILWAY_STATIC_URL:', process.env.RAILWAY_STATIC_URL);
+  console.log('[LATEX DEBUG] RAILWAY_SERVICE_ID:', process.env.RAILWAY_SERVICE_ID);
+} else {
+  console.log('[LATEX DEBUG] Not running in Railway environment');
+}
+
 /**
  * Compile LaTeX to PDF using Tectonic
  */
