@@ -560,22 +560,26 @@ export default function Home() {
 
   return (
     <SiteLayout>
-      <div className="h-full flex flex-col md:flex-row">
+      <div className="h-full flex flex-col md:flex-row bg-gradient-soft">
         {/* Left Panel (Input) */}
-        <div className="w-full md:w-1/2 h-full">
-          <LatexInput
-            value={editorState.inputContent}
-            onChange={handleInputChange}
-            onGenerate={handleGenerate}
-            documentType={editorState.documentType}
-            onDocumentTypeChange={handleDocumentTypeChange}
-            generating={editorState.isGenerating}
-          />
+        <div className="w-full md:w-1/2 h-full relative">
+          <div className="absolute inset-4 glass rounded-lg shadow-lg overflow-hidden depth-3d">
+            <LatexInput
+              value={editorState.inputContent}
+              onChange={handleInputChange}
+              onGenerate={handleGenerate}
+              documentType={editorState.documentType}
+              onDocumentTypeChange={handleDocumentTypeChange}
+              generating={editorState.isGenerating}
+            />
+          </div>
         </div>
 
         {/* Right Panel (Output) */}
-        <div className="w-full md:w-1/2 h-full">
-          <TabsWithContent tabs={tabs} defaultTabId="latex" />
+        <div className="w-full md:w-1/2 h-full relative">
+          <div className="absolute inset-4 glass rounded-lg shadow-lg overflow-hidden depth-3d">
+            <TabsWithContent tabs={tabs} defaultTabId="latex" />
+          </div>
         </div>
       </div>
 

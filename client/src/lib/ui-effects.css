@@ -1,0 +1,102 @@
+/* Modern UI Effects - Applied throughout the application */
+
+/* 1. Glassmorphism 2.0 */
+.glass {
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+.glass-dark {
+  background-color: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* 2. 3D Elements with Depth */
+.depth-3d {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.depth-3d:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.depth-subtle {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.depth-subtle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 5px -2px rgba(0, 0, 0, 0.06);
+}
+
+/* 3. Variable Blending Colors */
+.variable-gradient {
+  background: linear-gradient(135deg, var(--gradient-from, #3b82f6), var(--gradient-to, #8b5cf6));
+  transition: background 0.5s ease;
+}
+
+.variable-gradient:hover {
+  background: linear-gradient(135deg, var(--gradient-from-hover, #2563eb), var(--gradient-to-hover, #7c3aed));
+}
+
+.text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(to right, var(--gradient-from, #3b82f6), var(--gradient-to, #8b5cf6));
+}
+
+/* 4. Morphing Micro-interactions */
+.morph-button {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.morph-button:active {
+  transform: scale(0.97);
+}
+
+/* Enhanced Typography */
+.enhanced-heading {
+  font-weight: 700;
+  line-height: 1.2;
+  background: linear-gradient(to right, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Background gradient for page sections */
+.bg-gradient-soft {
+  background-image: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.05),
+    rgba(147, 51, 234, 0.05)
+  );
+  background-attachment: fixed;
+}
+
+/* Animated gradient backgrounds */
+.animated-gradient {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
