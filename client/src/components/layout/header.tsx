@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext } from "react";
 import { Link, useLocation } from "wouter";
 import { UserContext } from "@/App";
 import { API_ROUTES } from "@/lib/constants";
@@ -12,252 +12,18 @@ import { Loader2 } from "lucide-react";
 
 export default function Header() {
   const [location, navigate] = useLocation();
-  const { session, setSession, checkAndUpdateSession } = useContext(UserContext);
+  const { session, setSession } = useContext(UserContext);
   const { toast } = useToast();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-  
-  // Debug information
-  useEffect(() => {
-    console.log("HEADER AUTH STATE:", {
-      isAuthenticated: session.isAuthenticated,
-      user: session.user?.username,
-      tier: session.tier,
-      isLoading: session.isLoading
-    });
-  }, [session]);
-  
-  // This function forces a check of auth status immediately
-  const forceAuthCheck = async (retryCount = 0, maxRetries = 2) => {
-    try {
-      // Avoid excessive checks if we just checked (debounce for 2 seconds)
-      const now = Date.now();
-      if (session.lastAuthCheck && now - session.lastAuthCheck < 2000) {
-        console.log("SKIPPING AUTH CHECK - too soon since last check");
-        return;
-      }
-      
-      // If we're already authenticated and this is a periodic check, don't show loading state
-      const isPeriodicCheck = retryCount === 0 && session.isAuthenticated;
-      
-      // Only set loading state if we're not already authenticated
-      if (!isPeriodicCheck && !session.isAuthenticated) {
-        setSession(prev => ({
-          ...prev,
-          isLoading: true
-        }));
-      }
-      
-      console.log(`FORCE CHECKING AUTH STATUS (attempt ${retryCount + 1}/${maxRetries + 1})`);
-      const timeoutId = setTimeout(() => {
-        // If it takes more than 5 seconds, stop showing loading state
-        if (!isPeriodicCheck) {
-          setSession(prev => ({
-            ...prev,
-            isLoading: false
-          }));
-        }
-      }, 5000);
-      
-      const response = await fetch(API_ROUTES.auth.me, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'X-Request-Time': now.toString() // Add timestamp to prevent caching
-        }
-      });
-      
-      clearTimeout(timeoutId);
-      console.log("FORCE AUTH CHECK RESPONSE:", response.status);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log("FORCE AUTH CHECK SUCCESS:", data);
-        
-        if (data && data.user) {
-          // Update local storage backup
-          localStorage.setItem('userLoggedIn', 'true');
-          localStorage.setItem('userData', JSON.stringify({
-            username: data.user.username,
-            lastChecked: now
-          }));
-          
-          // Update session with user data
-          setSession({
-            user: data.user,
-            isAuthenticated: true,
-            isLoading: false,
-            tier: data.user.subscriptionTier || SubscriptionTier.Free,
-            usage: {
-              current: data.user.monthlyUsage || 0,
-              limit: data.usageLimit || 3,
-              resetDate: data.user.usageResetDate || new Date().toISOString()
-            },
-            refillPackCredits: data.user.refillPackCredits || 0,
-            lastAuthCheck: now
-          });
-          
-          // Show a success toast if coming from verification
-          const params = new URLSearchParams(window.location.search);
-          if (params.get('verified') === 'true') {
-            toast({
-              title: "Login successful!",
-              description: "Your email has been verified and you're now logged in.",
-            });
-            
-            // Clear the query param
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }
-        } else {
-          console.log("No user data in response");
-          setSession(prev => ({
-            ...prev,
-            isAuthenticated: false,
-            isLoading: false,
-            lastAuthCheck: now
-          }));
-        }
-      } else if (response.status === 401 && retryCount < maxRetries) {
-        console.log(`AUTH CHECK FAILED (${response.status}), retrying in 1 second...`);
-        setTimeout(() => {
-          forceAuthCheck(retryCount + 1, maxRetries);
-        }, 1000);
-        return;
-      } else {
-        console.log("FORCE AUTH CHECK FAILED:", response.status);
-        // User is not authenticated
-        setSession(prev => ({
-          ...prev,
-          isAuthenticated: false,
-          isLoading: false,
-          lastAuthCheck: now
-        }));
-      }
-    } catch (error) {
-      console.error("FORCE AUTH CHECK ERROR:", error);
-      // Retry on error if we have retries left
-      if (retryCount < maxRetries) {
-        console.log(`AUTH CHECK ERROR, retrying in 1 second... (${retryCount + 1}/${maxRetries + 1})`);
-        setTimeout(() => {
-          forceAuthCheck(retryCount + 1, maxRetries);
-        }, 1000);
-        return;
-      }
-      
-      // Check if we have a local storage backup
-      const userLoggedIn = localStorage.getItem('userLoggedIn');
-      const userDataStr = localStorage.getItem('userData');
-      const now = Date.now();
-      
-      if (userLoggedIn === 'true' && userDataStr) {
-        try {
-          const userData = JSON.parse(userDataStr);
-          console.log("USING LOCAL STORAGE BACKUP:", userData);
-          
-          // Show warning toast
-          toast({
-            title: "Connection Issue",
-            description: "Using locally stored session data. Some features may be limited.",
-            variant: "destructive"
-          });
-          
-          // Set partial session data
-          setSession(prev => ({
-            ...prev,
-            isAuthenticated: true,
-            isLoading: false,
-            user: {
-              ...prev.user,
-              username: userData.username
-            },
-            lastAuthCheck: now
-          }));
-        } catch (e) {
-          console.error("Failed to parse local storage user data:", e);
-          setSession(prev => ({
-            ...prev,
-            isAuthenticated: false,
-            isLoading: false,
-            lastAuthCheck: now
-          }));
-        }
-      } else {
-        // No backup, set as not authenticated
-        setSession(prev => ({
-          ...prev,
-          isAuthenticated: false,
-          isLoading: false,
-          lastAuthCheck: now
-        }));
-      }
-    }
-  };
-
-  // Check for query parameters that indicate we're coming from a verification link
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('verified') === 'true') {
-      console.log("DETECTED VERIFICATION REDIRECT - FORCING AUTH CHECK");
-      forceAuthCheck();
-    }
-  }, [location]);
-
-  // Perform a force check when the header mounts
-  useEffect(() => {
-    forceAuthCheck();
-    
-    // Set up periodic checks
-    const intervalId = setInterval(() => {
-      console.log("Performing periodic auth check");
-      forceAuthCheck();
-    }, 60000); // Check every minute
-    
-    // Check on window focus
-    const handleFocus = () => {
-      console.log("Window focused - checking auth");
-      forceAuthCheck();
-    };
-    
-    window.addEventListener('focus', handleFocus);
-    
-    // Clean up
-    return () => {
-      clearInterval(intervalId);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, []);
 
   const handleLogout = async () => {
     try {
-      console.log("LOGOUT STARTED");
-      
-      // Tell the server to clear its session first
-      const logoutResponse = await fetch(API_ROUTES.auth.logout, {
+      // Tell the server to clear its session
+      await fetch(API_ROUTES.auth.logout, {
         method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate'
-        }
+        credentials: 'include'
       });
-      
-      if (!logoutResponse.ok) {
-        console.error("SERVER LOGOUT FAILED:", await logoutResponse.text());
-      } else {
-        console.log("SERVER LOGOUT SUCCESS");
-      }
-      
-      // Clear all backup cookies and storage
-      document.cookie = "userLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      document.cookie = "latex.sid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      document.cookie = "connect.sid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      
-      localStorage.removeItem('userLoggedIn');
-      localStorage.removeItem('userData');
-      sessionStorage.removeItem('userLoggedIn');
       
       // Clear client-side state
       setSession({
@@ -273,79 +39,27 @@ export default function Header() {
         refillPackCredits: 0,
       });
       
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-      });
+      // Clear storage
+      localStorage.clear();
+      sessionStorage.clear();
       
       // Hard reload to clear any state
       window.location.href = '/';
     } catch (error) {
-      console.error("LOGOUT ERROR:", error);
-      
-      // Even if there's an error, clear client state
-      setSession({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        tier: SubscriptionTier.Free,
-        usage: {
-          current: 0,
-          limit: 3,
-          resetDate: new Date().toISOString(),
-        },
-        refillPackCredits: 0,
-      });
-      
-      toast({
-        title: "Error",
-        description: "There was an issue logging out, but your local session has been cleared.",
-        variant: "destructive",
-      });
-      
-      // Hard reload
+      console.error("Logout error:", error);
       window.location.href = '/';
     }
   };
 
-  // Force session sync
-  // State to track if the sync button is loading
-  const [isSyncing, setIsSyncing] = useState(false);
-
-  const forceSessionSync = async () => {
-    console.log("FORCING SESSION SYNC");
+  const handleEmergencyReset = () => {
+    // Clear all storage
+    localStorage.clear();
+    sessionStorage.clear();
     
-    // Don't allow multiple syncs at once
-    if (isSyncing) return;
-    
-    setIsSyncing(true);
-    
-    toast({
-      title: "Refreshing Session",
-      description: "Syncing your session state..."
-    });
-    
-    try {
-      // Use the existing forceAuthCheck function with more retries
-      await forceAuthCheck(0, 3);
-      
-      toast({
-        title: "Session Synced",
-        description: "Your session has been successfully refreshed."
-      });
-    } catch (error) {
-      console.error("Failed to sync session:", error);
-      toast({
-        title: "Sync Failed",
-        description: "Could not sync your session. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      // Always clear the syncing state, even on error
-      setTimeout(() => setIsSyncing(false), 500);
-    }
+    // Hard reload the page
+    window.location.href = '/';
   };
-
+  
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -367,48 +81,25 @@ export default function Header() {
               AI Latex Generator
             </h1>
           </Link>
-          {/* Debug button - only in dev */}
+          
+          {/* Emergency reset button */}
           <Button 
             variant="outline" 
             size="sm" 
-            className="ml-4 text-xs" 
-            onClick={forceSessionSync}
-            disabled={isSyncing}
+            className="ml-4 text-xs bg-red-50 text-red-600 hover:bg-red-100" 
+            onClick={handleEmergencyReset}
           >
-            {isSyncing ? (
-              <>
-                <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                Syncing...
-              </>
-            ) : (
-              "Sync Session"
-            )}
+            Reset App
           </Button>
         </div>
+        
         <div className="flex items-center space-x-4">
           {session.isLoading ? (
-            // Loading state with emergency fix button to manually exit loading state
-            <>
-              <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+            <div className="flex items-center">
+              <Loader2 className="h-5 w-5 animate-spin text-blue-500 mr-2" />
               <span className="text-sm text-gray-600">Loading...</span>
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                className="ml-2 text-xs" 
-                onClick={() => {
-                  console.log("Emergency loading state fix activated");
-                  setSession(prev => ({
-                    ...prev,
-                    isLoading: false,
-                    isAuthenticated: false
-                  }));
-                }}
-              >
-                Emergency Fix
-              </Button>
-            </>
+            </div>
           ) : session.isAuthenticated && session.user ? (
-            // Authenticated state
             <>
               <span className={`text-sm ${getUsageColor(
                 session.usage?.current || 0, 
@@ -423,7 +114,6 @@ export default function Header() {
                 </Link>
               )}
               
-              {/* Account button with username */}
               <Button
                 variant="ghost"
                 className="text-sm text-gray-600 hover:text-gray-800 font-medium"
@@ -432,7 +122,6 @@ export default function Header() {
                 {session.user?.username || "My Account"}
               </Button>
               
-              {/* Logout button */}
               <Button
                 type="button" 
                 variant="ghost"
@@ -442,7 +131,6 @@ export default function Header() {
                 Logout
               </Button>
               
-              {/* Plan button */}
               <Button 
                 onClick={() => setShowSubscriptionModal(true)}
                 className={session.tier === SubscriptionTier.Free ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"}
@@ -451,39 +139,40 @@ export default function Header() {
               </Button>
             </>
           ) : (
-            // Not authenticated state
             <>
-              <span className="text-sm text-gray-600">
-                3 generations left
-              </span>
-              <Button
-                variant="ghost"
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              <Button 
+                variant="outline" 
+                className="text-sm"
                 onClick={() => setShowLoginModal(true)}
               >
-                Sign In
+                Log In
               </Button>
               <Button 
-                onClick={() => setShowSubscriptionModal(true)}
-                className="bg-blue-600 hover:bg-blue-700"
+                onClick={() => setShowLoginModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-sm"
               >
-                Upgrade
+                Sign Up
               </Button>
             </>
           )}
         </div>
       </div>
-
-      {/* Modals */}
-      <LoginModal 
-        isOpen={showLoginModal} 
-        onClose={() => setShowLoginModal(false)} 
-      />
       
-      <SubscriptionModal 
-        isOpen={showSubscriptionModal} 
-        onClose={() => setShowSubscriptionModal(false)} 
-      />
+      {/* Login modal */}
+      {showLoginModal && (
+        <LoginModal
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+        />
+      )}
+      
+      {/* Subscription modal */}
+      {showSubscriptionModal && (
+        <SubscriptionModal
+          isOpen={showSubscriptionModal}
+          onClose={() => setShowSubscriptionModal(false)}
+        />
+      )}
     </header>
   );
 }

@@ -71,11 +71,11 @@ function Router() {
 }
 
 function App() {
-  // Initialize with a loading session
+  // Basic default initialization
   const [session, setSession] = useState<UserSession>({
     user: null,
     isAuthenticated: false,
-    isLoading: true,
+    isLoading: false,
     tier: SubscriptionTier.Free,
     usage: {
       current: 0,
@@ -163,7 +163,8 @@ function App() {
       localStorage.removeItem('userData');
       sessionStorage.removeItem('userLoggedIn');
       
-      setSession({
+      // Force complete reset of session state
+      const resetSession = {
         user: null,
         isAuthenticated: false,
         isLoading: false,
@@ -173,8 +174,17 @@ function App() {
           limit: 3,
           resetDate: new Date().toISOString()
         },
-        refillPackCredits: 0
-      });
+        refillPackCredits: 0,
+        lastAuthCheck: Date.now()
+      };
+      
+      setSession(resetSession);
+      
+      // Also force a reload if we're not already on the home page and it's a 401
+      if (res && res.status === 401 && window.location.pathname !== '/') {
+        console.log("401 detected, redirecting to home page");
+        window.location.href = '/';
+      }
     } catch (error) {
       console.error("SESSION CHECK ERROR:", error);
       setSession(prev => ({...prev, isLoading: false}));
@@ -251,48 +261,18 @@ function App() {
   useEffect(() => {
     console.log("INITIAL AUTH CHECK STARTED");
     
-    // Check if we have data in localStorage as a quick temporary solution
-    try {
-      const userLoggedIn = localStorage.getItem('userLoggedIn');
-      const userDataStr = localStorage.getItem('userData');
-      
-      if (userLoggedIn === 'true' && userDataStr) {
-        // We have some basic data - set a temporary session while we verify
-        const userData = JSON.parse(userDataStr);
-        console.log("Found user data in localStorage:", userData);
-        
-        // Set a temporary authenticated session with minimal data
-        // This prevents UI flickering while we do a proper check
-        setSession(prev => ({
-          ...prev,
-          isAuthenticated: true,
-          isLoading: true, // Still loading, but at least authenticated
-          user: {
-            id: 0, // Temporary ID that will be replaced with real value
-            username: userData.username,
-            email: userData.username, // Use username as email since we have that
-            password: "", // Will be replaced by proper auth check
-            role: "user",
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            emailVerified: true, // Assume verified until we know otherwise
-            monthlyUsage: 0,
-            usageResetDate: new Date(),
-            refillPackCredits: 0,
-            subscriptionTier: SubscriptionTier.Free,
-            subscriptionStatus: "active"
-          }
-        }));
-      }
-    } catch (e) {
-      console.error("Error reading from localStorage:", e);
-    }
+    // Skip localStorage check and go straight to server check
+    // This prevents intermittent loading state issues
+    console.log("Skipping localStorage check to avoid state cycles");
     
     // Perform proper server-side check immediately
-    checkAndUpdateSession();
+    // Add a small delay to ensure the app has time to properly initialize
+    setTimeout(() => {
+      checkAndUpdateSession();
+    }, 100);
     
-    // Setup polling for auth status (backup mechanism)
-    const checkIntervalMs = 60000; // 1 minute (reduced frequency)
+    // Setup polling for auth status (backup mechanism) at a reduced frequency
+    const checkIntervalMs = 120000; // 2 minutes (reduced frequency)
     const intervalId = window.setInterval(checkAndUpdateSession, checkIntervalMs);
     
     // Proper cleanup
@@ -305,7 +285,6 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <UserContext.Provider value={{ session, setSession, checkAndUpdateSession }}>
         <AuthRequiredContext.Provider value={{ showAuthPrompt, setShowAuthPrompt }}>
-          {/* Add LoadingFix component to ensure we never get stuck in loading state */}
           {session.isLoading && <LoadingFix />}
           <Router />
           <AuthRequiredDialog />
