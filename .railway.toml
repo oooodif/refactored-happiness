@@ -1,7 +1,7 @@
 # .railway.toml
 
 [build]
-builder             = "DOCKER"
+builder             = "NIXPACKS"
 buildCommand        = "npm run build"
 packages            = "tectonic"
 
