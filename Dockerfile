@@ -2,14 +2,11 @@ FROM node:18-slim
 
 WORKDIR /app
 
-# Install system dependencies including Tectonic dependencies and fonts
+# Install minimal system dependencies for Tectonic
 RUN apt-get update -y && \
     apt-get install -y curl build-essential fontconfig libfontconfig1-dev \
     libharfbuzz-dev libfreetype6-dev libgraphite2-dev libicu-dev libssl-dev \
-    zlib1g-dev unzip \
-    texlive-fonts-recommended texlive-fonts-extra \
-    texlive-latex-base texlive-latex-recommended \
-    texlive-science texlive-pictures && \
+    zlib1g-dev unzip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

@@ -18,4 +18,4 @@ restartPolicyMaxRetries = 10
 
 # 4. Environment variables for Railway-specific build
 [variables]
-NIXPACKS_PKGS = "fontconfig fontconfig-dev harfbuzz harfbuzz-dev freetype freetype-dev icu texlive-fonts-recommended texlive-fonts-extra texlive-latex-base texlive-latex-recommended"
+NIXPACKS_PKGS = "fontconfig fontconfig-dev harfbuzz harfbuzz-dev freetype freetype-dev icu"
