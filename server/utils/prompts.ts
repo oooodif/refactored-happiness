@@ -134,7 +134,7 @@ DO NOT use these packages:
 DOCUMENT_TYPES = [
   { id: "basic", name: "Basic"}
 **Purpose**: Provide minimal formatting without title or sections for simple content.
-**Enhancements**:
+**Rules**:
 - Uses the article document class with minimal preamble
 - Focuses on content presentation without structural elements
 - Avoids adding title, author, date, or sectioning unless explicitly requested
@@ -144,9 +144,11 @@ DOCUMENT_TYPES = [
 ### Article Document Type
 DOCUMENT_TYPES = [
   { id: article, name: "Article"}
+  
 **Purpose**: Create academic articles with proper title and section formatting.
-**Enhancements**:
+**Rules**:
 - Uses the article document class with appropriate options: \\documentclass[12pt]{article}
+-If the author name in article is "Your Name" as in,  \author{Your Name}, then remove the author name from the LaTeX code
 - Implements title via \\title{} and \\maketitle. Inside the brackets for \\title{}, create a title that is descriptive and concise
 - Implements author via \\author{} only if an author name is explicitly provided in the user's content. DO NOT use "Your Name" as a placeholder
 - If no author name is provided by the user, OMIT the \\author{} command completely
@@ -157,6 +159,7 @@ DOCUMENT_TYPES = [
   \\usepackage{amssymb}
   \\usepackage{graphicx}
   \\usepackage{hyperref}
+  
 - Set geometry options: \\geometry{margin=1in}
 - Adds sectioning with \\section{}, \\subsection{}, and \\subsubsection{}
 - Includes page numbering and appropriate margins
@@ -165,11 +168,15 @@ DOCUMENT_TYPES = [
 - Optimized for scholarly publications, conference submissions, and journal articles
 - Appropriate for users preparing academic papers or structured documents with clear hierarchy
 
+
+
+
 ### Slide Presentation Document Type
 DOCUMENT_TYPES = [
   { id: "presentation", name: "Slide Presentation"}
+  
 **Purpose**: Generate professional slide decks for presentations.
-**Enhancements**:
+**Rules**:
 - Uses beamer document class instead of article
 - Creates frame environments for each slide
 - Adds appropriate theme, color scheme, and navigation elements
@@ -185,11 +192,14 @@ DOCUMENT_TYPES = [
 - Perfect for academic talks, business presentations, or lecture materials
 - Ideal for users who need to convert content outlines or longer documents into structured presentations
 
+
+
 ### Report Document Type
 DOCUMENT_TYPES = [
   { id: "report", name: "Report"}
+  
 **Purpose**: Format formal reports with title page and chapters.
-**Enhancements**:
+**Rules**:
 - Uses report document class with chapters as top-level division
 - Creates professional title page with proper title formatting
 - Uses \\chapter{} and \\section{} commands for structure
@@ -204,11 +214,12 @@ DOCUMENT_TYPES = [
 - Suitable for business reports, technical documentation, or governmental documents
 - Best for users creating lengthy, structured documents with formal requirements
 
+
 ### Letter Document Type
 DOCUMENT_TYPES = [
   { id: "letter", name: "Letter"}
 **Purpose**: Format formal correspondence with sender and recipient information.
-**Enhancements**:
+**Rules**:
 - Uses letter document class with appropriate spacing
 - Formats sender and recipient addresses in correct positions
 - Adds date, subject line, and salutation
@@ -219,11 +230,12 @@ DOCUMENT_TYPES = [
 - Perfect for formal correspondence, application letters, or business communications
 - Ideal for users needing properly formatted professional letters rather than content documents
 
+
 ### Book Document Type
 DOCUMENT_TYPES = [
   { id: "book", name: "Book"}
 **Purpose**: Structure multi-chapter books with complex organization.
-**Enhancements**:
+**Rules**:
 - Uses book document class with appropriate chapter divisions
 - Creates front matter (title page, copyright, dedication, preface)
 - Implements table of contents, list of figures/tables
