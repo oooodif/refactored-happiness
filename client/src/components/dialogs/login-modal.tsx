@@ -126,16 +126,36 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       
       // Check for 403 status which might indicate email verification needed
       if (response.status === 403) {
-        const data = await response.json();
+        const errorData = await response.json();
         
-        if (data.requiresEmailVerification) {
+        // Look for verification requirement in the response data
+        if (errorData.requiresEmailVerification || 
+            (errorData.message && errorData.message.includes("verify your email"))) {
+          console.log("Verification required for:", values.email);
           // Store the email for resend functionality
           setVerificationEmail(values.email);
           setRequiresVerification(true);
+          
+          toast({
+            title: "Verification Required",
+            description: "Please check your email for a verification link or request a new one.",
+            variant: "destructive",
+          });
+          
           return;
         }
+        
+        // If we get here, it's a 403 but not a verification issue
+        toast({
+          title: "Authentication Failed",
+          description: errorData.message || "Access denied. Please check your credentials.",
+          variant: "destructive",
+        });
+        
+        return;
       }
       
+      // Only parse the response JSON for successful responses
       const data = await response.json();
       
       // If registration was successful but email verification is pending
