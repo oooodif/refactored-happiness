@@ -188,10 +188,12 @@ function App() {
       
       setSession(resetSession);
       
-      // Also force a reload if we're not already on the home page and it's a 401
-      if (res && res.status === 401 && window.location.pathname !== '/') {
-        console.log("401 detected, redirecting to home page");
-        window.location.href = '/';
+      // Allow certain pages to handle their own auth state without auto-redirecting
+      const noRedirectPaths = ['/', '/login', '/register', '/auth'];
+      if (res && res.status === 401 && !noRedirectPaths.includes(window.location.pathname) && 
+          !window.location.pathname.startsWith('/template/')) {
+        console.log("401 detected, but not redirecting for protected path:", window.location.pathname);
+        // Don't force redirect, let the page handle its own auth state
       }
     } catch (error) {
       console.error("SESSION CHECK ERROR:", error);

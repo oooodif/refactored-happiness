@@ -42,13 +42,39 @@ export default function Register() {
   const { session, setSession } = useContext(UserContext);
   const [, navigate] = useLocation();
 
-  // Redirect if already logged in
+  // Track if we've modified the page to prevent auto-redirects
+  const [hasInteracted, setHasInteracted] = useState(false);
+  
+  // Add SEO enhancement for register page
   useEffect(() => {
+    // Update page title and meta description
+    document.title = "Create Account - AI LaTeX Generator";
+    
+    // Update meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 
+        "Create your AI LaTeX Generator account. Sign up to generate LaTeX documents, academic papers, and presentations with AI assistance.");
+    }
+  }, []);
+  
+  // Only redirect if already logged in - but don't auto-redirect on page load
+  useEffect(() => {
+    // Don't redirect if user has interacted with the page
+    if (hasInteracted) return;
+    
     // Only redirect after auth check is complete and user is authenticated
     if (!session.isLoading && session.isAuthenticated) {
-      navigate("/");
+      // Show a toast instead of immediately redirecting
+      toast({
+        title: "Already logged in",
+        description: "You're already signed in to your account."
+      });
+      
+      // Allow user to stay on the page and don't automatically redirect
+      setHasInteracted(true);
     }
-  }, [session.isLoading, session.isAuthenticated, navigate]);
+  }, [session.isLoading, session.isAuthenticated, navigate, hasInteracted, toast]);
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -61,6 +87,8 @@ export default function Register() {
   });
 
   const onSubmit = async (values: z.infer<typeof registerSchema>) => {
+    // Mark that the user has interacted with the page
+    setHasInteracted(true);
     setIsLoading(true);
     try {
       const response = await apiRequest("POST", API_ROUTES.auth.register, {

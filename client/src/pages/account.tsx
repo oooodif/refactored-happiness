@@ -173,8 +173,27 @@ export default function Account() {
     return () => {};
   }, []);
 
-  // Redirect to login if not authenticated
+  // Track if we've already redirected to prevent double redirects
+  const [hasRedirected, setHasRedirected] = useState(false);
+
+  // Add SEO enhancement for account page
   useEffect(() => {
+    // Update page title and meta description
+    document.title = "Account Settings - AI LaTeX Generator";
+    
+    // Update meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 
+        "Manage your AI LaTeX Generator account settings, subscription plan, and LaTeX generation credits. View usage statistics and billing information.");
+    }
+  }, []);
+  
+  // Redirect to login if not authenticated - with protection against auto-redirects
+  useEffect(() => {
+    // Skip if we've already handled a redirect or if page is still loading
+    if (hasRedirected || pageIsLoading) return;
+    
     console.log("Account page session state:", {
       isLoading: session.isLoading,
       isAuthenticated: session.isAuthenticated,
@@ -186,15 +205,30 @@ export default function Account() {
       } : null
     });
     
-    if (!session.isLoading && !session.isAuthenticated) {
-      console.log("Not authenticated, redirecting to login page");
+    // Only redirect if we're definitely not authenticated (not loading and not authenticated)
+    // AND we haven't already redirected
+    if (!session.isLoading && !session.isAuthenticated && !hasRedirected) {
+      console.log("Not authenticated, showing toast and setting redirect flag");
+      
+      // Only show the toast, don't immediately redirect
       toast({
         title: "Authentication Required",
         description: "Please log in to view your account",
+        action: (
+          <Button 
+            onClick={() => navigate("/")}
+            variant="default"
+            size="sm"
+          >
+            Go to Login
+          </Button>
+        )
       });
-      navigate("/");
+      
+      // Mark that we've handled this case
+      setHasRedirected(true);
     }
-  }, [session.isLoading, session.isAuthenticated, navigate]);
+  }, [session.isLoading, session.isAuthenticated, navigate, hasRedirected, pageIsLoading, toast]);
 
   // Show loading state while checking authentication
   if (pageIsLoading || session.isLoading) {
