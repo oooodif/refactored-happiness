@@ -128,20 +128,33 @@ export default function LatexInput({
                 hasLatexContent ? "hover:bg-red-50 hover:border-red-300 text-gray-700" : "text-gray-400 bg-gray-50 cursor-not-allowed"
               }`}
               onClick={() => {
-                if (notes.trim() && onModify && hasLatexContent) {
-                  // Wrap the content in <OMIT> tags and send
-                  const omitContent = `<OMIT>${notes.trim()}</OMIT>`;
-                  onModify(omitContent, false);
-                  setNotes("");
+                if (hasLatexContent) {
+                  if (notes.trim()) {
+                    // If there's already text, wrap it in OMIT tags and send
+                    const omitContent = `<OMIT>${notes.trim()}</OMIT>`;
+                    onModify?.(omitContent, false);
+                    setNotes("");
+                  } else {
+                    // If no text yet, just insert the OMIT placeholder in the notes field
+                    setNotes("<OMIT> Place Omission Request Here </OMIT>");
+                    if (notesInputRef.current) {
+                      notesInputRef.current.focus();
+                      // Place cursor between the tags (after the opening prompt text)
+                      const cursorPosition = "<OMIT> ".length;
+                      setTimeout(() => {
+                        notesInputRef.current?.setSelectionRange(cursorPosition, cursorPosition + "Place Omission Request Here".length);
+                      }, 10);
+                    }
+                  }
                 }
               }}
-              disabled={!notes.trim() || generating || !hasLatexContent}
+              disabled={generating || !hasLatexContent}
             >
               <span className={`font-mono mr-1 ${hasLatexContent ? "text-red-600" : "text-gray-400"}`}>✂</span> OMIT
             </Button>
             <div className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 -top-16 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10 w-64 text-center">
               {hasLatexContent 
-                ? "Marks specific content to be removed from your LaTeX document" 
+                ? "Click to add OMIT tags in the notes field, or wrap existing text in OMIT tags" 
                 : "Generate LaTeX content first to enable the OMIT function"}
               <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-800"></div>
             </div>
