@@ -206,13 +206,18 @@ If you encounter errors like "Error: Docker build failed":
      ```
      rm -f Dockerfile docker-compose.yml .dockerignore
      ```
-   - Check for Docker files in node_modules (these can cause conflicts):
+   - Use the provided script to handle Docker files in node_modules:
      ```
-     find ./node_modules -name "Dockerfile" -o -name "docker-compose.yml"
+     node scripts/prepare-railway-deploy.js
      ```
-   - For deployment, you may need to temporarily rename these files:
+   - This script will:
+     - Find all Docker-related files in node_modules
+     - Rename them to prevent detection by Railway
+     - Update .npmignore with proper exclusion patterns
+     - Create a log for easy restoration after deployment
+   - After deployment, you can restore the renamed files:
      ```
-     find ./node_modules -name "docker-compose.yml" -exec mv {} {}.bak \;
+     node scripts/restore-railway-files.js
      ```
    - Commit and push these changes to your repository
 
@@ -255,16 +260,40 @@ If you encounter errors like "Error: Docker build failed":
      ```
    - Note: The duplicate "npm run build" in both buildCommand and preDeployCommand may be redundant but shouldn't cause issues
 
-5. **Create an .npmignore file**:
-   - Create an .npmignore file to explicitly exclude Docker-related files in node_modules:
+5. **Verify the .npmignore file**:
+   - An .npmignore file has been created to exclude Docker-related files:
      ```
+     # Ignore Docker-related files to prevent Railway from detecting them
      **/Dockerfile
      **/docker-compose.yml
      **/docker-compose.yaml
      **/.dockerignore
      **/docker/
+     
+     # Ignore development files
+     node_modules
+     .git
+     .github
+     .gitlab
+     .vscode
+     .idea
+     .env.local
+     .env.*.local
+     
+     # Ignore test files
+     **/*.test.js
+     **/*.spec.js
+     **/__tests__/
+     **/test/
+     **/tests/
+     
+     # Ignore documentation
+     docs/
+     *.md
+     !README.md
      ```
    - This helps prevent Railway from detecting these files during deployment
+   - Note: The prepare-railway-deploy.js script will also update this file if needed
 
 6. **Last resort: Start from a fresh project**:
    - If you continue to encounter Docker-related failures, consider creating a new Railway project

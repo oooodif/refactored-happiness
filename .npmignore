@@ -1,0 +1,28 @@
+# Ignore Docker-related files to prevent Railway from detecting them
+**/Dockerfile
+**/docker-compose.yml
+**/docker-compose.yaml
+**/.dockerignore
+**/docker/
+
+# Ignore development files
+node_modules
+.git
+.github
+.gitlab
+.vscode
+.idea
+.env.local
+.env.*.local
+
+# Ignore test files
+**/*.test.js
+**/*.spec.js
+**/__tests__/
+**/test/
+**/tests/
+
+# Ignore documentation
+docs/
+*.md
+!README.md
