@@ -35,7 +35,7 @@ export default function SuccessPage() {
 
   if (isLoading) {
     return (
-      <SiteLayout>
+      <SiteLayout seoTitle="Processing Payment - AI LaTeX Generator">
         <div className="flex items-center justify-center min-h-[70vh]">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
           <p className="ml-2">Processing your payment...</p>

@@ -4,6 +4,7 @@ import { Mail, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { API_ROUTES } from "@/lib/constants";
+import SiteLayout from "@/components/layout/site-layout";
 
 enum VerificationState {
   LOADING = "loading",
@@ -220,9 +221,21 @@ export default function VerifyEmail() {
     }
   };
   
+  // Use different SEO titles based on verification state
+  let seoTitle = "Verifying Your Email - AI LaTeX Generator";
+  if (state === VerificationState.SUCCESS) {
+    seoTitle = "Email Verified Successfully - AI LaTeX Generator";
+  } else if (state === VerificationState.ERROR) {
+    seoTitle = "Email Verification Failed - AI LaTeX Generator";
+  } else if (state === VerificationState.TOKEN_EXPIRED) {
+    seoTitle = "Verification Link Expired - AI LaTeX Generator";
+  }
+
   return (
-    <div className="container flex items-center justify-center min-h-screen py-8">
-      {renderContent()}
-    </div>
+    <SiteLayout seoTitle={seoTitle}>
+      <div className="container flex items-center justify-center min-h-screen py-8">
+        {renderContent()}
+      </div>
+    </SiteLayout>
   );
 }
