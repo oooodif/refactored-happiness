@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 
 // Check if Stripe is properly initialized
-const isStripeAvailable = !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const isStripeAvailable = !!import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 
 export default function Subscribe() {
   const [isLoading, setIsLoading] = useState(true);
