@@ -16,19 +16,20 @@ export default function AuthRequiredDialog() {
   const [open, setOpen] = useState(false);
   const [, navigate] = useLocation();
 
-  // Sync the local state with the context state
+  // Sync the local state with the context state only once
   useEffect(() => {
     console.log("Auth dialog context state changed:", showAuthPrompt);
     setOpen(showAuthPrompt);
   }, [showAuthPrompt]);
-
-  // When local state changes, update the context
-  useEffect(() => {
-    if (open !== showAuthPrompt) {
-      console.log("Updating context state from local:", open);
-      setShowAuthPrompt(open);
+  
+  // When dialog is manually closed, update the context only
+  const handleDialogChange = (value: boolean) => {
+    console.log("Dialog open state changed to:", value);
+    setOpen(value);
+    if (!value) {
+      setShowAuthPrompt(false);
     }
-  }, [open, setShowAuthPrompt, showAuthPrompt]);
+  };
 
   // Debug effect to monitor dialog visibility
   useEffect(() => {
@@ -38,24 +39,27 @@ export default function AuthRequiredDialog() {
   const handleSignUp = () => {
     console.log("Sign up clicked");
     setOpen(false);
+    setShowAuthPrompt(false);
     navigate('/register');
   };
 
   const handleLogin = () => {
     console.log("Login clicked");
     setOpen(false);
+    setShowAuthPrompt(false);
     navigate('/login');
   };
 
   const handleClose = () => {
     console.log("Dialog closed");
     setOpen(false);
+    setShowAuthPrompt(false);
   };
 
   console.log("Auth dialog render:", { contextState: showAuthPrompt, localState: open });
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Account Required</DialogTitle>
