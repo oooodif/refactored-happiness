@@ -14,212 +14,224 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
   const textContainerRef = useRef<HTMLDivElement>(null);
   const particlesRef = useRef<HTMLDivElement>(null);
   const orbContainerRef = useRef<HTMLDivElement>(null);
-
-  // Create a custom particle system with ultraviolent aesthetic
+  
+  // Create particles and orb effects
   useEffect(() => {
-    if (particlesRef.current) {
-      // Clear any existing content
-      const particlesContainer = particlesRef.current;
-      particlesContainer.innerHTML = '';
-      particlesContainer.style.position = 'absolute';
-      particlesContainer.style.top = '0';
-      particlesContainer.style.left = '0';
-      particlesContainer.style.width = '100%';
-      particlesContainer.style.height = '100%';
-      particlesContainer.style.overflow = 'hidden';
-      particlesContainer.style.pointerEvents = 'none';
-      
-      // Create custom particles
-      const particleCount = 80;
-      const colors = ['#ff00ff', '#9c27b0', '#673ab7', '#3f51b5'];
-      
-      for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'ultraviolent-particle';
+    try {
+      // Create particles
+      if (particlesRef.current) {
+        const particlesContainer = particlesRef.current;
+        particlesContainer.innerHTML = '';
+        particlesContainer.style.position = 'absolute';
+        particlesContainer.style.top = '0';
+        particlesContainer.style.left = '0';
+        particlesContainer.style.width = '100%';
+        particlesContainer.style.height = '100%';
+        particlesContainer.style.overflow = 'hidden';
+        particlesContainer.style.pointerEvents = 'none';
         
-        // Random position
-        const posX = Math.random() * 100;
-        const posY = Math.random() * 100;
+        // Create custom particles
+        const particleCount = 80;
+        const colors = ['#ff00ff', '#9c27b0', '#673ab7', '#3f51b5'];
         
-        // Random size
-        const size = Math.random() * 5 + 2;
-        
-        // Random color from our palette
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        
-        // Set particle styles
-        particle.style.position = 'absolute';
-        particle.style.left = `${posX}%`;
-        particle.style.top = `${posY}%`;
-        particle.style.width = `${size}px`;
-        particle.style.height = `${size}px`;
-        particle.style.borderRadius = '50%';
-        particle.style.backgroundColor = color;
-        particle.style.boxShadow = `0 0 ${size * 2}px ${color}`;
-        particle.style.opacity = `${Math.random() * 0.7 + 0.3}`;
-        
-        // Add random animation with keyframes
-        const duration = Math.random() * 15 + 10;
-        const delay = Math.random() * 10;
-        
-        // Create unique animation name
-        const animName = `particle-${i}-float`;
-        
-        // Create and append style with keyframes
-        const style = document.createElement('style');
-        style.innerHTML = `
-          @keyframes ${animName} {
-            0% {
-              transform: translate(0, 0) scale(1);
-              opacity: ${Math.random() * 0.5 + 0.5};
-            }
-            25% {
-              transform: translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) scale(${Math.random() + 0.5});
-            }
-            50% {
-              transform: translate(${Math.random() * 200 - 100}px, ${Math.random() * 200 - 100}px) scale(${Math.random() + 0.2});
-              opacity: ${Math.random() * 0.5 + 0.3};
-            }
-            75% {
-              transform: translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) scale(${Math.random() + 0.5});
-            }
-            100% {
-              transform: translate(0, 0) scale(1);
-              opacity: ${Math.random() * 0.5 + 0.5};
-            }
-          }
-        `;
-        document.head.appendChild(style);
-        
-        // Apply animation
-        particle.style.animation = `${animName} ${duration}s ease-in-out ${delay}s infinite`;
-        
-        // Add to container
-        particlesContainer.appendChild(particle);
-      }
-      
-      // Add mouse follow effect
-      particlesContainer.addEventListener('mousemove', (e) => {
-        const mouseX = e.clientX;
-        const mouseY = e.clientY;
-        
-        // Get all particles
-        const particles = particlesContainer.querySelectorAll('.ultraviolent-particle');
-        
-        // Animate particles to slightly follow mouse
-        particles.forEach((particle) => {
-          const rect = particle.getBoundingClientRect();
-          const particleX = rect.left + rect.width / 2;
-          const particleY = rect.top + rect.height / 2;
+        for (let i = 0; i < particleCount; i++) {
+          const particle = document.createElement('div');
+          particle.className = 'ultraviolent-particle';
           
-          // Calculate distance
-          const distX = mouseX - particleX;
-          const distY = mouseY - particleY;
-          const distance = Math.sqrt(distX * distX + distY * distY);
+          // Random position
+          const posX = Math.random() * 100;
+          const posY = Math.random() * 100;
           
-          // Only affect particles within 200px
-          if (distance < 200) {
-            const moveX = distX * 0.05;
-            const moveY = distY * 0.05;
+          // Random size
+          const size = Math.random() * 5 + 2;
+          
+          // Random color from our palette
+          const color = colors[Math.floor(Math.random() * colors.length)];
+          
+          // Set particle styles
+          particle.style.position = 'absolute';
+          particle.style.left = `${posX}%`;
+          particle.style.top = `${posY}%`;
+          particle.style.width = `${size}px`;
+          particle.style.height = `${size}px`;
+          particle.style.borderRadius = '50%';
+          particle.style.backgroundColor = color;
+          particle.style.boxShadow = `0 0 ${size * 2}px ${color}`;
+          particle.style.opacity = `${Math.random() * 0.7 + 0.3}`;
+          
+          // Add random animation with keyframes
+          const duration = Math.random() * 15 + 10;
+          const delay = Math.random() * 10;
+          
+          // Create unique animation name
+          const animName = `particle-${i}-float`;
+          
+          // Create and append style with keyframes
+          const style = document.createElement('style');
+          style.innerHTML = `
+            @keyframes ${animName} {
+              0% {
+                transform: translate(0, 0) scale(1);
+                opacity: ${Math.random() * 0.5 + 0.5};
+              }
+              25% {
+                transform: translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) scale(${Math.random() + 0.5});
+              }
+              50% {
+                transform: translate(${Math.random() * 200 - 100}px, ${Math.random() * 200 - 100}px) scale(${Math.random() + 0.2});
+                opacity: ${Math.random() * 0.5 + 0.3};
+              }
+              75% {
+                transform: translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) scale(${Math.random() + 0.5});
+              }
+              100% {
+                transform: translate(0, 0) scale(1);
+                opacity: ${Math.random() * 0.5 + 0.5};
+              }
+            }
+          `;
+          document.head.appendChild(style);
+          
+          // Apply animation
+          particle.style.animation = `${animName} ${duration}s ease-in-out ${delay}s infinite`;
+          
+          // Add to container
+          particlesContainer.appendChild(particle);
+        }
+        
+        // Add mouse follow effect
+        particlesContainer.addEventListener('mousemove', (e) => {
+          const mouseX = e.clientX;
+          const mouseY = e.clientY;
+          
+          // Get all particles
+          const particles = particlesContainer.querySelectorAll('.ultraviolent-particle');
+          
+          // Animate particles to slightly follow mouse
+          particles.forEach((particle) => {
+            const rect = particle.getBoundingClientRect();
+            const particleX = rect.left + rect.width / 2;
+            const particleY = rect.top + rect.height / 2;
             
-            // Apply gentle attraction effect
-            gsap.to(particle, {
-              x: `+=${moveX}`,
-              y: `+=${moveY}`,
-              duration: 2,
-              ease: 'power2.out'
-            });
-          }
+            // Calculate distance
+            const distX = mouseX - particleX;
+            const distY = mouseY - particleY;
+            const distance = Math.sqrt(distX * distX + distY * distY);
+            
+            // Only affect particles within 200px
+            if (distance < 200) {
+              const moveX = distX * 0.05;
+              const moveY = distY * 0.05;
+              
+              // Apply gentle attraction effect
+              gsap.to(particle, {
+                x: `+=${moveX}`,
+                y: `+=${moveY}`,
+                duration: 2,
+                ease: 'power2.out'
+              });
+            }
+          });
         });
-      });
-    }
-
-    // Create the glowing orb effect
-    if (orbContainerRef.current) {
-      const container = orbContainerRef.current;
-      container.innerHTML = '';
-      
-      // Central orb
-      const orb = document.createElement('div');
-      orb.className = 'glowing-orb';
-      container.appendChild(orb);
-      
-      // Pulsing rings
-      for (let i = 0; i < 3; i++) {
-        const ring = document.createElement('div');
-        ring.className = `glowing-orb-ring ring${i+1}`;
-        container.appendChild(ring);
       }
+
+      // Create the glowing orb effect
+      if (orbContainerRef.current) {
+        const container = orbContainerRef.current;
+        container.innerHTML = '';
+        
+        // Central orb
+        const orb = document.createElement('div');
+        orb.className = 'glowing-orb';
+        container.appendChild(orb);
+        
+        // Pulsing rings
+        for (let i = 0; i < 3; i++) {
+          const ring = document.createElement('div');
+          ring.className = `glowing-orb-ring ring${i+1}`;
+          container.appendChild(ring);
+        }
+      }
+    } catch (error) {
+      console.error("Error creating particles:", error);
     }
   }, []);
 
   // Text animation sequence with GSAP
   useEffect(() => {
-    if (textContainerRef.current) {
-      const timeline = gsap.timeline({
-        defaults: { duration: 1, ease: "power3.out" }
-      });
-      
-      // Create text animation for each heading
-      const title = textContainerRef.current.querySelector('.hero-text-1');
-      const subtitle = textContainerRef.current.querySelector('.hero-text-2');
-      const subsubtitle = textContainerRef.current.querySelector('.hero-text-3');
-      const cta = textContainerRef.current.querySelector('.cta-button');
-      
-      if (title && subtitle && subsubtitle && cta) {
-        timeline
-          .from(title, {
-            opacity: 0,
-            y: 50,
-            duration: 1.2
-          })
-          .to(title, {
-            color: "#ff00ff",
-            textShadow: "0 0 15px rgba(255, 0, 255, 0.8)",
-            duration: 0.2
-          })
-          .to(title, {
-            color: "white",
-            textShadow: "0 0 0px rgba(255, 255, 255, 0)",
-            duration: 0.2
-          })
-          .from(subtitle, {
-            opacity: 0,
-            y: 30,
-            duration: 1
-          }, "-=0.5")
-          .from(subsubtitle, {
-            opacity: 0,
-            y: 30,
-            duration: 0.8
-          }, "-=0.3")
-          .from(cta, {
-            opacity: 0,
-            scale: 0.8,
-            duration: 0.8
-          }, "-=0.2")
-          .to(".hero-text-container", {
-            boxShadow: "0 0 40px rgba(156, 39, 176, 0.7)",
-            duration: 2,
-            repeat: -1,
-            yoyo: true
-          }, "-=0.5");
+    try {
+      if (textContainerRef.current) {
+        const timeline = gsap.timeline({
+          defaults: { duration: 1, ease: "power3.out" }
+        });
+        
+        // Create text animation for each heading
+        const title = textContainerRef.current.querySelector('.hero-text-1');
+        const subtitle = textContainerRef.current.querySelector('.hero-text-2');
+        const subsubtitle = textContainerRef.current.querySelector('.hero-text-3');
+        const cta = textContainerRef.current.querySelector('.cta-button');
+        
+        if (title && subtitle && subsubtitle && cta) {
+          timeline
+            .from(title, {
+              opacity: 0,
+              y: 50,
+              duration: 1.2
+            })
+            .to(title, {
+              color: "#ff00ff",
+              textShadow: "0 0 15px rgba(255, 0, 255, 0.8)",
+              duration: 0.2
+            })
+            .to(title, {
+              color: "white",
+              textShadow: "0 0 0px rgba(255, 255, 255, 0)",
+              duration: 0.2
+            })
+            .from(subtitle, {
+              opacity: 0,
+              y: 30,
+              duration: 1
+            }, "-=0.5")
+            .from(subsubtitle, {
+              opacity: 0,
+              y: 30,
+              duration: 0.8
+            }, "-=0.3")
+            .from(cta, {
+              opacity: 0,
+              scale: 0.8,
+              duration: 0.8
+            }, "-=0.2")
+            .to(".hero-text-container", {
+              boxShadow: "0 0 40px rgba(156, 39, 176, 0.7)",
+              duration: 2,
+              repeat: -1,
+              yoyo: true
+            }, "-=0.5");
+        }
       }
+    } catch (error) {
+      console.error("Error animating text:", error);
     }
   }, []);
 
   // Page transitions using GSAP
   useEffect(() => {
-    // Create fade-in animation on component mount
-    if (introContainerRef.current) {
-      gsap.fromTo(introContainerRef.current, 
-        { opacity: 0 },
-        { 
-          opacity: 1, 
-          duration: 0.8, 
-          ease: "power2.out" 
-        }
-      );
+    try {
+      // Create fade-in animation on component mount
+      if (introContainerRef.current) {
+        gsap.fromTo(introContainerRef.current, 
+          { opacity: 0 },
+          { 
+            opacity: 1, 
+            duration: 0.8, 
+            ease: "power2.out" 
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Error with page transitions:", error);
     }
 
     return () => {
