@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsx server/index.ts",
-    "build": "vite build",
+    "build": "chmod +x scripts/verify-deployment.sh && scripts/verify-deployment.sh && vite build",
     "start": "NODE_ENV=production tsx server/index.ts",
     "check": "tsc",
     "db:push": "drizzle-kit push --force --config=./drizzle.config.ts",

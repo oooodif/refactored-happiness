@@ -1,14 +1,8 @@
-# .railway.toml
 
 [build]
-builder             = "NIXPACKS"
-buildCommand        = "npm run build"
-packages            = "tectonic"
+builder = "NIXPACKS"
+buildCommand = "npm run build"
+pkgs = ["tectonic"]
 
 [deploy]
-preDeployCommand    = "npm run db:push"
-startCommand        = "NODE_ENV=production NODE_PATH=. tsx server/index.ts"
-
-healthcheckPath     = "/health"
-healthcheckTimeout  = 180
-restartPolicyType   = "ON_FAILURE"
+preDeployCommand = "npm run db:push"
