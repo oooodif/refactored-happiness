@@ -1,0 +1,18 @@
+[phases.setup]
+aptPkgs = ["build-essential", "fontconfig", "libfontconfig1-dev", "libharfbuzz-dev", "libfreetype6-dev", "libgraphite2-dev", "libicu-dev", "libssl-dev", "zlib1g-dev", "curl", "unzip"]
+
+[phases.build]
+cmds = [
+  "curl --proto '=https' --tlsv1.2 -fsSL https://drop-sh.fullyjustified.net | sh",
+  "chmod +x tectonic",
+  "mv tectonic /usr/local/bin/",
+  "tectonic --version"
+]
+
+[phases.install]
+cmds = [
+  "npm run build"
+]
+
+[start]
+cmd = "NODE_ENV=production tsx server/index.ts"
