@@ -37,6 +37,11 @@
     <!-- Canonical URL -->
     <link rel="canonical" href="https://aitexgen.com/" />
     
+    <!-- Structured Data Link Relationships -->
+    <link rel="index" href="https://aitexgen.com/" title="AI LaTeX Generator Home" />
+    <link rel="author" href="https://aitexgen.com/account" />
+    <link rel="archives" href="https://aitexgen.com/document-history" title="Document History" />
+    
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/favicon.png" />
     
@@ -66,6 +71,51 @@
         "@type": "Organization",
         "name": "AI LaTeX Generator",
         "url": "https://aitexgen.com"
+      },
+      "potentialAction": [
+        {
+          "@type": "ViewAction",
+          "target": "https://aitexgen.com/"
+        },
+        {
+          "@type": "ViewAction",
+          "target": "https://aitexgen.com/document-history"
+        },
+        {
+          "@type": "ViewAction",
+          "target": "https://aitexgen.com/account"
+        },
+        {
+          "@type": "ViewAction",
+          "target": "https://aitexgen.com/subscribe"
+        },
+        {
+          "@type": "ViewAction",
+          "target": "https://aitexgen.com/refill"
+        },
+        {
+          "@type": "ViewAction",
+          "target": "https://aitexgen.com/template/article"
+        },
+        {
+          "@type": "ViewAction",
+          "target": "https://aitexgen.com/template/presentation"
+        }
+      ]
+    }
+    </script>
+    
+    <!-- Schema.org JSON-LD structured data for Website -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "AI LaTeX Generator",
+      "url": "https://aitexgen.com/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://aitexgen.com/?search={search_term_string}",
+        "query-input": "required name=search_term_string"
       }
     }
     </script>

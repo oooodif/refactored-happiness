@@ -64,12 +64,20 @@ export default function Header() {
     <header className="bg-white border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center">
-          <Link href="/" className="flex items-center">
+          <Link 
+            href="/" 
+            className="flex items-center" 
+            aria-label="Go to AI LaTeX Generator homepage" 
+            title="AI LaTeX Generator - Home"
+            rel="home"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-8 w-8 text-blue-500"
               viewBox="0 0 20 20"
               fill="currentColor"
+              aria-hidden="true"
+              role="img"
             >
               <path
                 fillRule="evenodd"
@@ -77,7 +85,7 @@ export default function Header() {
                 clipRule="evenodd"
               />
             </svg>
-            <h1 className="ml-2 text-xl font-semibold text-gray-800">
+            <h1 className="ml-2 text-xl font-semibold text-gray-800" id="site-title">
               AI Latex Generator
             </h1>
           </Link>
@@ -99,7 +107,12 @@ export default function Header() {
               </span>
               
               {location !== "/history" && (
-                <Link href="/history" className="text-sm text-gray-600 hover:text-gray-800 font-medium">
+                <Link 
+                  href="/history" 
+                  className="text-sm text-gray-600 hover:text-gray-800 font-medium"
+                  aria-label="View document history"
+                  title="View your LaTeX document history"
+                >
                   History
                 </Link>
               )}
