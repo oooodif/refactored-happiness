@@ -7,7 +7,7 @@ pkgs    = ["tectonic"]
 
 [deploy]
 preDeployCommand    = "npm run db:push"
-startCommand        = "NODE_ENV=production tectonic && tsx server/index.ts"
+startCommand        = "NODE_ENV=production NODE_PATH=. tsx server/index.ts"
 
 healthcheckPath     = "/health"
 healthcheckTimeout  = 180
