@@ -132,7 +132,7 @@ export default function LatexInput({
                   if (notes.trim()) {
                     // If there's already text, wrap it in OMIT tags and send
                     const omitContent = `<OMIT>${notes.trim()}</OMIT>`;
-                    onModify?.(omitContent, false);
+                    onModify?.(omitContent, true); // Set isOmit=true to properly process as an omission
                     setNotes("");
                   } else {
                     // If no text yet, just insert the OMIT placeholder in the notes field
