@@ -112,9 +112,18 @@ function App() {
         if (authData.user) {
           console.log("SESSION CHECK SUCCESS: AUTHENTICATED as", authData.user.username);
           
-          // Update the session with fresh data
+          // Update the session with fresh data - ensure required fields exist
+          if (!authData.user || typeof authData.user.id !== 'number') {
+            console.error("Invalid user data received from server, missing ID:", authData);
+            throw new Error("Invalid user data received from server");
+          }
+          
+          // Validate and set session with proper data
           setSession({
-            user: authData.user,
+            user: {
+              ...authData.user,
+              id: authData.user.id // Ensure ID is passed explicitly
+            },
             isAuthenticated: true,
             isLoading: false,
             tier: authData.user.subscriptionTier || SubscriptionTier.Free,
@@ -123,7 +132,8 @@ function App() {
               limit: authData.usageLimit || 3,
               resetDate: authData.user.usageResetDate || new Date().toISOString()
             },
-            refillPackCredits: authData.user.refillPackCredits || 0
+            refillPackCredits: authData.user.refillPackCredits || 0,
+            lastAuthCheck: Date.now()
           });
           
           // Update local storage as a backup
@@ -257,8 +267,19 @@ function App() {
           isAuthenticated: true,
           isLoading: true, // Still loading, but at least authenticated
           user: {
-            ...prev.user,
-            username: userData.username
+            id: 0, // Temporary ID that will be replaced with real value
+            username: userData.username,
+            email: userData.username, // Use username as email since we have that
+            password: "", // Will be replaced by proper auth check
+            role: "user",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            emailVerified: true, // Assume verified until we know otherwise
+            monthlyUsage: 0,
+            usageResetDate: new Date(),
+            refillPackCredits: 0,
+            subscriptionTier: SubscriptionTier.Free,
+            subscriptionStatus: "active"
           }
         }));
       }
