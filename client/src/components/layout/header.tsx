@@ -123,7 +123,7 @@ export default function Header() {
               
               <Button 
                 onClick={() => setShowSubscriptionModal(true)}
-                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 border-transparent"
+                className={session.tier === SubscriptionTier.Free ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"}
               >
                 {session.tier === SubscriptionTier.Free ? "Upgrade" : "Manage Plan"}
               </Button>
@@ -139,7 +139,7 @@ export default function Header() {
               </Button>
               <Button 
                 onClick={() => setShowLoginModal(true)}
-                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 border-transparent text-sm"
+                className="bg-blue-600 hover:bg-blue-700 text-sm"
               >
                 Sign Up
               </Button>
