@@ -80,6 +80,10 @@ export const API_ROUTES = {
     create: "/api/subscription/create",
     manage: "/api/subscription/manage",
     cancel: "/api/subscription/cancel",
-    portal: "/api/subscription/portal"
+    portal: "/api/subscription/portal",
+    refill: {
+      create: "/api/subscription/refill/create",
+      success: "/api/subscription/refill/success"
+    }
   }
 };

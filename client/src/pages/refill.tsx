@@ -1,11 +1,10 @@
 import { useState, useEffect, useContext } from "react";
 import { useLocation } from "wouter";
-import { useStripe, Elements, PaymentElement, useElements } from "@stripe/react-stripe-js";
-import { stripePromise } from "@/lib/stripe";
 import { UserContext } from "@/App";
 import SiteLayout from "@/components/layout/site-layout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { createRefillPackCheckout } from "@/lib/stripe";
 import { REFILL_PACK_CREDITS, REFILL_PACK_PRICE } from "@shared/schema";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,67 +13,12 @@ import { Button } from "@/components/ui/button";
 // Check if Stripe is properly initialized
 const isStripeAvailable = !!import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 
-// Payment form component
-const RefillForm = () => {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { toast } = useToast();
-  const [, navigate] = useLocation();
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!stripe || !elements) {
-      toast({
-        title: "Error",
-        description: "Stripe is not loaded yet. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsProcessing(true);
-
-    // Confirm the payment
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: window.location.origin + "/account?refill=success",
-      },
-    });
-
-    if (error) {
-      toast({
-        title: "Payment Failed",
-        description: error.message || "An error occurred during payment processing.",
-        variant: "destructive",
-      });
-      setIsProcessing(false);
-    } 
-    // Success case is handled by the return_url
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <PaymentElement />
-      <Button 
-        type="submit" 
-        className="w-full bg-emerald-600 hover:bg-emerald-700" 
-        disabled={!stripe || !elements || isProcessing}
-      >
-        {isProcessing ? "Processing..." : "Purchase Refill Pack"}
-      </Button>
-    </form>
-  );
-};
-
 export default function RefillPage() {
-  const [clientSecret, setClientSecret] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { session } = useContext(UserContext);
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -97,27 +41,33 @@ export default function RefillPage() {
       return;
     }
     
-    // Create the payment intent for refill pack
-    const createRefillPayment = async () => {
+    // Create the checkout session for refill pack
+    const createRefillCheckout = async () => {
       try {
         const response = await apiRequest("POST", "/api/subscription/refill/create", {});
         
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to create payment");
+          throw new Error(errorData.message || "Failed to create checkout session");
         }
         
         const data = await response.json();
-        setClientSecret(data.clientSecret);
+        
+        if (data.url) {
+          // Redirect to Stripe Checkout
+          window.location.href = data.url;
+        } else {
+          setError("Failed to create checkout session");
+          setIsLoading(false);
+        }
       } catch (err) {
-        console.error("Error creating refill payment:", err);
-        setError(err instanceof Error ? err.message : "Failed to create refill payment");
-      } finally {
+        console.error("Error creating refill checkout:", err);
+        setError(err instanceof Error ? err.message : "Failed to create refill checkout");
         setIsLoading(false);
       }
     };
     
-    createRefillPayment();
+    createRefillCheckout();
   }, [session.isAuthenticated, navigate, isStripeAvailable]);
   
   if (!session.isAuthenticated) {
@@ -129,6 +79,7 @@ export default function RefillPage() {
       <SiteLayout>
         <div className="h-screen flex items-center justify-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading"/>
+          <p className="ml-2">Preparing checkout...</p>
         </div>
       </SiteLayout>
     );
@@ -153,27 +104,8 @@ export default function RefillPage() {
     );
   }
   
-  if (!clientSecret) {
-    return (
-      <SiteLayout>
-        <div className="container mx-auto px-4 py-8">
-          <Card className="max-w-lg mx-auto">
-            <CardHeader>
-              <CardTitle>No Payment Required</CardTitle>
-              <CardDescription>Something went wrong with the payment setup</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 mb-4">
-                Unable to create payment information. Please try again later.
-              </p>
-              <Button onClick={() => navigate("/account")}>Return to Account</Button>
-            </CardContent>
-          </Card>
-        </div>
-      </SiteLayout>
-    );
-  }
-  
+  // We should not reach here since we're redirecting to Stripe's checkout
+  // But just in case there's some issue with the redirect
   return (
     <SiteLayout>
       <div className="container mx-auto px-4 py-8">
@@ -195,9 +127,15 @@ export default function RefillPage() {
               </div>
             </div>
             
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <RefillForm />
-            </Elements>
+            <p className="text-gray-700 mb-4">
+              Redirecting to secure checkout page...
+            </p>
+            <Button 
+              onClick={() => navigate("/account")}
+              className="w-full"
+            >
+              Cancel and Return to Account
+            </Button>
           </CardContent>
         </Card>
       </div>

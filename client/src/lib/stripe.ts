@@ -60,3 +60,19 @@ export async function createBillingPortalSession(): Promise<{ url: string }> {
     throw error;
   }
 }
+
+export async function createRefillPackCheckout(): Promise<{ sessionId: string; url: string }> {
+  try {
+    const response = await apiRequest("POST", API_ROUTES.subscription.refill.create, {});
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to create refill pack checkout");
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error creating refill pack checkout:", error);
+    throw error;
+  }
+}
