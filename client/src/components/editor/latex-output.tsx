@@ -49,23 +49,23 @@ export default function LatexOutput({
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 overflow-auto p-4 bg-gray-50">
-        <pre className="h-full rounded-md border border-gray-300 bg-gray-900 overflow-auto p-4 m-0">
+        <pre className="h-full rounded-md border border-gray-300 bg-gray-900 overflow-auto p-4 m-0 shadow-inner depth-3d-dark">
           <code ref={codeRef} className="language-latex font-mono text-sm whitespace-pre">
             {latexContent || '// Generated LaTeX will appear here'}
           </code>
         </pre>
       </div>
-      <div className="p-4 bg-white border-t border-gray-200">
+      <div className="p-4 glass border-t border-gray-200">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
             {latexContent ? (
               compilationSuccess ? (
-                <span className="text-emerald-600">● Compilation Successful</span>
+                <span className="text-emerald-600 pulse-animation">● Compilation Successful</span>
               ) : (
                 errorMessage ? (
-                  <span className="text-red-600">● Compilation Failed</span>
+                  <span className="text-red-600 pulse-animation-error">● Compilation Failed</span>
                 ) : (
-                  <span className="text-amber-500">● Awaiting Compilation</span>
+                  <span className="text-amber-500 pulse-animation-slow">● Awaiting Compilation</span>
                 )
               )
             ) : (
@@ -75,7 +75,7 @@ export default function LatexOutput({
           <div className="flex space-x-2">
             <Button
               variant="ghost"
-              className="text-gray-700 hover:text-gray-900 px-2 py-1 text-sm flex items-center"
+              className="glass-card text-gray-700 hover:text-gray-900 px-2 py-1 text-sm flex items-center transition-all duration-300 hover:shadow-md"
               onClick={handleCopyLatex}
               disabled={!latexContent}
               title="Copy LaTeX"
@@ -92,7 +92,7 @@ export default function LatexOutput({
               Copy
             </Button>
             <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-4 py-2 text-sm transition-colors duration-150 ease-in-out flex items-center"
+              className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-md px-4 py-2 text-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-1px] flex items-center"
               onClick={onDownloadPdf}
               disabled={!compilationSuccess}
             >
@@ -113,9 +113,9 @@ export default function LatexOutput({
           </div>
         </div>
         {errorMessage && !compilationSuccess && (
-          <div className="mt-2 text-sm text-red-600 p-2 bg-red-50 rounded-md border border-red-200">
-            <p className="font-medium">Compilation Error:</p>
-            <p className="font-mono">{errorMessage}</p>
+          <div className="mt-2 text-sm text-red-600 p-3 glass-error rounded-md border border-red-300 shadow-sm depth-3d">
+            <p className="font-semibold mb-1">Compilation Error:</p>
+            <p className="font-mono bg-red-50/50 p-2 rounded">{errorMessage}</p>
           </div>
         )}
       </div>
