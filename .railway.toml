@@ -1,13 +1,18 @@
 # .railway.toml
+
 [build]
 builder       = "NIXPACKS"
 buildCommand  = "npm run build"          # runs: vite build
+
+# Tell Nixpacks to install Tectonic
+[build.nixpacks]
+pkgs = ["tectonic"]
 
 [deploy]
 # 1. Push / migrate DB before starting
 preDeployCommand = "npm run db:push"
 
-# 2. Boot your server (tsx compiles TypeScript onthefly)
+# 2. Boot your server (tsx compiles TypeScript on the fly)
 startCommand  = "NODE_ENV=production tsx server/index.ts"
 
 # 3. Healthcheck + restart policy
