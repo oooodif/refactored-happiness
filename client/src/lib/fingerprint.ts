@@ -21,7 +21,8 @@ function generateFingerprint(): string {
     !!window.indexedDB,
     // Add more components that help uniquely identify the browser
     navigator.hardwareConcurrency,
-    navigator.deviceMemory,
+    // Use deviceMemory if available (not in all browsers)
+    'deviceMemory' in navigator ? (navigator as any).deviceMemory : undefined,
     navigator.platform,
   ];
 

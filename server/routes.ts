@@ -4,6 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { authenticateUser, requireAuth } from "./middleware/auth";
 import { checkSubscription } from "./middleware/subscription";
+import { trackAnonymousUser, allowAnonymousOrAuth, incrementAnonymousUsage } from "./middleware/anonymous-user";
 
 // Import validation middleware
 import { z } from "zod";
@@ -394,17 +395,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // LaTeX Generation Routes
   app.post("/api/latex/generate", 
-    authenticateUser, // Allow anonymous users
-    checkSubscription, // Already set to allow unlimited for testing
+    trackAnonymousUser, // Track anonymous users before checking authentication
+    allowAnonymousOrAuth, // Allow anonymous users with remaining free usage or authenticated users
+    checkSubscription, // Check subscription for authenticated users
     validateRequest(generateLatexSchema),
     async (req: Request, res: Response) => {
       const { content, documentType, options } = req.body;
-      const userId = req.session.userId; // May be undefined for guest users
+      const userId = req.session.userId; // May be undefined for anonymous users
       const isAuthenticated = !!userId; // Check if user is authenticated
       const shouldCompile = req.body.compile === true; // Optional flag to compile or not
       
-      // GUEST MODE ENABLED - for testing purposes
-      const GUEST_MODE = true;
+      // For anonymous users, increment their usage count
+      if (!isAuthenticated) {
+        await incrementAnonymousUsage(req);
+      }
       
       try {
         console.log(`LaTeX generation request - Auth: ${isAuthenticated ? 'Yes' : 'No (Guest)'}, Type: ${documentType}`);
