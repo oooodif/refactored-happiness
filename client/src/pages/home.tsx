@@ -774,6 +774,99 @@ export default function Home() {
     },
   ];
 
+  // State to track the input expansion for mobile
+  const [isInputExpanded, setIsInputExpanded] = useState(false);
+  
+  // Effect for handling mobile input expansion for #FloatingRectInput
+  useEffect(() => {
+    // Only apply on mobile devices
+    const isMobile = window.innerWidth < 768;
+    if (!isMobile) return;
+    
+    // Get reference to the input container
+    const inputElement = document.getElementById('FloatingRectInput');
+    if (!inputElement) return;
+    
+    // Cleanup tracker for event listeners
+    let cleanupFunctions: Array<() => void> = [];
+    
+    // Function to expand the input when focused
+    const expandInput = () => {
+      setIsInputExpanded(true);
+      inputElement.classList.remove('input-collapsed');
+      inputElement.classList.add('input-expanded');
+    };
+    
+    // Function to collapse the input when blurred or after generation
+    const collapseInput = () => {
+      setIsInputExpanded(false);
+      inputElement.classList.remove('input-expanded');
+      inputElement.classList.add('input-collapsed');
+    };
+    
+    // Find the textarea and set up event handlers immediately if it exists
+    const setupTextareaListeners = () => {
+      const textarea = inputElement.querySelector('textarea');
+      if (textarea) {
+        textarea.addEventListener('focus', expandInput);
+        textarea.addEventListener('blur', collapseInput);
+        
+        // Add to cleanup functions
+        cleanupFunctions.push(() => {
+          textarea.removeEventListener('focus', expandInput);
+          textarea.removeEventListener('blur', collapseInput);
+        });
+        
+        return true;
+      }
+      return false;
+    };
+    
+    // Try to set up listeners immediately
+    const listenersSetUp = setupTextareaListeners();
+    
+    // If the textarea wasn't found immediately, set up a MutationObserver to watch for it
+    if (!listenersSetUp) {
+      const observer = new MutationObserver((mutations) => {
+        // Check if textarea exists after mutation
+        if (setupTextareaListeners()) {
+          // If successfully set up, disconnect the observer
+          observer.disconnect();
+        }
+      });
+      
+      // Start observing the input container for changes
+      observer.observe(inputElement, { 
+        childList: true, 
+        subtree: true 
+      });
+      
+      // Add observer disconnect to cleanup
+      cleanupFunctions.push(() => observer.disconnect());
+    }
+    
+    // Handle the Generate button click using event delegation
+    const handleButtonClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target instanceof HTMLButtonElement && 
+          target.textContent && 
+          target.textContent.includes('Generate LaTeX')) {
+        collapseInput();
+      }
+    };
+    
+    // Add click handler to the container
+    inputElement.addEventListener('click', handleButtonClick as EventListener);
+    cleanupFunctions.push(() => {
+      inputElement.removeEventListener('click', handleButtonClick as EventListener);
+    });
+    
+    // Return combined cleanup function
+    return () => {
+      cleanupFunctions.forEach(cleanup => cleanup());
+    };
+  }, [isInputExpanded]);
+  
   return (
     <SiteLayout seoTitle="AI LaTeX Generator - Create Professional LaTeX Documents with AI">
       <div className="h-full flex flex-col md:flex-row bg-gradient-soft">
