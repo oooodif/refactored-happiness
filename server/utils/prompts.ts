@@ -229,6 +229,22 @@ DOCUMENT_TYPES = [
 - Implements proper spacing for formal documents
 - Suitable for business reports, technical documentation, or governmental documents
 - Best for users creating lengthy, structured documents with formal requirements
+-Add these packages to the preamble
+usepackage{graphicx}
+usepackage{titlesec}
+-Add custom chapter formatting
+titleformat{chapter}[display]
+{normalfontbfseriesLarge}
+{chaptername thechapter}{20pt}{LARGE}
+-Replace any custom title page with a formal title structure
+title{textbf{[Document Title]}}
+author{[Author Name] 
+[Author Affiliation] 
+texttt{[Author Email]}}
+date{today}
+-In the document body:
+-Replace any custom title page implementation with maketitle
+-Add newpage after tableofcontents
 
 
 ### Letter Document Type
