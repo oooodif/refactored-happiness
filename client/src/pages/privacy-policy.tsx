@@ -386,9 +386,17 @@ export default function PrivacyPolicy() {
           {/* Final Sections */}
           <div className="grid md:grid-cols-2 gap-8 mt-12">
             <AnimatedSection>
-              <div className="h-full p-6 rounded-xl bg-white dark:bg-gray-800 shadow-md border border-gray-100 dark:border-gray-700">
-                <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Cookies</h3>
-                <p className="text-gray-700 dark:text-gray-300">
+              <div className="h-full p-6 rounded-xl relative overflow-hidden
+                transition-all duration-300 cursor-default
+                bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm
+                shadow-md border border-gray-100/80 dark:border-gray-700/80 
+                hover:shadow-lg hover:translate-y-[-3px] 
+                hover:bg-white/90 dark:hover:bg-gray-800/90
+                hover:border-blue-100/50 dark:hover:border-blue-900/50
+                hover:backdrop-blur-md">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-gray-500/10 to-transparent rounded-bl-full"></div>
+                <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100 relative z-10">Cookies</h3>
+                <p className="text-gray-700 dark:text-gray-300 relative z-10">
                   We use cookies and similar tracking technologies to track activity on our website and hold certain information. 
                   Cookies are files with a small amount of data that may include an anonymous unique identifier. You can instruct 
                   your browser to refuse all cookies or to indicate when a cookie is being sent.
@@ -397,9 +405,17 @@ export default function PrivacyPolicy() {
             </AnimatedSection>
             
             <AnimatedSection delay={0.1}>
-              <div className="h-full p-6 rounded-xl bg-white dark:bg-gray-800 shadow-md border border-gray-100 dark:border-gray-700">
-                <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Children's Privacy</h3>
-                <p className="text-gray-700 dark:text-gray-300">
+              <div className="h-full p-6 rounded-xl relative overflow-hidden
+                transition-all duration-300 cursor-default
+                bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm
+                shadow-md border border-gray-100/80 dark:border-gray-700/80 
+                hover:shadow-lg hover:translate-y-[-3px] 
+                hover:bg-white/90 dark:hover:bg-gray-800/90
+                hover:border-blue-100/50 dark:hover:border-blue-900/50
+                hover:backdrop-blur-md">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-purple-500/10 to-transparent rounded-bl-full"></div>
+                <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100 relative z-10">Children's Privacy</h3>
+                <p className="text-gray-700 dark:text-gray-300 relative z-10">
                   Our service does not address anyone under the age of 18. We do not knowingly collect personally identifiable 
                   information from anyone under the age of 18. If we become aware that we have collected personal data from children 
                   without verification of parental consent, we take steps to remove that information from our servers.
