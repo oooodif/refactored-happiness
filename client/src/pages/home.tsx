@@ -208,7 +208,11 @@ export default function Home() {
               <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
                 Login
               </Button>
-              <Button size="sm" onClick={() => navigate("/register")}>
+              <Button 
+                size="sm" 
+                onClick={() => navigate("/register")}
+                className="bg-primary text-white hover:bg-primary/90"
+              >
                 Create Account
               </Button>
             </div>
