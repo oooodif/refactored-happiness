@@ -111,24 +111,12 @@ export default function Account() {
       }
     };
     
-    // Add a timeout to ensure the page doesn't hang indefinitely
-    const loadingTimeout = setTimeout(() => {
-      if (pageIsLoading) {
-        console.log("Account page: Loading timeout reached");
-        setPageIsLoading(false);
-        toast({
-          title: "Loading Timeout",
-          description: "Account information took too long to load. Please try again.",
-          variant: "destructive"
-        });
-        navigate("/");
-      }
-    }, 10000); // 10 seconds timeout
-    
+    // Remove automatic timeout - let users stay on the loading page as long as needed
+    // Just run the session verification without a timeout
     verifySession();
     
-    // Clean up the timeout
-    return () => clearTimeout(loadingTimeout);
+    // No timeout to clean up
+    return () => {};
   }, []);
 
   // Redirect to login if not authenticated
