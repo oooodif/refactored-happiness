@@ -83,51 +83,78 @@ export default function LatexInput({
     // Only apply this on mobile devices
     if (!isMobile) return;
     
-    // Track original window height
-    const originalHeight = window.innerHeight;
+    // Detect iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     
     // Handle when textarea is focused (keyboard opens)
     const handleFocus = () => {
-      // Force immediate keyboard visibility for iOS Safari
       setIsKeyboardVisible(true);
-      
-      // For iOS Safari, we need to add a class to the body
       document.body.classList.add('keyboard-visible');
       
-      // Scroll the textarea into view with a small delay to ensure it works after layout changes
-      setTimeout(() => {
-        if (textareaRef.current) {
-          // Ensure we're in focus and scrolled properly
-          textareaRef.current.focus();
-          textareaRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 300);
+      if (isIOS) {
+        // iOS-specific focus handling
+        document.documentElement.classList.add('ios-keyboard-open');
+        document.body.classList.add('ios-keyboard-open');
+        
+        // Delay scrolling to ensure keyboard is fully visible
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          if (textareaRef.current) {
+            textareaRef.current.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 300);
+      } else {
+        // For other mobile browsers
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 300);
+      }
     };
     
     // Handle when textarea is blurred (keyboard closes)
     const handleBlur = () => {
       setIsKeyboardVisible(false);
       document.body.classList.remove('keyboard-visible');
+      
+      if (isIOS) {
+        document.documentElement.classList.remove('ios-keyboard-open');
+        document.body.classList.remove('ios-keyboard-open');
+      }
     };
     
-    // Detect keyboard through resize events (more reliable on iOS)
+    // Track original window height for non-iOS detection
+    const originalHeight = window.innerHeight;
+    
+    // Detect keyboard through resize events (more reliable on some mobile browsers)
     const handleResize = () => {
       // If window height significantly decreases, a keyboard likely appeared
       const heightDifference = originalHeight - window.innerHeight;
       const visualViewportHeight = window.visualViewport?.height || window.innerHeight;
       
-      // More aggressive detection for iOS Safari
       if (heightDifference > 100 || visualViewportHeight < originalHeight * 0.8) {
         setIsKeyboardVisible(true);
         document.body.classList.add('keyboard-visible');
         
-        // When keyboard appears through resize, scroll textarea into view
-        if (textareaRef.current) {
-          textareaRef.current.scrollIntoView({ behavior: 'smooth' });
+        if (isIOS) {
+          document.documentElement.classList.add('ios-keyboard-open');
+          document.body.classList.add('ios-keyboard-open');
         }
+        
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
       } else {
         setIsKeyboardVisible(false);
         document.body.classList.remove('keyboard-visible');
+        
+        if (isIOS) {
+          document.documentElement.classList.remove('ios-keyboard-open');
+          document.body.classList.remove('ios-keyboard-open');
+        }
       }
     };
     
@@ -168,7 +195,20 @@ export default function LatexInput({
       }`
     : "w-full h-full flex flex-col border-r border-gray-200";
     
-  // Extra safeguard for forcing fullscreen on iOS
+  // Extra iOS safeguard - add meta viewport for iOS
+  useEffect(() => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    
+    if (isIOS) {
+      // Set viewport meta tag
+      const viewportMeta = document.querySelector('meta[name="viewport"]');
+      if (viewportMeta) {
+        viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1');
+      }
+    }
+  }, []);
+  
+  // Force fullscreen when keyboard is visible
   useEffect(() => {
     if (isMobile && isKeyboardVisible) {
       // Delay slightly to let the keyboard fully appear
@@ -181,7 +221,8 @@ export default function LatexInput({
         
         // Apply a full viewport height to ensure we take over the screen
         const rootElement = document.documentElement;
-        rootElement.style.setProperty('--keyboard-viewport-height', `${window.visualViewport?.height || window.innerHeight}px`);
+        const viewportHeight = window.visualViewport?.height || window.innerHeight;
+        rootElement.style.setProperty('--keyboard-viewport-height', `${viewportHeight}px`);
       }, 100);
     }
   }, [isMobile, isKeyboardVisible]);
