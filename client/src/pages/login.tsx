@@ -1,106 +1,101 @@
-import { useState, useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import SiteLayout from "@/components/layout/site-layout";
+import { UserContext } from "@/App";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { UserContext } from "@/App";
-import { useLocation } from "wouter";
 import { API_ROUTES } from "@/lib/constants";
-import { LoginCredentials, SubscriptionTier } from "@shared/schema";
-import SiteLayout from "@/components/layout/site-layout";
+import { SubscriptionTier } from "@shared/schema";
 
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Link } from "wouter";
-import { Loader2 } from "lucide-react";
 
-// Form schema
+/* -----------------------------  Zod schema  ----------------------------- */
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  rememberMe: z.boolean().default(false),
+  rememberMe: z.boolean().optional().default(false),
 });
+type LoginForm = z.infer<typeof loginSchema>;
+/* ----------------------------------------------------------------------- */
 
 export default function Login() {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   const { session, setSession } = useContext(UserContext);
   const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
-  // Redirect if already logged in
+  /* Redirect already‑authenticated users */
   useEffect(() => {
-    // Only redirect after auth check is complete and user is authenticated
-    if (!session.isLoading && session.isAuthenticated) {
-      navigate("/");
-    }
-  }, [session.isLoading, session.isAuthenticated, navigate]);
+    if (!session.isLoading && session.isAuthenticated) navigate("/");
+  }, [session.isLoading, session.isAuthenticated]);
 
-  const form = useForm<z.infer<typeof loginSchema>>({
+  /* React‑Hook‑Form setup */
+  const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      rememberMe: false,
-    },
+    defaultValues: { email: "", password: "", rememberMe: false },
   });
 
-  const onSubmit = async (values: z.infer<typeof loginSchema>) => {
-    setIsLoading(true);
+  /* -----------------------------  Submit  ----------------------------- */
+  const onSubmit = async (values: LoginForm) => {
+    setLoading(true);
     try {
-      const response = await apiRequest("POST", API_ROUTES.auth.login, {
+      const res = await apiRequest("POST", API_ROUTES.auth.login, {
         email: values.email,
         password: values.password,
       });
-      
-      const data = await response.json();
-      
-      if (!data.user) {
-        throw new Error("Login failed: Invalid response from server");
-      }
-      
+      const data = await res.json();
+
+      if (!data.user) throw new Error("Invalid response from server");
+
       setSession({
         user: data.user,
         isAuthenticated: true,
         isLoading: false,
-        tier: data.user.subscriptionTier || SubscriptionTier.Free,
+        tier: data.user.subscriptionTier ?? SubscriptionTier.Free,
         usage: {
-          current: data.user.monthlyUsage || 0,
-          limit: data.usageLimit || 0,
-          resetDate: data.user.usageResetDate || null,
+          current: data.user.monthlyUsage ?? 0,
+          limit: data.usageLimit ?? 0,
+          resetDate: data.user.usageResetDate ?? null,
         },
-        refillPackCredits: data.user.refillPackCredits || 0,
+        refillPackCredits: data.user.refillPackCredits ?? 0,
       });
-      
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in.",
-      });
-      
+
+      toast({ title: "Welcome back!", description: "Logged in successfully." });
       navigate("/");
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch (err) {
       toast({
         title: "Login failed",
-        description: error instanceof Error ? error.message : "Invalid email or password",
+        description: err instanceof Error ? err.message : "Invalid credentials",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
+  /* -----------------------------  UI  ----------------------------- */
   return (
     <SiteLayout fullHeight={false}>
       <div className="container mx-auto px-4 py-8">
@@ -112,9 +107,14 @@ export default function Login() {
                 Enter your credentials to access your account
               </CardDescription>
             </CardHeader>
+
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
+                  {/* Email */}
                   <FormField
                     control={form.control}
                     name="email"
@@ -123,8 +123,8 @@ export default function Login() {
                         <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="you@example.com"
                             type="email"
+                            placeholder="you@example.com"
                             autoComplete="email"
                             {...field}
                           />
@@ -134,6 +134,7 @@ export default function Login() {
                     )}
                   />
 
+                  {/* Password */}
                   <FormField
                     control={form.control}
                     name="password"
@@ -142,8 +143,8 @@ export default function Login() {
                         <FormLabel>Password</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="••••••••"
                             type="password"
+                            placeholder="••••••••"
                             autoComplete="current-password"
                             {...field}
                           />
@@ -153,6 +154,7 @@ export default function Login() {
                     )}
                   />
 
+                  {/* Remember‑me + forgot‑password */}
                   <div className="flex items-center justify-between">
                     <FormField
                       control={form.control}
@@ -161,9 +163,9 @@ export default function Login() {
                         <FormItem className="flex items-center space-x-2">
                           <FormControl>
                             <Checkbox
+                              id="remember"
                               checked={field.value}
                               onCheckedChange={field.onChange}
-                              id="remember"
                             />
                           </FormControl>
                           <label
@@ -180,27 +182,24 @@ export default function Login() {
                     </Button>
                   </div>
 
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Signing in..." : "Sign In"}
+                  {/* Submit */}
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Signing in…" : "Sign In"}
                   </Button>
                 </form>
               </Form>
             </CardContent>
+
             <CardFooter className="flex justify-center">
-              <div className="text-center">
-                <span className="text-sm text-gray-600">
-                  Don't have an account?
-                </span>
-                <Link href="/register">
-                  <a className="text-sm font-medium text-blue-600 hover:text-blue-500 ml-1">
-                    Create one
-                  </a>
-                </Link>
-              </div>
+              <span className="text-sm text-gray-600">
+                Don&apos;t have an account?
+              </span>
+              <Link
+                href="/register"
+                className="ml-1 text-sm font-medium text-blue-600 hover:text-blue-500"
+              >
+                Create one
+              </Link>
             </CardFooter>
           </Card>
         </div>

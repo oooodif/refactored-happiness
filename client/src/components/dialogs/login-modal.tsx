@@ -1,13 +1,15 @@
-import { useState, useContext } from "react";
+// client/src/components/dialogs/LoginModal.tsx
+
+import { useState, useContext, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { UserContext } from "@/App";
-import { useLocation } from "wouter";
 import { API_ROUTES } from "@/lib/constants";
-import { LoginCredentials, SubscriptionTier } from "@shared/schema";
+import { SubscriptionTier } from "@shared/schema";
 
 import {
   Dialog,
@@ -20,124 +22,113 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-// Form schema
+// Zod schemas
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   rememberMe: z.boolean().default(false),
 });
-
-const registerSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
-
-export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const { setSession } = useContext(UserContext);
-  const [, navigate] = useLocation();
-  const [showRegister, setShowRegister] = useState(false);
-
-  // Use the appropriate schema based on whether we're showing the register form
-  const currentSchema = showRegister ? registerSchema : loginSchema;
-  
-  // Form with dynamic schema resolution
-  const form = useForm<z.infer<typeof currentSchema>>({
-    resolver: zodResolver(currentSchema),
-    defaultValues: showRegister 
-      ? {
-          username: "",
-          email: "",
-          password: "",
-        }
-      : {
-          email: "",
-          password: "",
-          rememberMe: false,
-        },
+const registerSchema = z
+  .object({
+    username: z.string().min(3, "Username must be at least 3 characters"),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
   });
 
-  // Type-safe onSubmit that handles both login and register forms
-  const onSubmit = async (values: any) => {
-    setIsLoading(true);
+// Combined form values type
+type LoginValues = z.infer<typeof loginSchema>;
+type RegisterValues = z.infer<typeof registerSchema>;
+
+export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
+  const { setSession } = useContext(UserContext);
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Choose schema & types
+  const schema = isRegistering ? registerSchema : loginSchema;
+  type FormValues = LoginValues & Partial<RegisterValues>;
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: isRegistering
+      ? { username: "", email: "", password: "" }
+      : { email: "", password: "", rememberMe: false },
+  });
+
+  // Reset form when toggling
+  useEffect(() => {
+    form.reset();
+  }, [isRegistering]);
+
+  const onSubmit = async (values: FormValues) => {
+    setLoading(true);
     try {
-      // Choose the endpoint based on whether we're registering or logging in
-      const endpoint = showRegister ? API_ROUTES.auth.register : API_ROUTES.auth.login;
-      
-      // Prepare the data we'll send to the server
-      const requestData = showRegister 
+      const endpoint = isRegistering
+        ? API_ROUTES.auth.register
+        : API_ROUTES.auth.login;
+      const payload: any = isRegistering
         ? {
             username: values.username,
             email: values.email,
-            password: values.password
+            password: values.password,
           }
-        : {
-            email: values.email,
-            password: values.password
-          };
-      
-      // Make the API request
-      const response = await apiRequest("POST", endpoint, requestData);
-      const data = await response.json();
-      
-      // Set the session with the user data
+        : { email: values.email, password: values.password };
+
+      const res = await apiRequest("POST", endpoint, payload);
+      const data = await res.json();
+      if (!data.user) throw new Error("Invalid response from server");
+
       setSession({
         user: data.user,
         isAuthenticated: true,
         isLoading: false,
-        tier: data.user.subscriptionTier || SubscriptionTier.Free,
+        tier: data.user.subscriptionTier ?? SubscriptionTier.Free,
         usage: {
-          current: data.user.monthlyUsage || 0,
-          limit: data.usageLimit || 3,
-          resetDate: data.user.usageResetDate || new Date().toISOString(),
+          current: data.user.monthlyUsage ?? 0,
+          limit: data.usageLimit ?? 3,
+          resetDate: data.user.usageResetDate ?? new Date().toISOString(),
         },
-        refillPackCredits: data.user.refillPackCredits || 0,
+        refillPackCredits: data.user.refillPackCredits ?? 0,
       });
-      
-      // Show a success message
+
       toast({
-        title: showRegister ? "Account Created!" : "Welcome back!",
-        description: showRegister 
-          ? "Your account has been created successfully." 
-          : "You have successfully logged in.",
+        title: isRegistering ? "Account created!" : "Signed in!",
+        description: isRegistering
+          ? "Your account has been created."
+          : "Welcome back!",
       });
-      
-      // Close the modal and navigate to the home page
+
       onClose();
       navigate("/");
-    } catch (error) {
-      console.error(showRegister ? "Registration error:" : "Login error:", error);
+    } catch (err: any) {
       toast({
-        title: showRegister ? "Registration failed" : "Login failed",
-        description: error instanceof Error ? error.message : "Invalid credentials",
+        title: isRegistering ? "Registration failed" : "Login failed",
+        description: err.message || "Please try again.",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  };
-
-  const toggleRegister = () => {
-    form.reset();
-    setShowRegister(!showRegister);
   };
 
   return (
@@ -145,19 +136,18 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {showRegister ? "Create an Account" : "Sign In"}
+            {isRegistering ? "Create Account" : "Sign In"}
           </DialogTitle>
           <DialogDescription>
-            {showRegister
-              ? "Join to get more LaTeX generations and premium features"
-              : "Enter your credentials to access your account"}
+            {isRegistering
+              ? "Join to get more LaTeX generations."
+              : "Enter your credentials to continue."}
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Username field - only show when registering */}
-            {showRegister && (
+            {isRegistering && (
               <FormField
                 control={form.control}
                 name="username"
@@ -165,19 +155,14 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="yourname"
-                        type="text"
-                        autoComplete="username"
-                        {...field}
-                      />
+                      <Input placeholder="username" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             )}
-            
+
             <FormField
               control={form.control}
               name="email"
@@ -185,12 +170,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="you@example.com"
-                      type="email"
-                      autoComplete="email"
-                      {...field}
-                    />
+                    <Input placeholder="you@example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -204,54 +184,35 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="••••••••"
-                      type="password"
-                      autoComplete={showRegister ? "new-password" : "current-password"}
-                      {...field}
-                    />
+                    <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {!showRegister && (
-              <div className="flex items-center justify-between">
-                <FormField
-                  control={form.control}
-                  name="rememberMe"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center space-x-2">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          id="remember"
-                        />
-                      </FormControl>
-                      <label
-                        htmlFor="remember"
-                        className="text-sm text-gray-700"
-                      >
-                        Remember me
-                      </label>
-                    </FormItem>
-                  )}
-                />
-                <Button variant="link" className="p-0 h-auto text-sm">
-                  Forgot password?
-                </Button>
-              </div>
+            {!isRegistering && (
+              <FormField
+                control={form.control}
+                name="rememberMe"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <Checkbox {...field} />
+                    </FormControl>
+                    <label className="text-sm text-gray-700">Remember me</label>
+                  </FormItem>
+                )}
+              />
             )}
 
-            <DialogFooter className="flex flex-col sm:flex-row sm:justify-between sm:space-x-0">
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? "Processing..." : showRegister ? "Create Account" : "Sign In"}
+            <DialogFooter>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading
+                  ? "Processing…"
+                  : isRegistering
+                    ? "Create Account"
+                    : "Sign In"}
               </Button>
             </DialogFooter>
           </form>
@@ -259,14 +220,16 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
         <div className="text-center mt-4">
           <span className="text-sm text-gray-600">
-            {showRegister ? "Already have an account?" : "Don't have an account?"}
+            {isRegistering
+              ? "Already have an account?"
+              : "Don't have an account?"}
           </span>
           <Button
             variant="link"
-            className="text-sm font-medium text-blue-600 hover:text-blue-500 p-0 h-auto ml-1"
-            onClick={toggleRegister}
+            className="ml-1 text-sm font-medium text-blue-600"
+            onClick={() => setIsRegistering((prev) => !prev)}
           >
-            {showRegister ? "Sign in" : "Create one"}
+            {isRegistering ? "Sign In" : "Create one"}
           </Button>
         </div>
       </DialogContent>
