@@ -124,15 +124,24 @@ code[class*="language-"] {
   transition: opacity 200ms;
 }
 
-/* Visually hidden elements - for SEO accessibility */
+/* Visually hidden elements - for SEO accessibility 
+ * This implementation is crawler-friendly while still hiding the element visually
+ * - Avoids display: none (would be ignored by crawlers)
+ * - Avoids visibility: hidden (might be ignored by some crawlers)
+ * - Keeps content in the DOM and accessible
+ */
 .visually-hidden {
   position: absolute;
-  width: 1px;
+  width: 1px; 
   height: 1px;
   padding: 0;
-  margin: -1px;
+  margin: -1px; /* Negative margin to move it off-screen */
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%); /* Modern alternative to clip */
   white-space: nowrap;
   border-width: 0;
+  /* Important: Don't use display: none or visibility: hidden */
+  /* as these properties might cause search engines to ignore the content */
+  z-index: -1000; /* Behind everything, but still in the DOM */
 }
