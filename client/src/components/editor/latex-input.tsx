@@ -194,7 +194,7 @@ export default function LatexInput({
           className="w-full h-full p-3 rounded-md border border-gray-300 glass-card font-mono text-sm resize-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg"
           placeholder={documentType === 'presentation' 
             ? "Enter your presentation content here—paste it in or type away. No LaTeX knowledge needed! Our AI instantly converts your words into beautifully formatted slides; hit PDF Preview to generate a polished presentation in seconds.\n\nNeed a tiny tweak or omission? Drop a note in the field above after your LaTeX is generated."
-            : "Enter your content here—paste it in or type away. No LaTeX knowledge needed! Our AI instantly converts your words into clean, production-ready code; hit PDF Preview to generate a polished, fully formatted PDF in seconds.\n\nNeed a tiny tweak or omission? Drop a note in the field above after your LaTeX is generated."}
+            : "Paste or type your content here—no LaTeX knowledge required! Our AI will instantly convert it into clean, publication-ready LaTeX code. Click Generate LaTeX and preview your fully formatted PDF in seconds.\n\nNeed a quick tweak or omission? Simply add a note above after generating your LaTeX."}
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
