@@ -15,7 +15,4 @@ cmds = [
 ]
 
 [start]
-cmd = "npx tsx server/index.ts"
-
-[variables]
-NODE_ENV = "production"
+cmd = "NODE_ENV=production tsx server/index.ts"

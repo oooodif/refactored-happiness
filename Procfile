@@ -1,1 +1,1 @@
-web: NODE_PATH=. NODE_ENV=production npx tsx server/index.ts
+web: NODE_PATH=. npm start
