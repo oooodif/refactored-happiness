@@ -1,10 +1,19 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
 import * as schema from "@shared/schema";
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import ws from "ws";
 
-// This is the correct way neon config - DO NOT change this
-neonConfig.webSocketConstructor = ws;
+// Check if we're in a Railway environment
+const isRailway = process.env.RAILWAY_ENVIRONMENT === 'production';
+
+// Only use WebSocket for non-Railway environments (like Replit/local)
+if (!isRailway) {
+  // Configure Neon with WebSockets for environments like Replit
+  neonConfig.webSocketConstructor = ws;
+  console.log('[DB] Using WebSocket connection for Neon database');
+} else {
+  console.log('[DB] Running in Railway - using direct PostgreSQL connection');
+}
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
