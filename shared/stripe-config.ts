@@ -1,14 +1,14 @@
 import { SubscriptionTier } from './schema';
 
-// Your actual Stripe Price IDs
+// Actual Stripe Price IDs
 export const STRIPE_PRICE_IDS = {
-  [SubscriptionTier.Free]: '',                  // Free tier (no price ID needed)
-  [SubscriptionTier.Basic]: 'price_YOUR_ACTUAL_PRICE_ID_HERE', // $0.99/month
-  [SubscriptionTier.Tier2]: 'price_YOUR_ACTUAL_PRICE_ID_HERE', // $2.99/month
-  [SubscriptionTier.Pro]: 'price_YOUR_ACTUAL_PRICE_ID_HERE',   // $6.99/month
-  [SubscriptionTier.Tier4]: 'price_YOUR_ACTUAL_PRICE_ID_HERE', // $11.99/month
-  [SubscriptionTier.Power]: 'price_YOUR_ACTUAL_PRICE_ID_HERE', // $19.99/month
-  refillPack: 'price_YOUR_ACTUAL_PRICE_ID_HERE',               // $0.99 one-time
+  [SubscriptionTier.Free]: '',                                // Free tier (no price ID needed)
+  [SubscriptionTier.Basic]: 'price_1RM4x2FlLCnouIYK8m66Ps7x', // $0.99/month (Basic Plan)
+  [SubscriptionTier.Tier2]: 'price_1RM4xQFlLCnouIYKAyjbtS7Y', // $2.99/month (Standard Plan)
+  [SubscriptionTier.Pro]: 'price_1RM4xeFlLCnouIYKofrqNGB4',   // $6.99/month (Advanced Plan)
+  [SubscriptionTier.Tier4]: 'price_1RM4xpFlLCnouIYKuh2d4kHK', // $11.99/month (Pro Plan)
+  [SubscriptionTier.Power]: 'price_1RM4yCFlLCnouIYK7sUtY143', // $19.99/month (Power Plan)
+  refillPack: 'price_1RM51dFlLCnouIYKdmNEkNuX',               // $0.99 one-time (Refill Pack)
 };
 
 // Helpful information about each tier for display
