@@ -15,6 +15,7 @@ import DocumentHistory from "@/pages/document-history";
 import VerifyEmail from "@/pages/verify-email";
 import Success from "@/pages/success";
 import UIPlayground from "@/pages/ui-playground";
+import TemplateRedirect from "@/pages/template-redirect";
 import NotFound from "@/pages/not-found";
 
 // Components
@@ -71,6 +72,7 @@ function Router() {
       <Route path="/history" component={DocumentHistory} />
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/ui-playground" component={UIPlayground} />
+      <Route path="/template/:type" component={TemplateRedirect} />
       <Route component={NotFound} />
     </Switch>
   );
