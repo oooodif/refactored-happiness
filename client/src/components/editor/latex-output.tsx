@@ -92,7 +92,7 @@ export default function LatexOutput({
               Copy
             </Button>
             <Button
-              className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-md px-4 py-2 text-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-1px] flex items-center"
+              className="bg-gradient-to-r from-orange-500 to-orange-700 text-white rounded-md px-4 py-2 text-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-1px] flex items-center"
               onClick={onDownloadPdf}
               disabled={!compilationSuccess}
             >
