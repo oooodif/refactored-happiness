@@ -168,9 +168,10 @@ DOCUMENT_TYPES = [
 - Handles overlay specifications for simple animations or incremental reveals
 - Optimizes images and diagrams for projection
 - Implements title slides with titlepage and section dividers
-- Automatically splits large text into multiple slides to avoid overcrowding
+- STRICTLY enforces maximum 10 lines of text per slide unless explicitly requested otherwise
+- Splits slides at natural breaks in content to maintain coherent topics per slide
+- Automatically divides large text into multiple slides to avoid overcrowding
 - Maintains logical flow by creating slide titles such as Part I, Part II, etc.
-- Encourages the use of short paragraphs or bullet points per slide
 - Perfect for academic talks, business presentations, or lecture materials
 - Ideal for users who need to convert content outlines or longer documents into structured presentations
 
