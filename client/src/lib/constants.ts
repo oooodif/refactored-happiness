@@ -73,6 +73,7 @@ export const API_ROUTES = {
     generate: "/api/latex/generate",
     compile: "/api/latex/compile",
     extractTitle: "/api/latex/extract-title",
+    modify: "/api/latex/modify",
     documents: "/api/documents",
     document: (id: string | number) => `/api/documents/${id}`
   },

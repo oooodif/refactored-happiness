@@ -7,21 +7,27 @@ interface LatexInputProps {
   value: string;
   onChange: (value: string) => void;
   onGenerate: () => void;
+  onModify?: (notes: string, isOmit: boolean) => void;
   documentType: string;
   onDocumentTypeChange: (type: string) => void;
   generating: boolean;
+  hasLatexContent?: boolean;
 }
 
 export default function LatexInput({
   value,
   onChange,
   onGenerate,
+  onModify,
   documentType,
   onDocumentTypeChange,
-  generating
+  generating,
+  hasLatexContent = false
 }: LatexInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const notesInputRef = useRef<HTMLInputElement>(null);
   const [isReady, setIsReady] = useState(true);
+  const [notes, setNotes] = useState("");
 
   const insertTemplate = (templateId: string) => {
     if (!textareaRef.current) return;
@@ -85,57 +91,30 @@ export default function LatexInput({
             </Select>
           </div>
         </div>
-        <div className="flex space-x-2 flex-wrap">
+        <div className="flex space-x-2 items-center">
+          <div className="flex-1 mr-2">
+            <input
+              type="text"
+              id="notes-input"
+              placeholder="Enter notes or omission instructions here..."
+              className="w-full glass-card border border-gray-300 text-gray-700 text-sm rounded-md h-9 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
           <Button
             variant="outline"
             size="sm"
-            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-            onClick={() => insertTemplate("math")}
+            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-3 py-1 transition-all duration-300 hover:shadow-md hover:bg-red-50 hover:border-red-300"
+            onClick={() => {
+              const notesInput = document.getElementById('notes-input') as HTMLInputElement;
+              if (notesInput && notesInput.value.trim()) {
+                // Format the omission with tags
+                const omitText = `<OMIT>${notesInput.value.trim()}</OMIT>`;
+                notesInput.value = omitText;
+              }
+            }}
           >
-            <span className="font-mono gradient-text">Σ</span> Math
+            <span className="font-mono text-red-600 mr-1">✂</span> OMIT
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-            onClick={() => insertTemplate("table")}
-          >
-            <span className="font-mono gradient-text">⊞</span> Table
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-            onClick={() => insertTemplate("figure")}
-          >
-            <span className="font-mono gradient-text">⊛</span> Figure
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-            onClick={() => insertTemplate("section")}
-          >
-            <span className="font-mono gradient-text">§</span> Section
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-            onClick={() => insertTemplate("list")}
-          >
-            <span className="font-mono gradient-text">•</span> List
-          </Button>
-          {documentType === 'presentation' && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-              onClick={() => insertTemplate("slide")}
-            >
-              <span className="font-mono gradient-text">▦</span> New Slide
-            </Button>
-          )}
         </div>
       </div>
       <div className="flex-1 overflow-auto p-4 bg-gray-50">

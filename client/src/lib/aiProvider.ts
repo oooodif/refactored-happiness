@@ -2,6 +2,31 @@ import { API_ROUTES } from "./constants";
 import { apiRequest } from "./queryClient";
 import { GenerateLatexResponse, LatexGenerationOptions } from "./types";
 
+// Function for modifying existing LaTeX with omit instructions or notes
+export async function modifyLatex(
+  currentLatex: string,
+  notes: string,
+  isOmit: boolean = false
+): Promise<GenerateLatexResponse> {
+  try {
+    console.log(`Modifying LaTeX with ${isOmit ? 'OMIT' : 'notes'} instruction:`, notes);
+    const response = await apiRequest(
+      "POST",
+      API_ROUTES.latex.modify,
+      {
+        latex: currentLatex,
+        notes,
+        isOmit
+      }
+    );
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error modifying LaTeX:", error);
+    throw new Error(error instanceof Error ? error.message : "Failed to modify LaTeX");
+  }
+}
+
 export async function generateLatex(
   content: string,
   documentType: string,
