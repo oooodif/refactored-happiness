@@ -623,5 +623,73 @@ export const storage = {
     }
     
     return { tier };
+  },
+
+  // Anonymous user operations
+  
+  /**
+   * Get anonymous user by fingerprint
+   */
+  async getAnonymousUserByFingerprint(fingerprint: string): Promise<AnonymousUser | null> {
+    const user = await db.query.anonymousUsers.findFirst({
+      where: eq(anonymousUsers.fingerprint, fingerprint)
+    });
+    return user || null;
+  },
+  
+  /**
+   * Create a new anonymous user
+   */
+  async createAnonymousUser(data: {
+    fingerprint: string,
+    sessionId?: string,
+    ipAddress?: string,
+    userAgent?: string
+  }): Promise<AnonymousUser> {
+    const [newUser] = await db.insert(anonymousUsers).values({
+      fingerprint: data.fingerprint,
+      sessionId: data.sessionId,
+      ipAddress: data.ipAddress,
+      userAgent: data.userAgent,
+      usageCount: 0
+    }).returning();
+    
+    return newUser;
+  },
+  
+  /**
+   * Increment usage count for anonymous user
+   */
+  async incrementAnonymousUserUsage(fingerprint: string): Promise<AnonymousUser | null> {
+    const user = await this.getAnonymousUserByFingerprint(fingerprint);
+    
+    if (!user) {
+      return null;
+    }
+    
+    const [updatedUser] = await db.update(anonymousUsers)
+      .set({
+        usageCount: user.usageCount + 1,
+        lastUsed: new Date()
+      })
+      .where(eq(anonymousUsers.fingerprint, fingerprint))
+      .returning();
+    
+    return updatedUser;
+  },
+  
+  /**
+   * Check if anonymous user has remaining usage
+   */
+  async hasRemainingAnonymousUsage(fingerprint: string): Promise<boolean> {
+    const user = await this.getAnonymousUserByFingerprint(fingerprint);
+    
+    // If user doesn't exist, they haven't used their free conversion yet
+    if (!user) {
+      return true;
+    }
+    
+    // Anonymous users get 1 free conversion
+    return user.usageCount < 1;
   }
 };
