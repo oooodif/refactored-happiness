@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import PDFDocumentViewer from "./pdf-document-viewer";
 
 interface PDFPreviewProps {
   pdfData: string | null;
@@ -252,8 +251,19 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
                     sandbox="allow-scripts"
                   />
                 ) : (
-                  <div className="w-full h-full">
-                    {pdfData && <PDFDocumentViewer pdfData={pdfData} />}
+                  <div className="w-full h-full flex flex-col items-center justify-center">
+                    {pdfData ? (
+                      <iframe 
+                        src={formattedData || "about:blank"}
+                        className="w-full h-full border-0"
+                        title="PDF Preview"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600"></div>
+                        <p className="ml-2 text-gray-500">Loading PDF...</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -267,8 +277,8 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
               </p>
             ) : (
               <>
-                <p>PDF is now rendered with PDF.js for consistent display across browsers.</p>
-                <p>Use the controls above to navigate pages and adjust zoom.</p>
+                <p>PDF is now rendered with your browser's native PDF viewer.</p>
+                <p>Use your browser's PDF controls for navigation and zoom.</p>
               </>
             )}
           </div>
