@@ -555,16 +555,116 @@
   </script>
   </head>
   <script>
-    // Register service worker
+    // Register service workers
     if ('serviceWorker' in navigator) {
+      // Register the existing service worker first
       navigator.serviceWorker.register('/sw.js')
         .then(registration => {
-          console.log('Service Worker registered with scope:', registration.scope);
+          console.log('Main Service Worker registered with scope:', registration.scope);
         })
         .catch(error => {
-          console.error('Service Worker registration failed:', error);
+          console.error('Main Service Worker registration failed:', error);
+        });
+      
+      // Then register our offline functionality service worker
+      navigator.serviceWorker.register('/offline-sw.js', { scope: '/' })
+        .then(registration => {
+          console.log('Offline Service Worker registered with scope:', registration.scope);
+          
+          // Set up background sync for offline changes
+          if ('SyncManager' in window) {
+            registration.sync.register('sync-latex-changes')
+              .catch(err => console.error('Background sync registration failed:', err));
+          }
+        })
+        .catch(error => {
+          console.error('Offline Service Worker registration failed:', error);
         });
     }
+  </script>
+  
+  <script>
+    // Create a simple IndexedDB for offline document storage
+    const DB_NAME = 'AILatexGeneratorOfflineDB';
+    const DB_VERSION = 1;
+    const DOCUMENTS_STORE = 'documents';
+    const PENDING_CHANGES_STORE = 'pendingChanges';
+    
+    let db;
+    
+    function initIndexedDB() {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      
+      request.onerror = (event) => {
+        console.error('IndexedDB error:', event.target.errorCode);
+      };
+      
+      request.onupgradeneeded = (event) => {
+        db = event.target.result;
+        
+        // Create documents object store
+        if (!db.objectStoreNames.contains(DOCUMENTS_STORE)) {
+          const documentStore = db.createObjectStore(DOCUMENTS_STORE, { keyPath: 'id' });
+          documentStore.createIndex('userId', 'userId', { unique: false });
+          documentStore.createIndex('updatedAt', 'updatedAt', { unique: false });
+        }
+        
+        // Create pending changes object store
+        if (!db.objectStoreNames.contains(PENDING_CHANGES_STORE)) {
+          const pendingChangesStore = db.createObjectStore(PENDING_CHANGES_STORE, { keyPath: 'id', autoIncrement: true });
+          pendingChangesStore.createIndex('documentId', 'documentId', { unique: false });
+          pendingChangesStore.createIndex('timestamp', 'timestamp', { unique: false });
+        }
+      };
+      
+      request.onsuccess = (event) => {
+        db = event.target.result;
+        console.log('IndexedDB initialized successfully');
+      };
+    }
+    
+    // Initialize IndexedDB when the page loads
+    if ('indexedDB' in window) {
+      initIndexedDB();
+    }
+    
+    // Handle online/offline status changes
+    window.addEventListener('online', () => {
+      const statusElement = document.getElementById('offline-status');
+      if (statusElement) {
+        statusElement.style.display = 'none';
+      }
+      
+      // Trigger sync if supported
+      if ('serviceWorker' in navigator && 'SyncManager' in window) {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.sync.register('sync-latex-changes');
+        });
+      }
+    });
+    
+    window.addEventListener('offline', () => {
+      const statusElement = document.getElementById('offline-status');
+      if (statusElement) {
+        statusElement.style.display = 'block';
+      } else {
+        // Create and append the offline status element if it doesn't exist
+        const offlineBar = document.createElement('div');
+        offlineBar.id = 'offline-status';
+        offlineBar.style.position = 'fixed';
+        offlineBar.style.top = '0';
+        offlineBar.style.left = '0';
+        offlineBar.style.right = '0';
+        offlineBar.style.backgroundColor = '#f44336';
+        offlineBar.style.color = 'white';
+        offlineBar.style.textAlign = 'center';
+        offlineBar.style.padding = '8px';
+        offlineBar.style.zIndex = '9999';
+        offlineBar.innerHTML = 'You are currently offline. Some features may be limited.';
+        
+        document.body.prepend(offlineBar);
+      }
+    });
   </script>
   <body>
     <div id="root"></div>
