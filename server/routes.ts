@@ -799,52 +799,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "LaTeX content is required" });
         }
         
-        // Try to extract title from LaTeX content using heuristics first
-        let title = extractTitleFromLatex(latex);
-        
-        // If we couldn't find a title using heuristics, use AI to extract a meaningful one
-        if (title === "Untitled Document") {
-          // Determine which AI provider to use
-          const userId = req.session.userId;
-          let provider = "groq"; // Default to Groq since you mentioned it works well
+        // Always use AI to generate a title without relying on heuristics
+        // Determine which AI provider to use
+        const userId = req.session.userId;
+        let provider = "groq"; // Default to Groq as it's efficient and cost-effective
           
-          if (userId) {
-            const user = await storage.getUserById(userId);
-            if (user) {
-              // Use a provider based on user's subscription tier
-              // For now just use Groq
-              provider = "groq";
-            }
-          }
-          
-          // Generate a meaningful title based on the LaTeX content
-          try {
-            const prompt = `Extract a concise, descriptive title (3-7 words) from this LaTeX document. Focus on the main topic and purpose. Return ONLY the title with no quotation marks or formatting:
-
-${latex.substring(0, 5000)}`;  // Limit content to avoid token overflow
-            
-            // Use our existing AI provider interface
-            const generatedTitle = await callProviderWithModel(`${provider}/llama3-8b-8192`, prompt);
-            
-            // Clean up the title (remove quotes, line breaks, etc.)
-            title = generatedTitle
-              .replace(/["'`]/g, '')  // Remove quotes
-              .replace(/\\n|\\r/g, '') // Remove line breaks
-              .replace(/^Title:\s*/i, '')  // Remove "Title:" prefix
-              .replace(/^\s+|\s+$/g, '')  // Trim whitespace
-              .substring(0, 100);  // Limit length
-            
-            // Use default if we got an empty title
-            if (!title) {
-              title = "Generated Document";
-            }
-          } catch (error) {
-            console.error("Error generating title with AI:", error);
-            title = "Generated Document";  // Fallback
+        if (userId) {
+          const user = await storage.getUserById(userId);
+          if (user) {
+            // Use a provider based on user's subscription tier
+            // For now just use Groq
+            provider = "groq";
           }
         }
         
-        return res.status(200).json({ title });
+        // Generate a meaningful title based on the LaTeX content
+        try {
+          // Improved prompt focusing on key concepts and meaningful title generation
+          const prompt = `Analyze this LaTeX document content and generate a concise, meaningful title (3-7 words) that captures its core subject matter.
+          
+Your title should be descriptive, academically appropriate, and directly relevant to the content. 
+Avoid generic titles like "Assignment" or "Document". Focus on identifying the main theme or research topic.
+
+Return ONLY the title with no quotes, explanations, or additional formatting:
+
+${latex.substring(0, 5000)}`;  // Limit content to avoid token overflow
+          
+          // Use our existing AI provider interface
+          const generatedTitle = await callProviderWithModel(`${provider}/llama3-8b-8192`, prompt);
+          
+          // Clean up the title (remove quotes, line breaks, etc.)
+          let title = generatedTitle
+            .replace(/["'`]/g, '')  // Remove quotes
+            .replace(/\\n|\\r/g, '') // Remove line breaks
+            .replace(/^Title:\s*/i, '')  // Remove "Title:" prefix
+            .replace(/\\LaTeX|\\TeX/g, 'LaTeX') // Fix LaTeX command formatting
+            .replace(/^\s+|\s+$/g, '')  // Trim whitespace
+            .substring(0, 100);  // Limit length
+          
+          // Use default if we got an empty title
+          if (!title || title.length < 3) {
+            // Try to extract from LaTeX as fallback
+            title = extractTitleFromLatex(latex);
+          }
+          
+          return res.status(200).json({ title });
+        } catch (error) {
+          console.error("Error generating title with AI:", error);
+          
+          // Fall back to heuristic extraction
+          const title = extractTitleFromLatex(latex);
+          return res.status(200).json({ title });
+        }
       } catch (error) {
         console.error("Title extraction error:", error);
         return res.status(500).json({ 
