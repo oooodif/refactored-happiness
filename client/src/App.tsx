@@ -16,6 +16,7 @@ import NotFound from "@/pages/not-found";
 
 // Components
 import AuthRequiredDialog from "@/components/dialogs/auth-required-dialog";
+import LoadingFix from "@/components/LoadingFix";
 
 // User context
 import { UserSession } from "./lib/types";
@@ -304,6 +305,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <UserContext.Provider value={{ session, setSession, checkAndUpdateSession }}>
         <AuthRequiredContext.Provider value={{ showAuthPrompt, setShowAuthPrompt }}>
+          {/* Add LoadingFix component to ensure we never get stuck in loading state */}
+          {session.isLoading && <LoadingFix />}
           <Router />
           <AuthRequiredDialog />
           <Toaster />

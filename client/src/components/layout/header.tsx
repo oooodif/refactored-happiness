@@ -364,7 +364,7 @@ export default function Header() {
               />
             </svg>
             <h1 className="ml-2 text-xl font-semibold text-gray-800">
-              AITexGen
+              AI Latex Generator
             </h1>
           </Link>
           {/* Debug button - only in dev */}
@@ -387,10 +387,25 @@ export default function Header() {
         </div>
         <div className="flex items-center space-x-4">
           {session.isLoading ? (
-            // Loading state
+            // Loading state with emergency fix button to manually exit loading state
             <>
               <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
               <span className="text-sm text-gray-600">Loading...</span>
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                className="ml-2 text-xs" 
+                onClick={() => {
+                  console.log("Emergency loading state fix activated");
+                  setSession(prev => ({
+                    ...prev,
+                    isLoading: false,
+                    isAuthenticated: false
+                  }));
+                }}
+              >
+                Emergency Fix
+              </Button>
             </>
           ) : session.isAuthenticated && session.user ? (
             // Authenticated state
