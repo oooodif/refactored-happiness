@@ -1,0 +1,106 @@
+ 
+
+[Region: us-west1]
+
+==============
+
+Using Nixpacks
+
+==============
+
+
+context: mf14-i2sG
+
+╔════════════════════════ Nixpacks v1.38.0 ════════════════════════╗
+
+║ setup      │ nodejs_18, npm-9_x, openssl                         ║
+
+║──────────────────────────────────────────────────────────────────║
+
+║ caddy      │ pkgs: caddy                                         ║
+
+║            │ cmds: caddy fmt --overwrite /assets/Caddyfile       ║
+
+║──────────────────────────────────────────────────────────────────║
+
+║ install    │ npm ci                                              ║
+
+║──────────────────────────────────────────────────────────────────║
+
+║ build      │ npm run build                                       ║
+
+║──────────────────────────────────────────────────────────────────║
+
+║ start      │ NODE_ENV=production NODE_PATH=. tsx server/index.ts ║
+
+╚══════════════════════════════════════════════════════════════════╝
+
+[internal] load build definition from Dockerfile
+
+[internal] load build definition from Dockerfile
+
+[internal] load build definition from Dockerfile  ✔ 0ms
+
+[internal] load build definition from Dockerfile
+
+[internal] load build definition from Dockerfile  ✔ 8ms
+
+[internal] load metadata for ghcr.io/railwayapp/nixpacks:ubuntu-1745885067
+
+[internal] load metadata for ghcr.io/railwayapp/nixpacks:ubuntu-1745885067  ✔ 267ms
+
+[internal] load .dockerignore
+
+[internal] load .dockerignore  ✔ 0ms
+
+[internal] load .dockerignore
+
+[internal] load .dockerignore  ✔ 7ms
+
+[stage-0 11/15] RUN --mount=type=cache,id=s/8533af8e-5d28-4007-8dd8-f04a73c28bc0-/root/npm,target=/root/.npm npm ci
+
+[stage-0 10/15] COPY . /app/.
+
+[stage-0  9/15] RUN  caddy fmt --overwrite /assets/Caddyfile
+
+[stage-0  1/15] FROM ghcr.io/railwayapp/nixpacks:ubuntu-1745885067@sha256:d45c89d80e13d7ad0fd555b5130f22a866d9dd10e861f589932303ef2314c7de
+
+[stage-0  3/15] COPY .nixpacks/nixpkgs-ba913eda2df8eb72147259189d55932012df6301.nix .nixpacks/nixpkgs-ba913eda2df8eb72147259189d55932012df6301.nix
+
+[stage-0 13/15] RUN --mount=type=cache,id=s/8533af8e-5d28-4007-8dd8-f04a73c28bc0-node_modules/cache,target=/app/node_modules/.cache npm run build
+
+[stage-0 15/15] COPY . /app
+
+[stage-0  4/15] RUN nix-env -if .nixpacks/nixpkgs-ba913eda2df8eb72147259189d55932012df6301.nix && nix-collect-garbage -d
+
+[stage-0  7/15] COPY .nixpacks/assets /assets/
+
+[internal] load build context
+
+[stage-0  2/15] WORKDIR /app/
+
+[stage-0 12/15] COPY . /app/.
+
+[stage-0 14/15] RUN printf '\nPATH=/app/node_modules/.bin:$PATH' >> /root/.profile
+
+[stage-0  6/15] RUN nix-env -if .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix && nix-collect-garbage -d
+
+[stage-0  5/15] COPY .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix
+
+[stage-0  8/15] COPY . /app/.
+
+[stage-0  1/15] FROM ghcr.io/railwayapp/nixpacks:ubuntu-1745885067@sha256:d45c89d80e13d7ad0fd555b5130f22a866d9dd10e861f589932303ef2314c7de
+
+[internal] load build context  ✔ 0ms
+
+[internal] load build context
+
+[stage-0  1/15] FROM ghcr.io/railwayapp/nixpacks:ubuntu-1745885067@sha256:d45c89d80e13d7ad0fd555b5130f22a866d9dd10e861f589932303ef2314c7de  ✔ 8ms
+
+[internal] load build context  ✔ 148ms
+
+[stage-0  2/15] WORKDIR /app/  ✔ 0ms – CACHED
+
+[stage-0  3/15] COPY .nixpacks/nixpkgs-ba913eda2df8eb72147259189d55932012df6301.nix .nixpacks/nixpkgs-ba913eda2df8eb72147259189d55932012df6301.nix  ✔ 0ms – CACHED
+
+[stage-0  4/15] RUN nix-env -if .nixpacks/nixpkgs-ba913eda2df8eb72147259189d55932012df6301.nix && nix-collect-garbage -d  ✔ 0ms – CACHED
