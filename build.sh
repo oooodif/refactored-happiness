@@ -21,11 +21,5 @@ tectonic --version
 
 echo "Tectonic installation completed"
 
-# Set chunk size warning limit to avoid failures from warnings
-export VITE_APP_CHUNK_SIZE_WARNING_LIMIT=1000
-
 # Continue with the normal build process
-npm run build 
-
-# Ensure the build script exits with success regardless of warnings
-exit 0
+npm run build

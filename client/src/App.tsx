@@ -1,30 +1,28 @@
 import { Switch, Route } from "wouter";
-import {
-  Suspense,
-  lazy,
-  useState,
-  useEffect,
-  useCallback,
-  createContext,
-} from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { queryClient, checkAuthStatus } from "./lib/queryClient";
+import { useState, useEffect, useCallback } from "react";
+
+// Pages
+import Home from "@/pages/home";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
+import Account from "@/pages/account";
+import Subscribe from "@/pages/subscribe";
+import DocumentHistory from "@/pages/document-history";
+import NotFound from "@/pages/not-found";
+
+// Components
 import AuthRequiredDialog from "@/components/dialogs/auth-required-dialog";
+
+// User context
 import { UserSession } from "./lib/types";
 import { SubscriptionTier } from "@shared/schema";
 import { API_ROUTES } from "./lib/constants";
 
-// Lazy-loaded pages
-const Home = lazy(() => import("@/pages/home"));
-const Login = lazy(() => import("@/pages/login"));
-const Register = lazy(() => import("@/pages/register"));
-const Account = lazy(() => import("@/pages/account"));
-const Subscribe = lazy(() => import("@/pages/subscribe"));
-const DocumentHistory = lazy(() => import("@/pages/document-history"));
-const NotFound = lazy(() => import("@/pages/not-found"));
-
-// Contexts
+// Create a context to share user session data
+import { createContext } from "react";
 export const UserContext = createContext<{
   session: UserSession;
   setSession: React.Dispatch<React.SetStateAction<UserSession>>;
@@ -46,6 +44,7 @@ export const UserContext = createContext<{
   checkAndUpdateSession: async () => {},
 });
 
+// Create an Auth Required context to control the signup/login prompt
 export const AuthRequiredContext = createContext<{
   showAuthPrompt: boolean;
   setShowAuthPrompt: React.Dispatch<React.SetStateAction<boolean>>;
@@ -56,21 +55,20 @@ export const AuthRequiredContext = createContext<{
 
 function Router() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/login" component={Login} />
-        <Route path="/register" component={Register} />
-        <Route path="/account" component={Account} />
-        <Route path="/subscribe" component={Subscribe} />
-        <Route path="/history" component={DocumentHistory} />
-        <Route component={NotFound} />
-      </Switch>
-    </Suspense>
+    <Switch>
+      <Route path="/" component={Home} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      <Route path="/account" component={Account} />
+      <Route path="/subscribe" component={Subscribe} />
+      <Route path="/history" component={DocumentHistory} />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 
 function App() {
+  // Initialize with a loading session
   const [session, setSession] = useState<UserSession>({
     user: null,
     isAuthenticated: false,
@@ -83,16 +81,20 @@ function App() {
     },
     refillPackCredits: 0,
   });
-
+  
+  // Auth prompt modal state
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
-
+  
+  // Create a reusable function to check and update session that can be passed down via context
   const checkAndUpdateSession = useCallback(async () => {
     try {
       console.log("MANUAL SESSION CHECK TRIGGERED");
       const authData = await checkAuthStatus();
-
+      
       if (authData.isAuthenticated && authData.user) {
         console.log("SESSION CHECK SUCCESS:", authData.user.username);
+        
+        // Update the session with fresh data
         setSession({
           user: authData.user,
           isAuthenticated: true,
@@ -101,13 +103,14 @@ function App() {
           usage: {
             current: authData.user.monthlyUsage || 0,
             limit: authData.usageLimit || 3,
-            resetDate: authData.user.usageResetDate || new Date().toISOString(),
+            resetDate: authData.user.usageResetDate || new Date().toISOString()
           },
-          refillPackCredits: authData.user.refillPackCredits || 0,
+          refillPackCredits: authData.user.refillPackCredits || 0
         });
         return;
       }
-
+      
+      // Not authenticated
       console.log("SESSION CHECK - NOT AUTHENTICATED");
       setSession({
         user: null,
@@ -117,61 +120,71 @@ function App() {
         usage: {
           current: 0,
           limit: 3,
-          resetDate: new Date().toISOString(),
+          resetDate: new Date().toISOString()
         },
-        refillPackCredits: 0,
+        refillPackCredits: 0
       });
     } catch (error) {
       console.error("SESSION CHECK ERROR:", error);
-      setSession((prev) => ({ ...prev, isLoading: false }));
+      setSession(prev => ({...prev, isLoading: false}));
     }
   }, []);
-
+  
+  // Add event listeners for focus and visibility changes to refresh auth status
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
+      if (document.visibilityState === 'visible') {
         console.log("Page became visible, checking auth status");
         checkAndUpdateSession();
       }
     };
-
+    
     const handleFocus = () => {
       console.log("Window focused, checking auth status");
       checkAndUpdateSession();
     };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", handleFocus);
-
+    
+    // Add event listeners
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    // Remove event listeners on cleanup
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
     };
   }, [checkAndUpdateSession]);
-
+  
+  // Add a debug effect to log relevant factors (window.fetch available, etc.)
   useEffect(() => {
     console.log("Debug info:", {
-      fetchAvailable: typeof window.fetch === "function",
-      localStorage: typeof localStorage !== "undefined",
-      apiAuthMe: API_ROUTES.auth.me,
+      fetchAvailable: typeof window.fetch === 'function',
+      localStorage: typeof localStorage !== 'undefined',
+      apiAuthMe: API_ROUTES.auth.me
     });
   }, []);
 
+  // Initial auth check on app start
   useEffect(() => {
     console.log("INITIAL AUTH CHECK STARTED");
+    
+    // Perform initial check
     checkAndUpdateSession();
-    const intervalId = window.setInterval(checkAndUpdateSession, 10000);
-    return () => window.clearInterval(intervalId);
+    
+    // Setup polling for auth status (backup mechanism)
+    const checkIntervalMs = 10000; // 10 seconds
+    const intervalId = window.setInterval(checkAndUpdateSession, checkIntervalMs);
+    
+    // Proper cleanup
+    return () => {
+      window.clearInterval(intervalId);
+    };
   }, [checkAndUpdateSession]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <UserContext.Provider
-        value={{ session, setSession, checkAndUpdateSession }}
-      >
-        <AuthRequiredContext.Provider
-          value={{ showAuthPrompt, setShowAuthPrompt }}
-        >
+      <UserContext.Provider value={{ session, setSession, checkAndUpdateSession }}>
+        <AuthRequiredContext.Provider value={{ showAuthPrompt, setShowAuthPrompt }}>
           <Router />
           <AuthRequiredDialog />
           <Toaster />

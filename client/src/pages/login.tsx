@@ -1,101 +1,106 @@
-import { useContext, useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useContext, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import SiteLayout from "@/components/layout/site-layout";
-import { UserContext } from "@/App";
+import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { UserContext } from "@/App";
+import { useLocation } from "wouter";
 import { API_ROUTES } from "@/lib/constants";
-import { SubscriptionTier } from "@shared/schema";
+import { LoginCredentials, SubscriptionTier } from "@shared/schema";
+import SiteLayout from "@/components/layout/site-layout";
 
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "wouter";
+import { Loader2 } from "lucide-react";
 
-/* -----------------------------  Zod schema  ----------------------------- */
+// Form schema
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  rememberMe: z.boolean().optional().default(false),
+  rememberMe: z.boolean().default(false),
 });
-type LoginForm = z.infer<typeof loginSchema>;
-/* ----------------------------------------------------------------------- */
 
 export default function Login() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
   const { session, setSession } = useContext(UserContext);
   const [, navigate] = useLocation();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
 
-  /* Redirect already‑authenticated users */
+  // Redirect if already logged in
   useEffect(() => {
-    if (!session.isLoading && session.isAuthenticated) navigate("/");
-  }, [session.isLoading, session.isAuthenticated]);
+    // Only redirect after auth check is complete and user is authenticated
+    if (!session.isLoading && session.isAuthenticated) {
+      navigate("/");
+    }
+  }, [session.isLoading, session.isAuthenticated, navigate]);
 
-  /* React‑Hook‑Form setup */
-  const form = useForm<LoginForm>({
+  const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "", rememberMe: false },
+    defaultValues: {
+      email: "",
+      password: "",
+      rememberMe: false,
+    },
   });
 
-  /* -----------------------------  Submit  ----------------------------- */
-  const onSubmit = async (values: LoginForm) => {
-    setLoading(true);
+  const onSubmit = async (values: z.infer<typeof loginSchema>) => {
+    setIsLoading(true);
     try {
-      const res = await apiRequest("POST", API_ROUTES.auth.login, {
+      const response = await apiRequest("POST", API_ROUTES.auth.login, {
         email: values.email,
         password: values.password,
       });
-      const data = await res.json();
-
-      if (!data.user) throw new Error("Invalid response from server");
-
+      
+      const data = await response.json();
+      
+      if (!data.user) {
+        throw new Error("Login failed: Invalid response from server");
+      }
+      
       setSession({
         user: data.user,
         isAuthenticated: true,
         isLoading: false,
-        tier: data.user.subscriptionTier ?? SubscriptionTier.Free,
+        tier: data.user.subscriptionTier || SubscriptionTier.Free,
         usage: {
-          current: data.user.monthlyUsage ?? 0,
-          limit: data.usageLimit ?? 0,
-          resetDate: data.user.usageResetDate ?? null,
+          current: data.user.monthlyUsage || 0,
+          limit: data.usageLimit || 0,
+          resetDate: data.user.usageResetDate || null,
         },
-        refillPackCredits: data.user.refillPackCredits ?? 0,
+        refillPackCredits: data.user.refillPackCredits || 0,
       });
-
-      toast({ title: "Welcome back!", description: "Logged in successfully." });
+      
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully logged in.",
+      });
+      
       navigate("/");
-    } catch (err) {
+    } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Login failed",
-        description: err instanceof Error ? err.message : "Invalid credentials",
+        description: error instanceof Error ? error.message : "Invalid email or password",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  /* -----------------------------  UI  ----------------------------- */
   return (
     <SiteLayout fullHeight={false}>
       <div className="container mx-auto px-4 py-8">
@@ -107,14 +112,9 @@ export default function Login() {
                 Enter your credentials to access your account
               </CardDescription>
             </CardHeader>
-
             <CardContent>
               <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
-                >
-                  {/* Email */}
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
                     control={form.control}
                     name="email"
@@ -123,8 +123,8 @@ export default function Login() {
                         <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input
-                            type="email"
                             placeholder="you@example.com"
+                            type="email"
                             autoComplete="email"
                             {...field}
                           />
@@ -134,7 +134,6 @@ export default function Login() {
                     )}
                   />
 
-                  {/* Password */}
                   <FormField
                     control={form.control}
                     name="password"
@@ -143,8 +142,8 @@ export default function Login() {
                         <FormLabel>Password</FormLabel>
                         <FormControl>
                           <Input
-                            type="password"
                             placeholder="••••••••"
+                            type="password"
                             autoComplete="current-password"
                             {...field}
                           />
@@ -154,7 +153,6 @@ export default function Login() {
                     )}
                   />
 
-                  {/* Remember‑me + forgot‑password */}
                   <div className="flex items-center justify-between">
                     <FormField
                       control={form.control}
@@ -163,9 +161,9 @@ export default function Login() {
                         <FormItem className="flex items-center space-x-2">
                           <FormControl>
                             <Checkbox
-                              id="remember"
                               checked={field.value}
                               onCheckedChange={field.onChange}
+                              id="remember"
                             />
                           </FormControl>
                           <label
@@ -182,24 +180,27 @@ export default function Login() {
                     </Button>
                   </div>
 
-                  {/* Submit */}
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Signing in…" : "Sign In"}
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
                 </form>
               </Form>
             </CardContent>
-
             <CardFooter className="flex justify-center">
-              <span className="text-sm text-gray-600">
-                Don&apos;t have an account?
-              </span>
-              <Link
-                href="/register"
-                className="ml-1 text-sm font-medium text-blue-600 hover:text-blue-500"
-              >
-                Create one
-              </Link>
+              <div className="text-center">
+                <span className="text-sm text-gray-600">
+                  Don't have an account?
+                </span>
+                <Link href="/register">
+                  <a className="text-sm font-medium text-blue-600 hover:text-blue-500 ml-1">
+                    Create one
+                  </a>
+                </Link>
+              </div>
             </CardFooter>
           </Card>
         </div>

@@ -1,7 +1,7 @@
 # .railway.toml
 [build]
 builder       = "NIXPACKS"
-buildCommand  = "npm run build"  # Standard build command
+buildCommand  = "chmod +x ./build.sh && ./build.sh"  # Run our custom script that installs Tectonic first
 
 [deploy]
 # 1. Push / migrate DB before starting

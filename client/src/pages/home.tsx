@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useLocation } from "wouter";
 import { UserContext, AuthRequiredContext } from "@/App";
 import SiteLayout from "@/components/layout/site-layout";
@@ -7,81 +7,145 @@ import LatexInput from "@/components/editor/latex-input";
 import LatexOutput from "@/components/editor/latex-output";
 import PDFPreview from "@/components/editor/pdf-preview";
 import ErrorNotification from "@/components/dialogs/error-notification";
-import {
-  generateLatex,
-  compileLatex,
-  saveDocument,
-  extractTitleFromLatex,
-} from "@/lib/aiProvider";
+import { generateLatex, compileLatex, saveDocument, extractTitleFromLatex } from "@/lib/aiProvider";
 import { downloadPdf } from "@/lib/utils";
 import { TabItem, EditorState, ErrorNotificationData } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 
-const GUEST_MODE = true; // Toggle guest mode here
-
-/* ----------------------------------------------------------------- */
-/*  Title‑extraction helpers (unchanged logic, just compacted a bit) */
-/* ----------------------------------------------------------------- */
-function extractTitleFromInput(input: string): string {
-  if (!input.trim()) return "Untitled Document";
-
-  const lines = input.trim().split("\n");
-  const firstPara = lines.slice(0, 5).join(" ");
-
-  const explicit = input.match(/title:\s*(.+?)(?:\n|$)/i)?.[1]?.trim();
-  if (explicit) return explicit;
-
-  const mdHeading = input.match(/^#+\s+(.+?)(?:\n|$)/m)?.[1]?.trim();
-  if (mdHeading) return mdHeading;
-
-  if (input.match(/pleasure/i) && input.match(/pain/i))
-    return input.match(/paradox/i) ? "The Paradox of Pleasure and Pain" : "On Pleasure and Pain";
-
-  const phraseTable = [
-    [/happiness|well‑being|satisfaction/i, "On Happiness"],
-    [/virtue|ethics|moral/i, "Ethical Considerations"],
-    [/knowledge|truth|wisdom/i, "Pursuit of Knowledge"],
-    [/freedom|liberty|autonomy/i, "On Freedom and Choice"],
-    [/justice|fairness|equality/i, "Principles of Justice"],
-    [/beauty|aesthetic|art/i, "On Beauty and Aesthetics"],
-    [/nature|environment/i, "Natural Philosophy"],
-    [/society|community/i, "Social Structures"],
-    [/mind|consciousness|perception/i, "Philosophy of Mind"],
-    [/reality|existence|being/i, "On Reality and Existence"],
-  ] as const;
-
-  for (const [rx, title] of phraseTable) if (rx.test(input)) return title;
-
-  if (lines.length) {
-    const first = lines[0].trim();
-    const words = first.split(/\s+/);
-    if (words.length >= 3 && words.length <= 8 && first.length <= 60) {
-      if (/^[A-Z]/.test(first) && !/^[A-Z]+$/.test(first)) return first; // looks like a title
-      const lower = (w: string) =>
-        ["a", "an", "the", "and", "or", "for", "nor", "in", "of", "to", "by", "on"].includes(
-          w.toLowerCase(),
-        )
-          ? w.toLowerCase()
-          : w[0].toUpperCase() + w.slice(1).toLowerCase();
-      return words.map(lower).join(" ");
+/**
+ * Extract a meaningful title from the user's input content
+ * This analyzes the content to find a suitable title or generates one based on the content
+ * @param inputContent The user's input content
+ * @returns An extracted title or "Untitled Document" if no title found
+ */
+function extractTitleFromInput(inputContent: string): string {
+  if (!inputContent?.trim()) {
+    return "Untitled Document";
+  }
+  
+  const lines = inputContent.trim().split('\n');
+  const firstParagraph = lines.slice(0, Math.min(5, lines.length)).join(' ');
+  
+  // Try different title extraction strategies
+  
+  // 1. Check for explicit title markers
+  const titleMarkerMatch = inputContent.match(/title:\s*(.+?)(?:\n|$)/i);
+  if (titleMarkerMatch && titleMarkerMatch[1].trim()) {
+    return titleMarkerMatch[1].trim();
+  }
+  
+  // 2. Check for markdown-style heading
+  const headingMatch = inputContent.match(/^#+\s+(.+?)(?:\n|$)/m);
+  if (headingMatch && headingMatch[1].trim()) {
+    return headingMatch[1].trim();
+  }
+  
+  // 3. If it looks like a philosophical text (like in the example)
+  if (inputContent.includes("pleasure") && inputContent.includes("pain")) {
+    if (inputContent.toLowerCase().includes("paradox")) {
+      return "The Paradox of Pleasure and Pain";
+    }
+    return "On Pleasure and Pain";
+  }
+  
+  // 4. Look for key conceptual phrases and create a title from them
+  const keyPhrases = [
+    { search: /happiness|well-being|satisfaction/i, title: "On Happiness" },
+    { search: /virtue|ethics|moral/i, title: "Ethical Considerations" },
+    { search: /knowledge|truth|wisdom/i, title: "Pursuit of Knowledge" },
+    { search: /freedom|liberty|autonomy/i, title: "On Freedom and Choice" },
+    { search: /justice|fairness|equality/i, title: "Principles of Justice" },
+    { search: /beauty|aesthetic|art/i, title: "On Beauty and Aesthetics" },
+    { search: /nature|natural|environment/i, title: "Natural Philosophy" },
+    { search: /society|social|community/i, title: "Social Structures" },
+    { search: /mind|consciousness|perception/i, title: "Philosophy of Mind" },
+    { search: /reality|existence|being/i, title: "On Reality and Existence" },
+  ];
+  
+  for (const { search, title } of keyPhrases) {
+    if (search.test(inputContent)) {
+      return title;
     }
   }
-
-  const conceptMatch = firstPara.match(/\bthe (concept|nature|idea) of ([^,.]{3,20})/i)?.[2];
-  if (conceptMatch) return `The Nature of ${conceptMatch.trim()}`;
-
-  const fallback = input.trim().split(/\s+/).slice(0, 6).join(" ");
-  return fallback.length <= 50 ? fallback : `Document ${new Date().toLocaleDateString()}`;
+  
+  // 5. If the first line is short (potentially a title) and capitalized like a title
+  if (lines.length > 0) {
+    const firstLine = lines[0].trim();
+    const words = firstLine.split(/\s+/);
+    
+    // Short first line that looks like a proper title (3-8 words)
+    if (words.length >= 3 && words.length <= 8 && firstLine.length <= 60) {
+      // If it's already capitalized like a title, use it
+      if (/^[A-Z]/.test(firstLine) && !/^[A-Z]+$/.test(firstLine)) {
+        return firstLine;
+      }
+      
+      // Convert to title case
+      return words.map(word => {
+        // Skip capitalizing articles, conjunctions, and prepositions
+        if (['a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at', 'to', 'from', 'by', 'in', 'of'].includes(word.toLowerCase())) {
+          return word.toLowerCase();
+        }
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      }).join(' ');
+    }
+  }
+  
+  // 6. Extract a title from the first substantial paragraph
+  if (firstParagraph.length > 20) {
+    // Look for the main subject being discussed
+    const mainSubject = extractMainSubject(firstParagraph);
+    if (mainSubject) {
+      return mainSubject;
+    }
+  }
+  
+  // Fallback: Use the topic from the first few words if all else fails
+  if (inputContent.trim().length > 15) {
+    const firstFewWords = inputContent.trim().split(/\s+/).slice(0, 6).join(' ');
+    if (firstFewWords.length <= 50) {
+      return firstFewWords;
+    }
+    return "Document " + new Date().toLocaleDateString();
+  }
+  
+  return "Untitled Document";
 }
-/* ----------------------------------------------------------------- */
+
+/**
+ * Extract the main subject from a paragraph
+ */
+function extractMainSubject(paragraph: string): string | null {
+  // If it starts with "But I must explain..." or similar explanatory intros
+  if (/^(but |now |here |I must|let me) explain/i.test(paragraph)) {
+    const aboutMatch = paragraph.match(/explain\s+([^,.]+)/i);
+    if (aboutMatch && aboutMatch[1]) {
+      return "Explanation of " + aboutMatch[1].trim();
+    }
+    
+    // Look for key topics after "explain"
+    const topics = paragraph.match(/explain.{1,50}(how|why|what|the)\s+([^,.]{3,30})/i);
+    if (topics && topics[2]) {
+      return "On " + topics[2].trim();
+    }
+  }
+  
+  // Check for a statement about a concept
+  const conceptMatch = paragraph.match(/\b(the (concept|idea|theory|principle|nature) of)\s+([^,.]{3,20})/i);
+  if (conceptMatch && conceptMatch[3]) {
+    return "The Nature of " + conceptMatch[3].trim();
+  }
+  
+  return null;
+}
 
 export default function Home() {
   const { session } = useContext(UserContext);
   const { setShowAuthPrompt } = useContext(AuthRequiredContext);
   const [, navigate] = useLocation();
   const { toast } = useToast();
-
+  
   const [editorState, setEditorState] = useState<EditorState>({
     inputContent: "",
     latexContent: "",
@@ -93,140 +157,374 @@ export default function Home() {
 
   const [errorNotification, setErrorNotification] = useState<ErrorNotificationData | null>(null);
 
-  const setState = (patch: Partial<EditorState>) =>
-    setEditorState((prev) => ({ ...prev, ...patch }));
+  // Handle document type change
+  const handleDocumentTypeChange = (type: string) => {
+    setEditorState(prev => ({ ...prev, documentType: type }));
+  };
 
-  /* -----------------------------  Handlers  ----------------------------- */
+  // Handle input content change
+  const handleInputChange = (value: string) => {
+    setEditorState(prev => ({ ...prev, inputContent: value }));
+  };
 
+  // Generate LaTeX from input content
   const handleGenerate = async () => {
     if (!editorState.inputContent.trim()) {
-      toast({ title: "Empty input", description: "Enter something first.", variant: "destructive" });
+      toast({
+        title: "Empty input",
+        description: "Please enter some content to generate LaTeX.",
+        variant: "destructive",
+      });
       return;
     }
-
+    
+    // DEBUGGING
+    console.log("Generate button clicked, auth status:", {
+      isAuthenticated: session.isAuthenticated,
+      user: session.user
+    });
+    
+    // GUEST MODE ENABLED - Allow non-authenticated users to generate content
+    const GUEST_MODE = true;
+    
+    // If user is not authenticated and guest mode is disabled, show auth prompt
     if (!session.isAuthenticated && !GUEST_MODE) {
-      setShowAuthPrompt(true);
+      // Stop the generating animation if it was started
+      setEditorState(prev => ({ ...prev, isGenerating: false }));
+      
+      console.log("User not authenticated, showing auth prompt");
+      
+      // Try directly setting the auth prompt to true
+      try {
+        // Show auth required dialog
+        setShowAuthPrompt(true);
+        console.log("Set showAuthPrompt to true");
+        
+        // Force a dialog to appear (fallback)
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in or create an account to generate LaTeX.",
+          action: (
+            <div className="flex gap-2 mt-2">
+              <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
+                Login
+              </Button>
+              <Button size="sm" onClick={() => navigate("/register")}>
+                Create Account
+              </Button>
+            </div>
+          ),
+        });
+      } catch (err) {
+        console.error("Error showing auth prompt:", err);
+      }
       return;
     }
+    
+    if (!session.isAuthenticated && GUEST_MODE) {
+      console.log("Guest mode enabled - allowing generation without authentication");
+      toast({
+        title: "Guest Mode",
+        description: "You're using guest mode. Create an account to save your documents.",
+      });
+    }
+    
+    console.log("User is authenticated, proceeding with generation");
 
+    // Check if user has reached limit
     if (session.isAuthenticated && session.usage.current >= session.usage.limit) {
       setErrorNotification({
         title: "Usage Limit Reached",
-        message: `You've hit ${session.usage.limit} generations.`,
-        actions: [{ label: "Upgrade Plan", action: () => navigate("/subscribe") }],
+        message: `You've reached your monthly limit of ${session.usage.limit} generations. Upgrade your plan to get more.`,
+        actions: [
+          {
+            label: "Upgrade Plan",
+            action: () => navigate("/subscribe"),
+          },
+        ],
       });
       return;
     }
 
-    setState({ isGenerating: true });
+    // Start generating
+    setEditorState(prev => ({ ...prev, isGenerating: true }));
 
     try {
-      const { latex, compilationResult, documentId } = await generateLatex(
+      // Generate LaTeX without compiling to PDF
+      const result = await generateLatex(
         editorState.inputContent,
         editorState.documentType,
-        undefined,
-        false,
+        undefined,  // default options
+        false       // explicitly set compile=false
       );
 
-      const title = extractTitleFromInput(editorState.inputContent);
-      setState({
-        latexContent: latex,
-        compilationResult,
-        isGenerating: false,
-        documentId,
-        title,
-      });
+      // Extract a title from the input content
+      try {
+        // Try to extract a title from the input content
+        const inputContentTitle = extractTitleFromInput(editorState.inputContent);
+        
+        // Set the results with the extracted title
+        setEditorState(prev => ({
+          ...prev,
+          latexContent: result.latex,
+          compilationResult: result.compilationResult, // This will be empty with success=false
+          isGenerating: false,
+          documentId: result.documentId,
+          title: inputContentTitle !== "Untitled Document" ? inputContentTitle : prev.title
+        }));
+      } catch (error) {
+        // If title extraction fails, just update without changing the title
+        console.error("Error extracting title from input:", error);
+        setEditorState(prev => ({
+          ...prev,
+          latexContent: result.latex,
+          compilationResult: result.compilationResult,
+          isGenerating: false,
+          documentId: result.documentId,
+        }));
+      }
 
-      toast({ title: "LaTeX Generated", description: "Compile to PDF when ready." });
-    } catch (err) {
-      setState({ isGenerating: false });
+      // Show success message
+      toast({
+        title: "LaTeX Generated",
+        description: "Your content has been successfully converted to LaTeX. Click 'Generate PDF' in the PDF Preview tab to compile it.",
+      });
+    } catch (error) {
+      console.error("Error generating LaTeX:", error);
+      setEditorState(prev => ({ ...prev, isGenerating: false }));
+      
       toast({
         title: "Generation Failed",
-        description: err instanceof Error ? err.message : "Try again.",
+        description: error instanceof Error ? error.message : "Failed to generate LaTeX. Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  const handleCompilePdf = async () => {
-    if (!editorState.latexContent) {
-      toast({ title: "Nothing to compile", variant: "destructive" });
+  // Handle PDF download
+  const handleDownloadPdf = async () => {
+    if (!editorState.compilationResult?.success || !editorState.compilationResult.pdf) {
+      toast({
+        title: "No PDF available",
+        description: "Please generate and compile LaTeX content first.",
+        variant: "destructive",
+      });
       return;
     }
-
+    
+    // GUEST MODE ENABLED - Allow non-authenticated users to download PDFs
+    const GUEST_MODE = true;
+    
+    // If user is not authenticated and guest mode is disabled, show auth prompt
     if (!session.isAuthenticated && !GUEST_MODE) {
-      setShowAuthPrompt(true);
+      console.log("User not authenticated, showing auth prompt for PDF download");
+      
+      try {
+        // Show auth required dialog
+        setShowAuthPrompt(true);
+        
+        // Force a dialog to appear (fallback)
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in or create an account to download PDFs.",
+          action: (
+            <div className="flex gap-2 mt-2">
+              <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
+                Login
+              </Button>
+              <Button size="sm" onClick={() => navigate("/register")}>
+                Create Account
+              </Button>
+            </div>
+          ),
+        });
+      } catch (err) {
+        console.error("Error showing auth prompt:", err);
+      }
       return;
+    }
+    
+    if (!session.isAuthenticated && GUEST_MODE) {
+      console.log("Guest mode enabled - allowing PDF download without authentication");
+      toast({
+        title: "Guest Mode",
+        description: "You're using guest mode. Create an account to save your documents.",
+      });
     }
 
     try {
-      const result = await compileLatex(editorState.latexContent);
-      setState({ compilationResult: result.compilationResult });
-
-      if (result.compilationResult.success) {
-        toast({ title: "PDF Generated" });
-      } else {
-        setErrorNotification({
-          title: "Compilation Error",
-          message: result.compilationResult.error ?? "Unknown error",
+      // First try to extract a meaningful title from the LaTeX content
+      const extractedTitle = await extractTitleFromLatex(editorState.latexContent);
+      
+      // Use the extracted title if available, otherwise fall back to the current title or a default
+      const titleToUse = extractedTitle || editorState.title || "latex-document";
+      
+      downloadPdf(
+        editorState.compilationResult.pdf,
+        titleToUse
+      );
+      
+      // If we got a good title and it's different from the current one, update the editor state
+      if (extractedTitle && extractedTitle !== "Generated Document" && extractedTitle !== editorState.title) {
+        setEditorState(prev => ({
+          ...prev,
+          title: extractedTitle
+        }));
+        
+        // Show a toast about the AI-generated title
+        toast({
+          title: "Title Extracted",
+          description: `AI detected document title: "${extractedTitle}"`,
         });
       }
-    } catch (err) {
-      toast({
-        title: "Compilation Failed",
-        description: err instanceof Error ? err.message : "Try again.",
-        variant: "destructive",
-      });
+    } catch (error) {
+      console.error("Error in download process:", error);
+      
+      // Fallback to basic download if title extraction fails
+      downloadPdf(
+        editorState.compilationResult.pdf, 
+        editorState.title || "latex-document"
+      );
     }
   };
 
-  const handleDownloadPdf = async () => {
-    const result = editorState.compilationResult;
-    if (!result?.success || !result.pdf) {
-      toast({ title: "No PDF available", variant: "destructive" });
-      return;
-    }
-
-    try {
-      const extracted = await extractTitleFromLatex(editorState.latexContent);
-      const name = extracted || editorState.title || "latex-document";
-      downloadPdf(result.pdf, name);
-
-      if (extracted && extracted !== editorState.title) setState({ title: extracted });
-    } catch {
-      downloadPdf(result.pdf, editorState.title);
-    }
-  };
-
+  // Save the document
   const handleSaveDocument = async () => {
     if (!session.isAuthenticated) {
-      toast({ title: "Sign in required" });
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to save documents.",
+      });
       return;
     }
 
     if (!editorState.latexContent) {
-      toast({ title: "No LaTeX to save", variant: "destructive" });
+      toast({
+        title: "No content",
+        description: "Please generate LaTeX content first.",
+        variant: "destructive",
+      });
       return;
     }
 
     try {
+      const compilationSuccessful = editorState.compilationResult?.success || false;
+      const compilationError = editorState.compilationResult?.error || undefined;
+
       await saveDocument(
         editorState.title,
         editorState.inputContent,
         editorState.latexContent,
         editorState.documentType,
-        !!editorState.compilationResult?.success,
-        editorState.compilationResult?.error,
-        editorState.documentId,
+        compilationSuccessful,
+        compilationError,
+        editorState.documentId
       );
-      toast({ title: "Document Saved" });
-    } catch (err) {
-      toast({ title: "Save Failed", variant: "destructive" });
+
+      toast({
+        title: "Document Saved",
+        description: "Your document has been saved successfully.",
+      });
+    } catch (error) {
+      console.error("Error saving document:", error);
+      toast({
+        title: "Save Failed",
+        description: error instanceof Error ? error.message : "Failed to save document. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
-  /* -----------------------------  UI Tabs  ----------------------------- */
+  // Handle manual PDF compilation (compile existing LaTeX)
+  const handleCompilePdf = async () => {
+    if (!editorState.latexContent) {
+      toast({
+        title: "No LaTeX Content",
+        description: "Please generate LaTeX content first before compiling to PDF.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // GUEST MODE ENABLED - Allow non-authenticated users to compile PDFs
+    const GUEST_MODE = true;
+    
+    // If user is not authenticated and guest mode is disabled, show auth prompt
+    if (!session.isAuthenticated && !GUEST_MODE) {
+      console.log("User not authenticated, showing auth prompt for PDF compilation");
+      
+      try {
+        // Show auth required dialog
+        setShowAuthPrompt(true);
+        
+        // Force a dialog to appear (fallback)
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in or create an account to compile to PDF.",
+          action: (
+            <div className="flex gap-2 mt-2">
+              <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
+                Login
+              </Button>
+              <Button size="sm" onClick={() => navigate("/register")}>
+                Create Account
+              </Button>
+            </div>
+          ),
+        });
+      } catch (err) {
+        console.error("Error showing auth prompt:", err);
+      }
+      return;
+    }
+    
+    if (!session.isAuthenticated && GUEST_MODE) {
+      console.log("Guest mode enabled - allowing PDF compilation without authentication");
+      toast({
+        title: "Guest Mode",
+        description: "You're using guest mode. Create an account to save your documents.",
+      });
+    }
 
+    try {
+      // Call the compile endpoint to generate PDF from current LaTeX
+      const result = await compileLatex(editorState.latexContent);
+      
+      // Update the editor state with the compilation result
+      setEditorState(prev => ({
+        ...prev,
+        compilationResult: result.compilationResult
+      }));
+
+      if (result.compilationResult.success) {
+        toast({
+          title: "PDF Generated",
+          description: "Your LaTeX has been successfully compiled to PDF.",
+        });
+      } else {
+        setErrorNotification({
+          title: "PDF Compilation Error",
+          message: result.compilationResult.error || "Failed to compile LaTeX to PDF.",
+          actions: [
+            {
+              label: "View Details",
+              action: () => console.log(result.compilationResult.errorDetails),
+            },
+          ],
+        });
+      }
+    } catch (error) {
+      console.error("Error compiling LaTeX to PDF:", error);
+      
+      toast({
+        title: "Compilation Failed",
+        description: error instanceof Error ? error.message : "Failed to compile LaTeX to PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Define the tabs for the output panel
   const tabs: TabItem[] = [
     {
       id: "latex",
@@ -235,7 +533,7 @@ export default function Home() {
         <LatexOutput
           latexContent={editorState.latexContent}
           onDownloadPdf={handleDownloadPdf}
-          compilationSuccess={!!editorState.compilationResult?.success}
+          compilationSuccess={editorState.compilationResult?.success || false}
           errorMessage={editorState.compilationResult?.error}
         />
       ),
@@ -245,7 +543,7 @@ export default function Home() {
       label: "PDF Preview",
       content: (
         <PDFPreview
-          pdfData={editorState.compilationResult?.pdf ?? null}
+          pdfData={editorState.compilationResult?.pdf || null}
           title={editorState.title}
           onCompilePdf={handleCompilePdf}
         />
@@ -253,29 +551,33 @@ export default function Home() {
     },
   ];
 
-  /* -----------------------------  Render  ----------------------------- */
-
   return (
     <SiteLayout>
       <div className="h-full flex flex-col md:flex-row">
+        {/* Left Panel (Input) */}
         <div className="w-full md:w-1/2 h-full">
           <LatexInput
             value={editorState.inputContent}
-            onChange={(v) => setState({ inputContent: v })}
+            onChange={handleInputChange}
             onGenerate={handleGenerate}
             documentType={editorState.documentType}
-            onDocumentTypeChange={(t) => setState({ documentType: t })}
+            onDocumentTypeChange={handleDocumentTypeChange}
             generating={editorState.isGenerating}
           />
         </div>
 
+        {/* Right Panel (Output) */}
         <div className="w-full md:w-1/2 h-full">
           <TabsWithContent tabs={tabs} defaultTabId="latex" />
         </div>
       </div>
 
+      {/* Error Notification */}
       {errorNotification && (
-        <ErrorNotification data={errorNotification} onClose={() => setErrorNotification(null)} />
+        <ErrorNotification
+          data={errorNotification}
+          onClose={() => setErrorNotification(null)}
+        />
       )}
     </SiteLayout>
   );
