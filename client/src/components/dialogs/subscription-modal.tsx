@@ -321,7 +321,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           {/* Power Tier */}
           <div 
             className={cn(
-              "border rounded-lg p-5 relative flex flex-col",
+              "border rounded-lg p-5 relative flex flex-col w-48",
               session.tier === SubscriptionTier.Power ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
               "cursor-pointer hover:border-blue-300 transition-colors"
             )}
