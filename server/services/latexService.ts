@@ -9,6 +9,7 @@ export async function compileLatex(latex: string): Promise<{
   pdf?: string;
   error?: string;
   errorDetails?: { line: number; message: string }[];
+  isHtml?: boolean;
 }> {
   // Validate LaTeX content
   if (!latex || typeof latex !== 'string') {
@@ -25,7 +26,8 @@ export async function compileLatex(latex: string): Promise<{
     if (result.success) {
       return {
         success: true,
-        pdf: result.pdf
+        pdf: result.pdf,
+        isHtml: result.isHtml
       };
     } else {
       return {

@@ -546,6 +546,7 @@ export default function Home() {
           pdfData={editorState.compilationResult?.pdf || null}
           title={editorState.title}
           onCompilePdf={handleCompilePdf}
+          isHtml={editorState.compilationResult?.isHtml || false}
         />
       ),
     },

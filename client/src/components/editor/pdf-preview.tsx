@@ -203,8 +203,16 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
           </div>
           
           <div className="text-center text-sm text-gray-500 mb-6">
-            <p>PDF viewing is now handled by your browser's native PDF viewer.</p>
-            <p>Use your browser's PDF controls for page navigation and zoom.</p>
+            {isHtml ? (
+              <p className="p-2 bg-amber-50 border border-amber-200 rounded-md text-amber-700">
+                <strong>Note:</strong> This is an HTML preview. The PDF compilation service is currently unavailable.
+              </p>
+            ) : (
+              <>
+                <p>PDF viewing is now handled by your browser's native PDF viewer.</p>
+                <p>Use your browser's PDF controls for page navigation and zoom.</p>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -2,12 +2,13 @@ import { User, Document, SubscriptionTier } from "@shared/schema";
 
 export interface LatexCompilationResult {
   success: boolean;
-  pdf?: string; // base64 encoded PDF
+  pdf?: string; // base64 encoded PDF or HTML when isHtml is true
   error?: string;
   errorDetails?: {
     line: number;
     message: string;
   }[];
+  isHtml?: boolean; // Indicates if pdf is actually HTML content (used for fallback in deployment)
 }
 
 export interface GenerateLatexResponse {
