@@ -11,7 +11,7 @@ nixPkgs = [
   "dejavu_fonts",
   "cm_unicode",
   "lmodern",
-  "latin-modern-math",
+  # Note: latin-modern-math was removed - package doesn't exist in Nixpkgs
   # Required for certain LaTeX operations
   "poppler_utils",
   "ghostscript"
