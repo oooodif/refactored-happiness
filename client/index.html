@@ -259,7 +259,54 @@
     }
     </script>
     
-    <!-- Course Schema removed to fix validation error -->
+    <!-- Course Schema with proper structure -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Course",
+      "name": "Academic LaTeX Writing Guide",
+      "description": "Learn professional academic document formatting using AI assistance. This comprehensive guide covers everything from thesis formatting to mathematical equations.",
+      "url": "https://aitexgen.com/resources/guide",
+      "provider": {
+        "@type": "Organization",
+        "name": "AI LaTeX Generator",
+        "url": "https://aitexgen.com"
+      },
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Academic researchers, students, professionals"
+      },
+      "hasCourseInstance": [
+        {
+          "@type": "CourseInstance",
+          "name": "Academic LaTeX Writing - Self-paced Guide",
+          "courseMode": "online",
+          "courseWorkload": "PT2H",
+          "startDate": "2025-05-01",
+          "endDate": "2026-05-01",
+          "location": {
+            "@type": "VirtualLocation",
+            "url": "https://aitexgen.com/resources/guide"
+          },
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "url": "https://aitexgen.com/resources/guide",
+            "validFrom": "2025-05-01"
+          }
+        }
+      ],
+      "teaches": [
+        "Academic paper formatting",
+        "Thesis structure and organization",
+        "Bibliography management",
+        "Mathematical equation formatting",
+        "Scientific document preparation"
+      ]
+    }
+    </script>
     
     <!-- LocalBusiness Schema for academic institution targeting -->
     <script type="application/ld+json">
