@@ -2,6 +2,14 @@ import Stripe from 'stripe';
 import { storage } from '../storage';
 import { SubscriptionTier, User } from '@shared/schema';
 
+/**
+ * Service for keeping our database in sync with Stripe's API
+ * 
+ * This service handles bidirectional synchronization between our database and Stripe.
+ * It also enforces the rule that users can only have one active subscription at a time
+ * by sorting and retaining only the most recent subscription when multiple are found.
+ */
+
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }

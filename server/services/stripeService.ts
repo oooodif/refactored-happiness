@@ -3,6 +3,16 @@ import { STRIPE_PRICE_IDS } from '@shared/stripe-config';
 import { SubscriptionTier } from '@shared/schema';
 import { storage } from '../storage';
 
+/**
+ * Service for interacting with Stripe
+ * 
+ * This service ensures that users can only have one active subscription at a time.
+ * When a user subscribes to a new plan:
+ * 1. We check for any existing subscriptions and cancel them
+ * 2. Create a new subscription using Stripe Checkout
+ * 3. Handle webhooks to ensure the database is updated with the correct subscription
+ */
+
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
@@ -94,9 +104,6 @@ export const stripeService = {
         shipping: 'auto'
       },
       allow_promotion_codes: true,
-      // Only allow users to have one subscription at a time
-      // This will cancel and replace any existing subscription
-      cancel_url_with_status: true,
     });
 
     return session;
@@ -164,7 +171,6 @@ export const stripeService = {
       allow_promotion_codes: true,
       // Only allow users to have one subscription at a time
       // This will cancel and replace any existing subscription
-      cancel_url_with_status: true,
     });
 
     return session;
