@@ -110,9 +110,7 @@ export default function LatexInput({
               />
               {/* This overlay will only show when the input is disabled */}
               {!hasLatexContent && (
-                <div className="absolute inset-0 bg-gray-200 bg-opacity-50 rounded-md pointer-events-none flex items-center justify-center">
-                  <div className="text-gray-500 text-xs font-medium">Available after generation</div>
-                </div>
+                <div className="absolute inset-0 bg-gray-200 bg-opacity-50 rounded-md pointer-events-none"></div>
               )}
             </div>
             {!hasLatexContent && (
