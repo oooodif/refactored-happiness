@@ -518,15 +518,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // New endpoint for modifying existing LaTeX with notes or omissions
   app.post("/api/latex/modify",
-    authenticateUser, // Require authentication
-    checkSubscription, // Check user's subscription status
+    trackAnonymousUser, // Track anonymous users before checking authentication
+    allowAnonymousOrAuth, // Allow anonymous users with remaining free usage or authenticated users
+    checkSubscription, // Check subscription for authenticated users
     async (req: Request, res: Response) => {
       const { latex, notes, isOmit } = req.body;
       const userId = req.session.userId;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      const isAuthenticated = !!userId;
       
       if (!latex) {
         return res.status(400).json({ message: "LaTeX content is required" });
@@ -537,7 +535,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       try {
-        console.log(`LaTeX modification request - User: ${userId}, OMIT mode: ${isOmit}`);
+        console.log(`LaTeX modification request - Auth: ${isAuthenticated ? 'Yes' : 'No (Anonymous)'}, OMIT mode: ${isOmit}`);
+        
+        // For anonymous users, increment their usage count
+        if (!isAuthenticated) {
+          await incrementAnonymousUsage(req);
+        }
         
         // Call the modifyLatex function to process the request
         const result = await modifyLatex(latex, notes, isOmit);
@@ -546,8 +549,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(500).json({ message: result.error });
         }
         
-        // Count this as a generation for usage tracking
-        await storage.incrementUserUsage(userId);
+        // Count this as a generation for usage tracking (authenticated users only)
+        if (isAuthenticated && userId) {
+          await storage.incrementUserUsage(userId);
+        }
         
         return res.status(200).json({
           latex: result.latex,

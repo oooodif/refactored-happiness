@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { getFingerprint } from "./fingerprint";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -49,12 +50,16 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  // Get fingerprint for anonymous user tracking
+  const fingerprint = getFingerprint();
+  
   const res = await fetch(url, {
     method,
     headers: {
       ...(data ? { "Content-Type": "application/json" } : {}),
       'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache'
+      'Pragma': 'no-cache',
+      'X-Device-Fingerprint': fingerprint, // Add fingerprint to identify anonymous users
     },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
@@ -70,12 +75,16 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    // Get fingerprint for anonymous user tracking
+    const fingerprint = getFingerprint();
+    
     const res = await fetch(queryKey[0] as string, {
       credentials: "include",
       headers: {
         'Accept': 'application/json',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
+        'Pragma': 'no-cache',
+        'X-Device-Fingerprint': fingerprint // Add fingerprint to identify anonymous users
       }
     });
 
