@@ -867,7 +867,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  // Stripe webhook
+  // Stripe webhook - must be defined before any other routes that use body parsing
   app.post("/webhook/stripe", 
     express.raw({ type: 'application/json' }),
     async (req: Request, res: Response) => {
@@ -878,11 +878,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sig = req.headers['stripe-signature'] as string;
       
       try {
+        // The raw body must be a Buffer for the Stripe signature verification to work
+        if (!Buffer.isBuffer(req.body)) {
+          console.error('Webhook error: req.body is not a Buffer');
+          return res.status(400).send('Webhook Error: req.body must be a Buffer');
+        }
+        
         const event = stripe.webhooks.constructEvent(
           req.body,
           sig,
           process.env.STRIPE_WEBHOOK_SECRET
         );
+        
+        console.log(`✅ Webhook received: ${event.type}`);
         
         // Handle different webhook events using our stripeService
         if (event.type.startsWith('customer.subscription.')) {

@@ -9,7 +9,16 @@ app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
-app.use(express.json());
+// Add a path matcher to exclude the webhook path from JSON parsing
+const jsonParsingMiddleware = express.json();
+app.use((req, res, next) => {
+  if (req.path === '/webhook/stripe') {
+    // Skip JSON parsing for Stripe webhook
+    return next();
+  }
+  jsonParsingMiddleware(req, res, next);
+});
+
 app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
