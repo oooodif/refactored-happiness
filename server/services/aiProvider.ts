@@ -74,7 +74,10 @@ const providers = {
         messages: [{ role: 'user', content: prompt }]
       });
 
-      return extractLatexFromResponse(response.content[0].text);
+      const textContent = response.content[0].type === 'text' 
+        ? (response.content[0] as {type: 'text', text: string}).text 
+        : '';
+      return extractLatexFromResponse(textContent);
     }
   },
   
@@ -129,7 +132,8 @@ const providers = {
         return extractLatexFromResponse(response.data.choices[0].message.content || '');
       } catch (error) {
         // If we get a 429 (rate limit) error, might be approaching limits, so track it
-        if (error.response?.status === 429) {
+        const errorObj = error as any;
+        if (errorObj.response?.status === 429) {
           this.totalTokensUsed = this.MAX_TOKENS; // Mark as at limit
         }
         throw error;
@@ -284,7 +288,9 @@ export async function generateLatex(
       providerStatus[provider].lastError = error;
       
       // Check for rate limiting
-      if (error.response?.status === 429 || error.message?.includes('rate limit')) {
+      const errorObj = error as any;
+      if (errorObj.response?.status === 429 || 
+          (typeof errorObj.message === 'string' && errorObj.message.includes('rate limit'))) {
         providerStatus[provider].rateLimited = true;
         
         // Reset rate limit status after 5 minutes
