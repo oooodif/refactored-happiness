@@ -1,4 +1,5 @@
 import Header from "./header";
+import Footer from "./footer";
 import { ReactNode } from "react";
 import { VisuallyHiddenHeading } from "@/components/seo/visually-hidden-heading";
 
@@ -6,12 +7,14 @@ interface SiteLayoutProps {
   children: ReactNode;
   fullHeight?: boolean;
   seoTitle?: string;
+  hideFooter?: boolean;
 }
 
 export default function SiteLayout({ 
   children, 
   fullHeight = true, 
-  seoTitle = "AI LaTeX Generator for Students" 
+  seoTitle = "AI LaTeX Generator for Students",
+  hideFooter = true
 }: SiteLayoutProps) {
   return (
     <div className={`flex flex-col ${fullHeight ? 'h-screen' : 'min-h-screen'}`}>
@@ -21,6 +24,7 @@ export default function SiteLayout({
         <VisuallyHiddenHeading>{seoTitle}</VisuallyHiddenHeading>
         {children}
       </main>
+      {!hideFooter && <Footer />}
     </div>
   );
 }
