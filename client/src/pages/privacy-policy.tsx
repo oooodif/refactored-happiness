@@ -118,11 +118,10 @@ export default function PrivacyPolicy() {
         style={{ opacity: backgroundOpacity }}
       >
         <motion.div 
-          className="absolute inset-0 bg-gradient-to-b from-blue-500/20 to-cyan-500/20 -z-10"
+          className="absolute inset-0 bg-gradient-to-b from-gray-50/50 to-white/50 -z-10 dark:from-gray-900/50 dark:to-gray-800/50"
           style={{ y: gradientY }}
         />
         <div className="absolute inset-0 bg-grid-pattern opacity-5 -z-10" />
-        <div className="gradient-animation" />
         
         <motion.div 
           className="text-center px-4 py-16 max-w-4xl mx-auto z-10"
@@ -148,7 +147,6 @@ export default function PrivacyPolicy() {
       </motion.div>
       
       <div className="container max-w-4xl mx-auto py-12 px-4 relative">
-        <div className="gradient-animation opacity-50" />
         <AnimatedSection delay={0.2}>
           <div className="flex justify-between items-center mb-10">
             <p className="text-lg font-medium text-gray-600 dark:text-gray-400">
@@ -429,7 +427,6 @@ export default function PrivacyPolicy() {
             <AnimatedSection>
               <div className="rounded-2xl overflow-hidden bg-gradient-to-r from-blue-500 to-cyan-500 p-[2px]">
                 <div className="bg-white/90 dark:bg-gray-900/90 rounded-2xl p-8 relative overflow-hidden backdrop-blur-sm">
-                  <div className="gradient-animation opacity-30 z-0" />
                   <h3 className="text-2xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500">Contact Us</h3>
                   <p className="text-gray-700 dark:text-gray-300 mb-4">
                     If you have any questions about this Privacy Policy, please contact us at:
