@@ -299,21 +299,21 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
     barba.init({
       transitions: [{
         name: 'opacity-transition',
-        async leave(data) {
+        async leave(data: any) {
           const tween = gsap.to(data.current.container, {
             opacity: 0,
             duration: 0.5
           });
-          return new Promise(resolve => {
+          return new Promise<void>(resolve => {
             tween.eventCallback('onComplete', resolve);
           });
         },
-        async enter(data) {
+        async enter(data: any) {
           const tween = gsap.from(data.next.container, {
             opacity: 0,
             duration: 0.5
           });
-          return new Promise(resolve => {
+          return new Promise<void>(resolve => {
             tween.eventCallback('onComplete', resolve);
           });
         }
