@@ -64,9 +64,19 @@ function formatData(pdfData: string | null, isHtml: boolean = false): string | n
 export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = false }: PDFPreviewProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [loadRetries, setLoadRetries] = useState(0);
+  const [iframeKey, setIframeKey] = useState(Date.now()); // Used to force iframe reload
   
   // Format data for iframe based on content type
   const formattedData = pdfData ? formatData(pdfData, isHtml) : null;
+
+  // Reset retry counter when new PDF data is provided
+  useEffect(() => {
+    if (pdfData) {
+      setLoadRetries(0);
+      setIframeKey(Date.now());
+    }
+  }, [pdfData]);
 
   // Handle loading timeouts
   useEffect(() => {
@@ -77,14 +87,24 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
       timeoutId = setTimeout(() => {
         console.log("PDF loading timeout reached");
         setIsGenerating(false);
-        setErrorMessage("PDF generation timeout. Please try again.");
+        
+        // Only show error if we've reached max retries
+        if (loadRetries >= 2) {
+          setErrorMessage("PDF generation timeout. Please try again.");
+        } else {
+          console.log(`Automatically retrying PDF load (retry ${loadRetries + 1}/3)`);
+          // Increment retry counter and force iframe refresh
+          setLoadRetries(prev => prev + 1);
+          setIframeKey(Date.now());
+          // Don't set error message yet, we're still trying to recover
+        }
       }, 15000);
     }
     
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [isGenerating]);
+  }, [isGenerating, loadRetries]);
 
   // Reset generating state when data changes
   useEffect(() => {
@@ -263,37 +283,60 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
               <div className="pdf-container w-full h-[650px] bg-gray-100">
                 {isHtml ? (
                   <iframe 
+                    key={`html-frame-${iframeKey}`}
                     src={formattedData || "about:blank"}
                     className="w-full h-full border-0"
                     title="HTML Preview"
                     sandbox="allow-scripts"
                     onError={(e) => {
                       console.error("HTML iframe load error:", e);
-                      setErrorMessage("Failed to load HTML preview. Please try again.");
+                      
+                      // Only show error if we've reached max retries
+                      if (loadRetries >= 2) {
+                        setErrorMessage("Failed to load HTML preview. Please try again.");
+                      } else {
+                        console.log(`Automatically retrying HTML load (retry ${loadRetries + 1}/3)`);
+                        // Increment retry counter and force iframe refresh
+                        setLoadRetries(prev => prev + 1);
+                        setIframeKey(Date.now());
+                      }
                     }}
                     onLoad={() => {
                       console.log("HTML iframe loaded successfully");
                       // Make sure we're not showing loading or error states
                       setIsGenerating(false);
                       setErrorMessage(null);
+                      setLoadRetries(0);
                     }}
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center">
                     {pdfData ? (
                       <iframe 
+                        key={`pdf-frame-${iframeKey}`}
                         src={formattedData || "about:blank"}
                         className="w-full h-full border-0"
                         title="PDF Preview"
                         onError={(e) => {
                           console.error("PDF iframe load error:", e);
-                          setErrorMessage("Failed to load PDF viewer. Please try again.");
+                          
+                          // Only show error if we've reached max retries
+                          if (loadRetries >= 2) {
+                            setErrorMessage("Failed to load PDF viewer. Please try again.");
+                          } else {
+                            console.log(`Automatically retrying PDF load (retry ${loadRetries + 1}/3)`);
+                            // Increment retry counter and force iframe refresh
+                            setLoadRetries(prev => prev + 1);
+                            setIframeKey(Date.now());
+                            // Don't set error message yet, we're still trying to recover
+                          }
                         }}
                         onLoad={() => {
                           console.log("PDF iframe loaded successfully");
                           // Make sure we're not showing loading or error states
                           setIsGenerating(false);
                           setErrorMessage(null);
+                          setLoadRetries(0);
                         }}
                       />
                     ) : (
