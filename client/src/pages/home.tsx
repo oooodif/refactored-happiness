@@ -922,23 +922,10 @@ export default function Home() {
           </div>
         </div>
         
-        {/* AdSense - Side Advertisement */}
-        <div className="hidden lg:block absolute right-0 top-1/4 z-10 w-[300px] h-[600px] mr-2">
-          <div className="bg-white/5 rounded-lg p-2 backdrop-blur-sm border border-white/10">
-            <div dangerouslySetInnerHTML={{ __html: `
-              <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7093009607766318"
-                   crossorigin="anonymous"></script>
-              <!-- g -->
-              <ins class="adsbygoogle"
-                   style="display:block"
-                   data-ad-client="ca-pub-7093009607766318"
-                   data-ad-slot="2967045279"
-                   data-ad-format="auto"
-                   data-full-width-responsive="true"></ins>
-              <script>
-                   (adsbygoogle = window.adsbygoogle || []).push({});
-              </script>
-            ` }} />
+        {/* Discreet AdSense container in bottom right corner */}
+        <div className="hidden lg:block fixed bottom-4 right-4 z-10 w-[300px] max-h-[280px] opacity-80 hover:opacity-100 transition-opacity">
+          <div className="bg-white/10 rounded-lg p-2 shadow-sm border border-white/10 backdrop-blur-sm">
+            <div id="ad-container-discreet" className="text-xs text-gray-400 mb-1">Sponsored</div>
           </div>
         </div>
       </div>
