@@ -12,6 +12,7 @@ import Account from "@/pages/account";
 import Subscribe from "@/pages/subscribe";
 import DocumentHistory from "@/pages/document-history";
 import VerifyEmail from "@/pages/verify-email";
+import Success from "@/pages/success";
 import NotFound from "@/pages/not-found";
 
 // Components
@@ -63,6 +64,7 @@ function Router() {
       <Route path="/register" component={Register} />
       <Route path="/account" component={Account} />
       <Route path="/subscribe" component={Subscribe} />
+      <Route path="/success" component={Success} />
       <Route path="/history" component={DocumentHistory} />
       <Route path="/verify-email" component={VerifyEmail} />
       <Route component={NotFound} />
