@@ -22,6 +22,22 @@ export default function LatexInput({
 }: LatexInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isReady, setIsReady] = useState(true);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Detect if the device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   const insertTemplate = (templateId: string) => {
     if (!textareaRef.current) return;
@@ -61,84 +77,137 @@ export default function LatexInput({
   useEffect(() => {
     setIsReady(value.trim().length > 0);
   }, [value]);
+  
+  // Set up keyboard detection (for mobile devices)
+  useEffect(() => {
+    // Only apply this on mobile devices
+    if (!isMobile) return;
+    
+    // Handle when textarea is focused (keyboard opens)
+    const handleFocus = () => {
+      setIsKeyboardVisible(true);
+    };
+    
+    // Handle when textarea is blurred (keyboard closes)
+    const handleBlur = () => {
+      setIsKeyboardVisible(false);
+    };
+    
+    // Get the textarea element
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.addEventListener('focus', handleFocus);
+      textarea.addEventListener('blur', handleBlur);
+    }
+    
+    return () => {
+      if (textarea) {
+        textarea.removeEventListener('focus', handleFocus);
+        textarea.removeEventListener('blur', handleBlur);
+      }
+    };
+  }, [isMobile]);
+
+  // Determine the CSS classes for the container based on keyboard visibility
+  const containerClasses = isMobile && isKeyboardVisible
+    ? "w-full h-full flex flex-col border-r border-gray-200 mobile-keyboard-open fixed top-0 left-0 right-0 bottom-0 z-50 bg-white"
+    : "w-full h-full flex flex-col border-r border-gray-200";
 
   return (
-    <div className="w-full h-full flex flex-col border-r border-gray-200">
-      <div className="p-4 border-b border-gray-200 glass">
+    <div className={containerClasses}>
+      <div className={`p-4 border-b border-gray-200 glass ${isMobile && isKeyboardVisible ? 'shrink-0' : ''}`}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold enhanced-heading">Input</h2>
           <div className="flex items-center space-x-2">
-            <Select
-              value={documentType}
-              onValueChange={(value) => onDocumentTypeChange(value)}
-            >
-              <SelectTrigger className="glass-card border border-gray-300 text-gray-700 text-sm rounded-md h-9 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="glass-card">
-                {DOCUMENT_TYPES.map((type) => (
-                  <SelectItem key={type.id} value={type.id}>
-                    {type.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {!isKeyboardVisible && (
+              <Select
+                value={documentType}
+                onValueChange={(value) => onDocumentTypeChange(value)}
+              >
+                <SelectTrigger className="glass-card border border-gray-300 text-gray-700 text-sm rounded-md h-9 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="glass-card">
+                  {DOCUMENT_TYPES.map((type) => (
+                    <SelectItem key={type.id} value={type.id}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {isMobile && isKeyboardVisible && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs glass-card border border-gray-300 text-gray-700"
+                onClick={() => {
+                  if (textareaRef.current) {
+                    textareaRef.current.blur();
+                  }
+                }}
+              >
+                Done
+              </Button>
+            )}
           </div>
         </div>
-        <div className="flex space-x-2 flex-wrap">
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-            onClick={() => insertTemplate("math")}
-          >
-            <span className="font-mono gradient-text">Σ</span> Math
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-            onClick={() => insertTemplate("table")}
-          >
-            <span className="font-mono gradient-text">⊞</span> Table
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-            onClick={() => insertTemplate("figure")}
-          >
-            <span className="font-mono gradient-text">⊛</span> Figure
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-            onClick={() => insertTemplate("section")}
-          >
-            <span className="font-mono gradient-text">§</span> Section
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-            onClick={() => insertTemplate("list")}
-          >
-            <span className="font-mono gradient-text">•</span> List
-          </Button>
-          {documentType === 'presentation' && (
+        {(!isMobile || !isKeyboardVisible) && (
+          <div className="flex space-x-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
               className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-              onClick={() => insertTemplate("slide")}
+              onClick={() => insertTemplate("math")}
             >
-              <span className="font-mono gradient-text">▦</span> New Slide
+              <span className="font-mono gradient-text">Σ</span> Math
             </Button>
-          )}
-        </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
+              onClick={() => insertTemplate("table")}
+            >
+              <span className="font-mono gradient-text">⊞</span> Table
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
+              onClick={() => insertTemplate("figure")}
+            >
+              <span className="font-mono gradient-text">⊛</span> Figure
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
+              onClick={() => insertTemplate("section")}
+            >
+              <span className="font-mono gradient-text">§</span> Section
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
+              onClick={() => insertTemplate("list")}
+            >
+              <span className="font-mono gradient-text">•</span> List
+            </Button>
+            {documentType === 'presentation' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
+                onClick={() => insertTemplate("slide")}
+              >
+                <span className="font-mono gradient-text">▦</span> New Slide
+              </Button>
+            )}
+          </div>
+        )}
       </div>
-      <div className="flex-1 overflow-auto p-4 bg-gray-50">
+      <div className={`flex-1 overflow-auto p-4 bg-gray-50 ${isMobile && isKeyboardVisible ? 'h-full' : ''}`}>
         <textarea
           ref={textareaRef}
           className="w-full h-full p-3 rounded-md border border-gray-300 glass-card font-mono text-sm resize-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg"
