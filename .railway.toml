@@ -1,19 +1,15 @@
 # .railway.toml
 
 [build]
-builder       = "NIXPACKS"
-buildCommand  = "npm run build"          # runs: vite build
-postBuildCommand = "echo 'Build complete'"
+builder             = "NIXPACKS"
+buildCommand        = "npm run build"
+postBuildCommand    = "echo 'Build complete'"
 
 [deploy]
-# 1. Push / migrate DB before starting
-preDeployCommand = "npm run db:push"
+preDeployCommand    = "npm run db:push"
+startCommand        = "NODE_ENV=production tsx server/index.ts"
 
-# 2. Boot your server (tsx compiles TypeScript on the fly)
-startCommand  = "NODE_ENV=production tsx server/index.ts"
-
-# 3. Healthcheck + restart policy
-healthcheckPath        = "/health"
-healthcheckTimeout     = 180
-restartPolicyType      = "ON_FAILURE"
+healthcheckPath     = "/health"
+healthcheckTimeout  = 180
+restartPolicyType   = "ON_FAILURE"
 restartPolicyMaxRetries = 10
