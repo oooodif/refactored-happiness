@@ -562,7 +562,7 @@ export default function Home() {
     <SiteLayout>
       <div className="h-full flex flex-col md:flex-row bg-gradient-soft">
         {/* Left Panel (Input) */}
-        <div className="w-full md:w-1/2 h-full relative bg-subtle-blue rounded-lg p-2">
+        <div className="w-full md:w-1/2 h-full relative">
           <div className="absolute inset-4 glass rounded-lg shadow-lg overflow-hidden depth-3d">
             <LatexInput
               value={editorState.inputContent}
@@ -576,7 +576,7 @@ export default function Home() {
         </div>
 
         {/* Right Panel (Output) */}
-        <div className="w-full md:w-1/2 h-full relative bg-subtle-green rounded-lg p-2">
+        <div className="w-full md:w-1/2 h-full relative">
           <div className="absolute inset-4 glass rounded-lg shadow-lg overflow-hidden depth-3d">
             <TabsWithContent tabs={tabs} defaultTabId="latex" />
           </div>
