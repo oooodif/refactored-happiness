@@ -372,7 +372,7 @@ export default function Account() {
                   <Button
                     onClick={handleManageSubscription}
                     disabled={isLoading}
-                    className="px-8"
+                    className="bg-gradient-to-r from-blue-500 to-blue-700 text-white transition-all duration-300 hover:shadow-md hover:translate-y-[-1px] px-8"
                   >
                     Manage Subscription
                   </Button>
