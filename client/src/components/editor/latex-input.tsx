@@ -130,10 +130,14 @@ export default function LatexInput({
               onClick={() => {
                 if (hasLatexContent) {
                   if (notes.trim()) {
-                    // If there's already text, wrap it in OMIT tags and send
-                    const omitContent = `<OMIT>${notes.trim()}</OMIT>`;
-                    onModify?.(omitContent, true); // Set isOmit=true to properly process as an omission
-                    setNotes("");
+                    // If there's already text, wrap it in OMIT tags but DON'T send
+                    // Just update the notes field with the wrapped content
+                    setNotes(`<OMIT>${notes.trim()}</OMIT>`);
+                    
+                    // Focus on the notes field after wrapping
+                    if (notesInputRef.current) {
+                      notesInputRef.current.focus();
+                    }
                   } else {
                     // If no text yet, just insert the OMIT placeholder in the notes field
                     setNotes("<OMIT> Place Omission Request Here </OMIT>");
@@ -162,16 +166,16 @@ export default function LatexInput({
           <div className="relative group">
             <Button
               className={`text-sm bg-gradient-to-r from-blue-500 to-blue-700 text-white transition-all duration-300 hover:shadow-md hover:translate-y-[-1px] ${
-                !hasLatexContent || !notes.trim() || generating ? "opacity-50 cursor-not-allowed" : ""
+                !hasLatexContent || notes.trim().length === 0 || generating ? "opacity-50 cursor-not-allowed" : "opacity-100"
               }`}
               onClick={() => {
-                if (notes.trim() && onModify && hasLatexContent) {
+                if (notes.trim().length > 0 && onModify && hasLatexContent) {
                   // Call modify with isOmit=false
                   onModify(notes.trim(), false);
                   setNotes("");
                 }
               }}
-              disabled={!notes.trim() || generating || !hasLatexContent}
+              disabled={notes.trim().length === 0 || generating || !hasLatexContent}
             >
               SEND
             </Button>
@@ -212,11 +216,11 @@ export default function LatexInput({
             </Button>
             <Button
               className={`bg-gradient-to-r from-blue-500 to-blue-700 text-white transition-all duration-300 hover:shadow-md hover:translate-y-[-1px] ${
-                (notes.trim() && hasLatexContent) ? "opacity-50 cursor-not-allowed" : ""
+                (notes.trim().length > 0 && hasLatexContent) ? "opacity-50 cursor-not-allowed" : "opacity-100"
               }`}
               onClick={onGenerate}
-              disabled={!isReady || generating || (notes.trim() && hasLatexContent)}
-              title={notes.trim() && hasLatexContent ? "Clear notes field or use SEND to update existing LaTeX" : "Generate new LaTeX from input"}
+              disabled={!isReady || generating || (notes.trim().length > 0 && hasLatexContent)}
+              title={notes.trim().length > 0 && hasLatexContent ? "Clear notes field or use SEND to update existing LaTeX" : "Generate new LaTeX from input"}
             >
               {generating ? "Generating..." : "Generate LaTeX"}
             </Button>
