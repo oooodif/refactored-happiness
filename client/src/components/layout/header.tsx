@@ -309,15 +309,41 @@ export default function Header() {
   };
 
   // Force session sync
-  const forceSessionSync = () => {
+  // State to track if the sync button is loading
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const forceSessionSync = async () => {
     console.log("FORCING SESSION SYNC");
+    
+    // Don't allow multiple syncs at once
+    if (isSyncing) return;
+    
+    setIsSyncing(true);
+    
     toast({
       title: "Refreshing Session",
-      description: "Attempting to sync your session state..."
+      description: "Syncing your session state..."
     });
     
-    // Force a hard reload to sync session
-    window.location.reload();
+    try {
+      // Force auth check with retries (this is a better approach than reloading the page)
+      await forceAuthCheck(0, 3);
+      
+      toast({
+        title: "Session Synced",
+        description: "Your session has been successfully refreshed."
+      });
+    } catch (error) {
+      console.error("Failed to sync session:", error);
+      toast({
+        title: "Sync Failed",
+        description: "Could not sync your session. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      // Always clear the syncing state, even on error
+      setTimeout(() => setIsSyncing(false), 500);
+    }
   };
 
   return (
@@ -347,8 +373,16 @@ export default function Header() {
             size="sm" 
             className="ml-4 text-xs" 
             onClick={forceSessionSync}
+            disabled={isSyncing}
           >
-            Sync Session
+            {isSyncing ? (
+              <>
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                Syncing...
+              </>
+            ) : (
+              "Sync Session"
+            )}
           </Button>
         </div>
         <div className="flex items-center space-x-4">
