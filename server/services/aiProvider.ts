@@ -392,6 +392,9 @@ function preparePrompt(
     }
   }
   
+  // Add specific instructions to prevent unwanted math equations in regenerations
+  prompt = `${prompt}\n\nIMPORTANT: DO NOT ADD ANY MATH EQUATIONS UNLESS EXPLICITLY REQUESTED. DO NOT INSERT $\\sqrt{2}$ OR ANY MATHEMATICAL EXPRESSIONS THAT ARE NOT LITERALLY PRESENT IN THE INPUT TEXT. TREAT ALL TEXT LITERALLY, ESPECIALLY WHEN REGENERATING CONTENT.`;
+  
   return prompt;
 }
 
