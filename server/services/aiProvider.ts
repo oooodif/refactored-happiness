@@ -467,12 +467,12 @@ export async function modifyLatex(
       ? `EXISTING LATEX CODE:\n\`\`\`latex\n${latexContent}\n\`\`\`\n\nREMOVE THE FOLLOWING CONTENT FROM THE LATEX CODE (make no other changes):\n${notes}\n\nReturn the complete modified LaTeX code with the specified content removed.`
       : `EXISTING LATEX CODE:\n\`\`\`latex\n${latexContent}\n\`\`\`\n\nMODIFY THE LATEX CODE ACCORDING TO THESE INSTRUCTIONS:\n${notes}\n\nReturn the complete modified LaTeX code with the requested changes applied.`;
 
-    // Default to using the most powerful model for modifications
-    // This ensures precise, accurate changes
-    const modelToUse = options.model || 'gpt-4o';
+    // Default to using Groq for modifications
+    // This ensures good quality at lower cost
+    const modelToUse = options.model || 'llama-3-70b-8192';
     
     // Use the provider selection logic we already have
-    const result = await callProviderWithModel(prompt, modelToUse);
+    const result = await callProviderWithModel(modelToUse, prompt);
     
     // Extract the LaTeX from the response
     const modifiedLatex = extractLatexFromResponse(result);
