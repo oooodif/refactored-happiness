@@ -1,10 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
-
-// Configure PDF.js worker - required for react-pdf
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+import { setupPdfWorker } from './pdf-worker-fix';
 
 interface PDFDocumentViewerProps {
   pdfData: string;
@@ -15,6 +13,25 @@ export default function PDFDocumentViewer({ pdfData }: PDFDocumentViewerProps) {
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [error, setError] = useState<string | null>(null);
   const [scale, setScale] = useState<number>(1.0);
+  const [workerReady, setWorkerReady] = useState<boolean>(false);
+
+  // Initialize PDF.js worker when component mounts
+  useEffect(() => {
+    async function initWorker() {
+      try {
+        const success = await setupPdfWorker();
+        setWorkerReady(success);
+        if (!success) {
+          setError("Could not load PDF viewer worker. Try downloading the PDF instead.");
+        }
+      } catch (err) {
+        console.error("Error initializing PDF worker:", err);
+        setError("Could not initialize PDF viewer. Try downloading the PDF instead.");
+      }
+    }
+    
+    initWorker();
+  }, []);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
