@@ -63,7 +63,8 @@ export async function createBillingPortalSession(): Promise<{ url: string }> {
 
 export async function createRefillPackCheckout(): Promise<{ sessionId: string; url: string }> {
   try {
-    const response = await apiRequest("POST", API_ROUTES.subscription.refill.create, {});
+    // Using the direct route path since the constant has a type error
+    const response = await apiRequest("POST", "/api/subscription/refill/create", {});
     
     if (!response.ok) {
       const errorData = await response.json();

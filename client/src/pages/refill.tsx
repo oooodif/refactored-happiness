@@ -42,20 +42,13 @@ export default function RefillPage() {
     }
     
     // Create the checkout session for refill pack
-    const createRefillCheckout = async () => {
+    const initiateRefillCheckout = async () => {
       try {
-        const response = await apiRequest("POST", "/api/subscription/refill/create", {});
+        const { url } = await createRefillPackCheckout();
         
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to create checkout session");
-        }
-        
-        const data = await response.json();
-        
-        if (data.url) {
+        if (url) {
           // Redirect to Stripe Checkout
-          window.location.href = data.url;
+          window.location.href = url;
         } else {
           setError("Failed to create checkout session");
           setIsLoading(false);
@@ -67,7 +60,7 @@ export default function RefillPage() {
       }
     };
     
-    createRefillCheckout();
+    initiateRefillCheckout();
   }, [session.isAuthenticated, navigate, isStripeAvailable]);
   
   if (!session.isAuthenticated) {
