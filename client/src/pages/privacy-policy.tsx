@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import SiteLayout from "@/components/layout/site-layout";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useInView } from "react-intersection-observer";
@@ -8,6 +8,10 @@ const AnimatedSection = ({
   children, 
   className = "", 
   delay = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
 }) => {
   const [ref, inView] = useInView({
     triggerOnce: true,
@@ -32,7 +36,7 @@ const AnimatedSection = ({
 };
 
 // Enhanced section heading with decorative elements
-const SectionHeading = ({ number, title }) => {
+const SectionHeading = ({ number, title }: { number: string; title: string }) => {
   const [ref, inView] = useInView({
     triggerOnce: true,
     threshold: 0.1,
@@ -69,7 +73,7 @@ const SectionHeading = ({ number, title }) => {
 };
 
 // Card component with glass effect
-const GlassCard = ({ children, className = "" }) => {
+const GlassCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
   const [ref, inView] = useInView({
     triggerOnce: true,
     threshold: 0.1,

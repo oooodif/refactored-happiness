@@ -5,6 +5,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Grid pattern for visual backgrounds */
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(100, 116, 139, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(100, 116, 139, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: center center;
+}
+
+/* Glass effect utilities */
+.glass-effect {
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass-effect {
+  background: rgba(15, 23, 42, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 /* Animation keyframes for mobile keyboard dismissal effects */
 @keyframes parallax-rise {
   0% { transform: translateY(0); opacity: 1; }
