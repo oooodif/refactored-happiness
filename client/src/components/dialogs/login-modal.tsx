@@ -360,7 +360,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <DialogFooter className="flex flex-col sm:flex-row sm:justify-between sm:space-x-0">
                   <Button
                     type="submit"
-                    className="w-full"
+                    variant="primary"
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                     disabled={isLoading}
                   >
                     {isLoading ? (
