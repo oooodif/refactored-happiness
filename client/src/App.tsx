@@ -16,6 +16,7 @@ import VerifyEmail from "@/pages/verify-email";
 import Success from "@/pages/success";
 import UIPlayground from "@/pages/ui-playground";
 import TemplateRedirect from "@/pages/template-redirect";
+import PrivacyPolicy from "@/pages/privacy-policy";
 import NotFound from "@/pages/not-found";
 
 // Components
@@ -73,6 +74,7 @@ function Router() {
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/ui-playground" component={UIPlayground} />
       <Route path="/template/:type" component={TemplateRedirect} />
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route component={NotFound} />
     </Switch>
   );
