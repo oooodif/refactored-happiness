@@ -462,9 +462,25 @@ export async function modifyLatex(
   options: any = {}
 ) {
   try {
+    // Special handling for date omission requests with \maketitle
+    if (isOmit && 
+        (notes.toLowerCase().includes('date') || notes.toLowerCase().includes('the date')) && 
+        latexContent.includes('\\maketitle') && 
+        !latexContent.includes('\\date{')) {
+      
+      // Add \date{} before \maketitle to remove the date
+      latexContent = latexContent.replace(/\\maketitle/, '\\date{}\n\\maketitle');
+      
+      // Return the modified content immediately, no need to send to AI
+      return {
+        success: true,
+        latex: latexContent
+      };
+    }
+
     // Construct a prompt for the AI to modify the LaTeX
     let prompt = isOmit
-      ? `EXISTING LATEX CODE:\n\`\`\`latex\n${latexContent}\n\`\`\`\n\nREMOVE THE FOLLOWING CONTENT FROM THE LATEX CODE (make no other changes):\n${notes}\n\nReturn the complete modified LaTeX code with the specified content removed.`
+      ? `EXISTING LATEX CODE:\n\`\`\`latex\n${latexContent}\n\`\`\`\n\nREMOVE THE FOLLOWING CONTENT FROM THE LATEX CODE (make no other changes):\n${notes}\n\nIMPORTANT NOTE ABOUT DATES: If this request is about removing a date and the document uses \\maketitle without a \\date{} command, you should add \\date{} before \\maketitle to explicitly set an empty date.\n\nReturn the complete modified LaTeX code with the specified content removed.`
       : `EXISTING LATEX CODE:\n\`\`\`latex\n${latexContent}\n\`\`\`\n\nMODIFY THE LATEX CODE ACCORDING TO THESE INSTRUCTIONS:\n${notes}\n\nReturn the complete modified LaTeX code with the requested changes applied.`;
 
     // Try the specified model first

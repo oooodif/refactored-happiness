@@ -1,0 +1,155 @@
+Well no, so lets I generate my latex based off
+
+Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in Bookmarksgrove right at the coast of the Semantics, a large language ocean. A small river named Duden flows by their place and supplies it with the necessary regelialia. It is a paradisematic country, in which roasted parts of sentences fly into your mouth. Even the all-powerful Pointing has no control about the blind texts it is an almost unorthographic life One day however a small line of blind text by the name of Lorem Ipsum decided to leave for the far World of Grammar. The Big Oxmox advised her not to do so, because there were thousands of bad Commas, wild Question Marks and devious Semikoli, but the Little Blind Text didn’t listen. She packed her seven versalia, put her initial into the belt and made herself on the way. When she reached the first hills of the Italic Mountains, she had a last view back on the skyline of her hometown Bookmarksgrove, the headline of Alphabet Village and the subline of her own road, the Line Lane. Pityful a rethoric question ran over her cheek, then
+
+
+and i get the code 
+
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage{parskip}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+
+\begin{document}
+
+\title{Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.}
+
+\maketitle
+
+Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in Bookmarksgrove right at the coast of the Semantics, a large language ocean. A small river named Duden flows by their place and supplies it with the necessary regelialia. It is a paradisematic country, in which roasted parts of sentences fly into your mouth. Even the all-powerful Pointing has no control about the blind texts it is an almost unorthographic life One day however a small line of blind text by the name of Lorem Ipsum decided to leave for the far World of Grammar. The Big Oxmox advised her not to do so, because there were thousands of bad Commas, wild Question Marks and devious Semikoli, but the Little Blind Text didn’t listen. She packed her seven versalia, put her initial into the belt and made herself on the way. When she reached the first hills of the Italic Mountains, she had a last view back on the skyline of her hometown Bookmarksgrove, the headline of Alphabet Village and the subline of her own road, the Line Lane. Pityful a rethoric question ran over her cheek, then
+
+\end{document}
+
+Which makes a PDF that displays
+
+Far far away, behind the word mountains, far from the
+countries Vokalia and Consonantia, there live the blind
+texts.
+May 11, 2025
+Far far away, behind the word mountains, far from the countries Vokalia and Consonantia,
+there live the blind texts. Separated they live in Bookmarksgrove right at the coast of the
+Semantics, a large language ocean. A small river named Duden flows by their place and
+supplies it with the necessary regelialia. It is a paradisematic country, in which roasted
+parts of sentences fly into your mouth. Even the all-powerful Pointing has no control about
+the blind texts it is an almost unorthographic life One day however a small line of blind
+text by the name of Lorem Ipsum decided to leave for the far World of Grammar. The
+Big Oxmox advised her not to do so, because there were thousands of bad Commas, wild
+Question Marks and devious Semikoli, but the Little Blind Text didn’t listen. She packed
+her seven versalia, put her initial into the belt and made herself on the way. When she
+reached the first hills of the Italic Mountains, she had a last view back on the skyline of
+her hometown Bookmarksgrove, the headline of Alphabet Village and the subline of her own
+road, the Line Lane. Pityful a rethoric question ran over her cheek, then
+
+
+Which works great!
+
+Perfect
+
+Now if I do 
+
+Change title to “Hello”
+
+I get
+
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage{parskip}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+
+\begin{document}
+
+\title{Hello}
+
+\maketitle
+
+Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in Bookmarksgrove right at the coast of the Semantics, a large language ocean. A small river named Duden flows by their place and supplies it with the necessary regelialia. It is a paradisematic country, in which roasted parts of sentences fly into your mouth. Even the all-powerful Pointing has no control about the blind texts it is an almost unorthographic life One day however a small line of blind text by the name of Lorem Ipsum decided to leave for the far World of Grammar. The Big Oxmox advised her not to do so, because there were thousands of bad Commas, wild Question Marks and devious Semikoli, but the Little Blind Text didn’t listen. She packed her seven versalia, put her initial into the belt and made herself on the way. When she reached the first hills of the Italic Mountains, she had a last view back on the skyline of her hometown Bookmarksgrove, the headline of Alphabet Village and the subline of her own road, the Line Lane. Pityful a rethoric question ran over her cheek, then
+
+\end{document}
+
+
+Which the PDF showing 
+
+Hello
+May 11, 2025
+Far far away, behind the word mountains, far from the countries Vokalia and Consonantia,
+there live the blind texts. Separated they live in Bookmarksgrove right at the coast of the
+Semantics, a large language ocean. A small river named Duden flows by their place and
+supplies it with the necessary regelialia. It is a paradisematic country, in which roasted
+parts of sentences fly into your mouth. Even the all-powerful Pointing has no control about
+the blind texts it is an almost unorthographic life One day however a small line of blind
+text by the name of Lorem Ipsum decided to leave for the far World of Grammar. The
+Big Oxmox advised her not to do so, because there were thousands of bad Commas, wild
+Question Marks and devious Semikoli, but the Little Blind Text didn’t listen. She packed
+her seven versalia, put her initial into the belt and made herself on the way. When she
+reached the first hills of the Italic Mountains, she had a last view back on the skyline of
+her hometown Bookmarksgrove, the headline of Alphabet Village and the subline of her own
+road, the Line Lane. Pityful a rethoric question ran over her cheek, then
+
+
+Again, perfect, really happy
+
+
+
+But if I do 
+
+<OMIT> Date  </OMIT>
+
+I get either
+
+A generation with NO CHANGE
+
+
+Or occasionally ill even get
+
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage{parskip}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+
+\begin{document}
+
+\title{Hello}
+
+\maketitle
+
+\end{document}
+
+
+Which has a PDF showing 
+
+Hello
+May 11, 2025
+
+So this is a big
+
+
+
+As you mentioned it has to do with 
+
+The \maketitle
+
+Tag..
+
+
+We need to add special handling that says if user requests date omission and there is no clear date tag to remove \maketitle
+ Or something
+
+
+
+
+
