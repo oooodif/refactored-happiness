@@ -90,7 +90,7 @@ export default function AuthRequiredDialog() {
           </Button>
           <div className="flex gap-2 w-full sm:w-auto">
             <Button 
-              variant="outline" 
+              variant="secondary"
               onClick={handleLogin}
               className="flex-1 sm:flex-auto"
             >
