@@ -10,6 +10,11 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Redirect ads.txt to Ezoic's ads.txt manager before serving static files
+app.get('/ads.txt', (req, res) => {
+  return res.redirect(301, 'https://srv.adstxtmanager.com/74831/aitexgen.com');
+});
+
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, "../public")));
 
