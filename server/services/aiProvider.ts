@@ -446,3 +446,49 @@ function extractLatexFromResponse(response: string): string {
   // Return the whole response as a fallback
   return response.trim();
 }
+
+/**
+ * Modify existing LaTeX content based on user notes or omission instructions
+ * @param latexContent Existing LaTeX content to modify
+ * @param notes User notes or instructions for the modification
+ * @param isOmit Whether this is an omission request (remove specific content)
+ * @param options Additional options for generation
+ * @returns Object with success status and modified LaTeX content
+ */
+export async function modifyLatex(
+  latexContent: string,
+  notes: string,
+  isOmit: boolean = false,
+  options: any = {}
+) {
+  try {
+    // Construct a prompt for the AI to modify the LaTeX
+    let prompt = isOmit
+      ? `EXISTING LATEX CODE:\n\`\`\`latex\n${latexContent}\n\`\`\`\n\nREMOVE THE FOLLOWING CONTENT FROM THE LATEX CODE (make no other changes):\n${notes}\n\nReturn the complete modified LaTeX code with the specified content removed.`
+      : `EXISTING LATEX CODE:\n\`\`\`latex\n${latexContent}\n\`\`\`\n\nMODIFY THE LATEX CODE ACCORDING TO THESE INSTRUCTIONS:\n${notes}\n\nReturn the complete modified LaTeX code with the requested changes applied.`;
+
+    // Default to using the most powerful model for modifications
+    // This ensures precise, accurate changes
+    const modelToUse = options.model || 'gpt-4o';
+    
+    // Use the provider selection logic we already have
+    const result = await callProviderWithModel(prompt, modelToUse);
+    
+    // Extract the LaTeX from the response
+    const modifiedLatex = extractLatexFromResponse(result);
+    
+    return {
+      success: true,
+      latex: modifiedLatex
+    };
+  } catch (error) {
+    console.error('Error modifying LaTeX:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to modify LaTeX content',
+      latex: latexContent // Return the original unmodified content
+    };
+  }
+}
+
+// exports are already defined individually throughout the file

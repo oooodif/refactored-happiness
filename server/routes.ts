@@ -26,7 +26,7 @@ const validateRequest = (schema: z.ZodType<any, any>) => {
   };
 };
 import { generateLatexSchema, SubscriptionTier, REFILL_PACK_CREDITS, REFILL_PACK_PRICE } from "@shared/schema";
-import { generateLatex, getAvailableModels, callProviderWithModel } from "./services/aiProvider";
+import { generateLatex, getAvailableModels, callProviderWithModel, modifyLatex } from "./services/aiProvider";
 import { compileLatex, compileAndFixLatex } from "./services/latexService";
 import { stripeService } from "./services/stripeService";
 import { stripeSync } from "./services/stripeSync";
@@ -508,6 +508,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("LaTeX fix error:", error);
         return res.status(500).json({ message: "Failed to fix LaTeX" });
+      }
+    }
+  );
+  
+  // New endpoint for modifying existing LaTeX with notes or omissions
+  app.post("/api/latex/modify",
+    authenticateUser, // Require authentication
+    checkSubscription, // Check user's subscription status
+    async (req: Request, res: Response) => {
+      const { latex, notes, isOmit } = req.body;
+      const userId = req.session.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      if (!latex) {
+        return res.status(400).json({ message: "LaTeX content is required" });
+      }
+      
+      if (!notes) {
+        return res.status(400).json({ message: "Modification notes are required" });
+      }
+      
+      try {
+        console.log(`LaTeX modification request - User: ${userId}, OMIT mode: ${isOmit}`);
+        
+        // Call the modifyLatex function to process the request
+        const result = await modifyLatex(latex, notes, isOmit);
+        
+        if (!result.success) {
+          return res.status(500).json({ message: result.error });
+        }
+        
+        // Count this as a generation for usage tracking
+        await storage.incrementUserUsage(userId);
+        
+        return res.status(200).json({
+          latex: result.latex,
+          compilationResult: {
+            success: false,
+            pdf: null,
+            error: null,
+            errorDetails: null
+          }
+        });
+      } catch (error) {
+        console.error("LaTeX modification error:", error);
+        return res.status(500).json({ 
+          message: "Failed to modify LaTeX",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
       }
     }
   );

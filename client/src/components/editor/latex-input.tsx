@@ -92,53 +92,78 @@ export default function LatexInput({
           </div>
         </div>
         <div className="flex space-x-2 items-center">
-          <div className="flex-1 mr-2">
+          <div className="flex-1 mr-2 relative group">
             <input
               type="text"
               ref={notesInputRef}
               placeholder={hasLatexContent 
                 ? "Enter modification instructions or text to omit..." 
-                : "Enter notes for generation..."}
-              className="w-full glass-card border border-gray-300 text-gray-700 text-sm rounded-md h-9 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                : "Notes (available after generation)"}
+              className={`w-full glass-card border border-gray-300 text-sm rounded-md h-9 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                hasLatexContent ? "text-gray-700" : "text-gray-400 bg-gray-50"
+              }`}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              disabled={generating}
+              disabled={generating || !hasLatexContent}
+              title={hasLatexContent ? "Enter instructions to modify your LaTeX" : "Generate LaTeX content first to enable modifications"}
             />
+            {!hasLatexContent && (
+              <div className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 -top-10 left-0 bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
+                Generate LaTeX content first to enable notes
+                <div className="absolute bottom-0 left-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-gray-800"></div>
+              </div>
+            )}
           </div>
-          {hasLatexContent && (
+          <div className="relative group">
             <Button
               variant="outline"
               size="sm"
-              className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-3 py-1 transition-all duration-300 hover:shadow-md hover:bg-red-50 hover:border-red-300"
+              className={`text-xs glass-card border border-gray-300 rounded px-3 py-1 transition-all duration-300 hover:shadow-md ${
+                hasLatexContent ? "hover:bg-red-50 hover:border-red-300 text-gray-700" : "text-gray-400 bg-gray-50 cursor-not-allowed"
+              }`}
               onClick={() => {
-                if (notes.trim() && onModify) {
+                if (notes.trim() && onModify && hasLatexContent) {
                   // Call modify with isOmit=true
                   onModify(notes.trim(), true);
                   setNotes("");
                 }
               }}
-              disabled={!notes.trim() || generating}
+              disabled={!notes.trim() || generating || !hasLatexContent}
             >
-              <span className="font-mono text-red-600 mr-1">✂</span> OMIT
+              <span className={`font-mono mr-1 ${hasLatexContent ? "text-red-600" : "text-gray-400"}`}>✂</span> OMIT
             </Button>
-          )}
-          {hasLatexContent && (
+            <div className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 -top-16 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10 w-64 text-center">
+              {hasLatexContent 
+                ? "Removes specific content from LaTeX. Use by typing text to remove in the notes field." 
+                : "Generate LaTeX content first to enable the OMIT function"}
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-800"></div>
+            </div>
+          </div>
+          <div className="relative group">
             <Button
               variant="outline"
               size="sm"
-              className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-3 py-1 transition-all duration-300 hover:shadow-md hover:bg-blue-50 hover:border-blue-300"
+              className={`text-xs glass-card border border-gray-300 rounded px-3 py-1 transition-all duration-300 hover:shadow-md ${
+                hasLatexContent ? "hover:bg-blue-50 hover:border-blue-300 text-gray-700" : "text-gray-400 bg-gray-50 cursor-not-allowed"
+              }`}
               onClick={() => {
-                if (notes.trim() && onModify) {
+                if (notes.trim() && onModify && hasLatexContent) {
                   // Call modify with isOmit=false
                   onModify(notes.trim(), false);
                   setNotes("");
                 }
               }}
-              disabled={!notes.trim() || generating}
+              disabled={!notes.trim() || generating || !hasLatexContent}
             >
-              <span className="font-mono text-blue-600 mr-1">✏️</span> MODIFY
+              <span className={`font-mono mr-1 ${hasLatexContent ? "text-blue-600" : "text-gray-400"}`}>✏️</span> MODIFY
             </Button>
-          )}
+            <div className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 -top-16 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10 w-64 text-center">
+              {hasLatexContent 
+                ? "Applies changes to LaTeX based on your instructions. Type what you want to change in the notes field." 
+                : "Generate LaTeX content first to enable the MODIFY function"}
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-800"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div className="flex-1 overflow-auto p-4 bg-gray-50">
