@@ -509,6 +509,81 @@ export const storage = {
       return null;
     }
   },
+  
+  /**
+   * Add credits to a user's refill pack
+   */
+  async addCredits(userId: number, credits: number): Promise<User | null> {
+    try {
+      const user = await this.getUserById(userId);
+      
+      if (!user) {
+        return null;
+      }
+      
+      const currentCredits = user.refillPackCredits || 0;
+      const newTotalCredits = currentCredits + credits;
+      
+      return this.updateUserRefillCredits(userId, newTotalCredits);
+    } catch (error) {
+      console.error('Add credits error:', error);
+      return null;
+    }
+  },
+  
+  /**
+   * Update Stripe Customer ID for a user
+   */
+  async updateStripeCustomerId(userId: number, customerId: string): Promise<User | null> {
+    try {
+      const [updatedUser] = await db.update(users)
+        .set({
+          stripeCustomerId: customerId,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      return updatedUser || null;
+    } catch (error) {
+      console.error('Update Stripe customer ID error:', error);
+      return null;
+    }
+  },
+  
+  /**
+   * Update subscription information for a user
+   */
+  async updateSubscription(userId: number, subscriptionData: {
+    stripeSubscriptionId?: string;
+    tier?: string;
+    subscriptionStatus?: string;
+    currentPeriodEnd?: Date | null;
+  }): Promise<User | null> {
+    try {
+      const [updatedUser] = await db.update(users)
+        .set({
+          stripeSubscriptionId: subscriptionData.stripeSubscriptionId,
+          subscriptionTier: subscriptionData.tier || SubscriptionTier.Free,
+          subscriptionStatus: subscriptionData.subscriptionStatus || 'active',
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      return updatedUser || null;
+    } catch (error) {
+      console.error('Update subscription error:', error);
+      return null;
+    }
+  },
+  
+  /**
+   * Get a user by ID - a simpler version that doesn't require any special handling
+   */
+  async getUser(userId: number): Promise<User | null> {
+    return this.getUserById(userId);
+  },
 
   // AI model info
   async getModelInfo(modelName: string): Promise<{ tier: SubscriptionTier } | null> {

@@ -28,13 +28,7 @@ const validateRequest = (schema: z.ZodType<any, any>) => {
 import { generateLatexSchema, SubscriptionTier, REFILL_PACK_CREDITS, REFILL_PACK_PRICE } from "@shared/schema";
 import { generateLatex, getAvailableModels, callProviderWithModel } from "./services/aiProvider";
 import { compileLatex, compileAndFixLatex } from "./services/latexService";
-import { 
-  createCustomer, 
-  createSubscription, 
-  cancelSubscription, 
-  createPortalSession,
-  createRefillPackCheckoutSession
-} from "./services/stripeService";
+import { stripeService } from "./services/stripeService";
 import { testPostmarkConnection, generateVerificationToken, sendVerificationEmail } from "./utils/email";
 import Stripe from "stripe";
 import session from "express-session";
@@ -684,35 +678,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "User not found" });
         }
         
-        // If user already has a subscription, return the portal URL instead
-        if (user.stripeSubscriptionId) {
-          const session = await createPortalSession(user.stripeCustomerId);
-          return res.status(200).json({ url: session.url });
-        }
+        // Create success and cancel URLs for redirect after checkout
+        const successUrl = `${req.protocol}://${req.get('host')}/success?session_id={CHECKOUT_SESSION_ID}`;
+        const cancelUrl = `${req.protocol}://${req.get('host')}/account`;
         
-        // Create or get a Stripe customer
-        let customerId = user.stripeCustomerId;
+        // Create a checkout session
+        const session = await stripeService.createSubscriptionSession(
+          userId, 
+          tier, 
+          successUrl, 
+          cancelUrl
+        );
         
-        if (!customerId) {
-          const customer = await createCustomer(user.email, user.username);
-          customerId = customer.id;
-          
-          // Update user with Stripe customer ID
-          await storage.updateUserStripeInfo(userId, {
-            stripeCustomerId: customerId
-          });
-        }
-        
-        // Create subscription
-        const subscription = await createSubscription(customerId, tier);
-        
-        // Get the client secret from the latest invoice's payment intent
-        const latestInvoice = subscription.latest_invoice as any;
-        const paymentIntent = latestInvoice?.payment_intent;
-        const clientSecret = paymentIntent?.client_secret;
-        
+        // Return session URL for redirect
         return res.status(200).json({
-          clientSecret: clientSecret
+          sessionId: session.id,
+          url: session.url
         });
       } catch (error) {
         console.error("Create subscription error:", error);
@@ -741,8 +722,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "No active subscription found" });
         }
         
-        // Cancel the subscription
-        const cancelResult = await cancelSubscription(user.stripeSubscriptionId);
+        // Cancel the subscription at the end of the current period
+        await stripe.subscriptions.update(user.stripeSubscriptionId, {
+          cancel_at_period_end: true
+        });
         
         return res.status(200).json({
           success: true,
@@ -775,8 +758,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "No Stripe customer found" });
         }
         
+        // Create a return URL for after the customer finishes in the portal
+        const returnUrl = `${req.protocol}://${req.get('host')}/account`;
+        
         // Create a billing portal session
-        const session = await createPortalSession(user.stripeCustomerId);
+        const session = await stripe.billingPortal.sessions.create({
+          customer: user.stripeCustomerId,
+          return_url: returnUrl
+        });
         
         return res.status(200).json({ url: session.url });
       } catch (error) {
@@ -848,22 +837,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "User not found" });
         }
         
-        // Create or retrieve Stripe customer
-        let customerId = user.stripeCustomerId;
-        
-        if (!customerId) {
-          // Create a new customer
-          const customer = await createCustomer(user.email, user.username);
-          customerId = customer.id;
-          
-          // Update user with Stripe customer ID
-          await storage.updateUserStripeInfo(userId, {
-            stripeCustomerId: customerId
+        // Only allow paid subscribers to purchase refill packs
+        if (user.subscriptionTier === SubscriptionTier.Free) {
+          return res.status(403).json({ 
+            message: "Refill packs are only available for paid subscribers. Please upgrade to a paid plan first." 
           });
         }
         
+        // Create success and cancel URLs for redirect after checkout
+        const successUrl = `${req.protocol}://${req.get('host')}/success?session_id={CHECKOUT_SESSION_ID}`;
+        const cancelUrl = `${req.protocol}://${req.get('host')}/account`;
+        
         // Create a checkout session for the refill pack
-        const session = await createRefillPackCheckoutSession(customerId, quantity);
+        const session = await stripeService.createRefillSession(
+          userId,
+          successUrl,
+          cancelUrl
+        );
         
         return res.status(200).json({
           sessionId: session.id,
@@ -893,85 +883,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           process.env.STRIPE_WEBHOOK_SECRET
         );
         
-        // Handle the event
-        switch (event.type) {
-          case 'customer.subscription.created':
-          case 'customer.subscription.updated': {
-            const subscription = event.data.object as Stripe.Subscription;
-            const customerId = subscription.customer as string;
-            const subscriptionId = subscription.id;
-            const status = subscription.status;
-            const priceId = subscription.items.data[0].price.id;
-            
-            // Get tier from price ID
-            const tierMapping: Record<string, string> = {
-              [process.env.STRIPE_PRICE_TIER1_ID || 'price_tier1']: 'tier1',
-              [process.env.STRIPE_PRICE_TIER2_ID || 'price_tier2']: 'tier2',
-              [process.env.STRIPE_PRICE_TIER3_ID || 'price_tier3']: 'tier3',
-              [process.env.STRIPE_PRICE_TIER4_ID || 'price_tier4']: 'tier4',
-              [process.env.STRIPE_PRICE_TIER5_ID || 'price_tier5']: 'tier5'
-            };
-            
-            const tier = tierMapping[priceId] || 'tier1';
-            
-            // Update user subscription info
-            await storage.updateUserSubscription(customerId, {
-              stripeSubscriptionId: subscriptionId,
-              subscriptionTier: tier,
-              subscriptionStatus: status
-            });
-            
-            break;
-          }
-          case 'customer.subscription.deleted': {
-            const subscription = event.data.object as Stripe.Subscription;
-            const customerId = subscription.customer as string;
-            
-            // Downgrade user to free tier
-            await storage.updateUserSubscription(customerId, {
-              stripeSubscriptionId: null,
-              subscriptionTier: 'free',
-              subscriptionStatus: 'inactive'
-            });
-            
-            break;
-          }
-          
-          // Process successful refill pack payments
-          case 'payment_intent.succeeded': {
-            const paymentIntent = event.data.object as Stripe.PaymentIntent;
-            
-            // Only process if it's a refill pack purchase
-            if (paymentIntent.metadata?.type === 'refill_pack') {
-              const userId = parseInt(paymentIntent.metadata.userId || '0', 10);
-              const credits = parseInt(paymentIntent.metadata.credits || '0', 10);
-              
-              if (userId && credits) {
-                console.log(`Processing refill pack payment: adding ${credits} credits to user ${userId}`);
-                
-                try {
-                  // Add refill pack credits to the user's account
-                  const user = await storage.getUserById(userId);
-                  
-                  if (user) {
-                    const currentCredits = user.refillPackCredits || 0;
-                    const newCredits = currentCredits + credits;
-                    
-                    // Update user with new credits
-                    await storage.updateUserRefillCredits(userId, newCredits);
-                    
-                    console.log(`Successfully added ${credits} refill credits to user ${userId}, new total: ${newCredits}`);
-                  } else {
-                    console.error(`Refill credits payment: User ${userId} not found`);
-                  }
-                } catch (err) {
-                  console.error('Error adding refill credits to user:', err);
-                }
-              }
-            }
-            break;
-          }
-          // Add more event types as needed
+        // Handle different webhook events using our stripeService
+        if (event.type.startsWith('customer.subscription.')) {
+          // Handle subscription events
+          await stripeService.handleSubscriptionEvent(event);
+        } else if (event.type === 'checkout.session.completed') {
+          // Handle checkout completion (refill packs)
+          await stripeService.handleCheckoutCompleted(event);
         }
         
         res.json({ received: true });

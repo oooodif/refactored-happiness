@@ -1,201 +1,241 @@
 import Stripe from 'stripe';
+import { STRIPE_PRICE_IDS } from '@shared/stripe-config';
 import { SubscriptionTier } from '@shared/schema';
+import { storage } from '../storage';
 
-// Initialize Stripe client
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2025-04-30.basil' as any, // Using latest API version
-    })
-  : null;
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
 
-// Get price IDs from environment variables or use defaults
-const PRICE_IDS = {
-  [SubscriptionTier.Free]: process.env.STRIPE_PRICE_FREE_ID || 'price_free', // Usually not needed as free tier doesn't require payment
-  [SubscriptionTier.Tier1]: process.env.STRIPE_PRICE_TIER1_ID || 'price_tier1',
-  [SubscriptionTier.Tier2]: process.env.STRIPE_PRICE_TIER2_ID || 'price_tier2',
-  [SubscriptionTier.Tier3]: process.env.STRIPE_PRICE_TIER3_ID || 'price_tier3',
-  [SubscriptionTier.Tier4]: process.env.STRIPE_PRICE_TIER4_ID || 'price_tier4',
-  [SubscriptionTier.Tier5]: process.env.STRIPE_PRICE_TIER5_ID || 'price_tier5'
-};
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2023-10-16',
+});
 
-// Refill pack price ID
-const REFILL_PACK_PRICE_ID = process.env.STRIPE_PRICE_REFILL_PACK_ID || 'price_refill_pack';
+export const stripeService = {
+  /**
+   * Creates a checkout session for subscription
+   */
+  async createSubscriptionSession(userId: number, tier: SubscriptionTier, successUrl: string, cancelUrl: string) {
+    const user = await storage.getUser(userId);
 
-/**
- * Create a new Stripe customer
- */
-export async function createCustomer(email: string, name: string): Promise<Stripe.Customer> {
-  if (!stripe) throw new Error('Stripe is not configured');
-
-  return stripe.customers.create({
-    email,
-    name,
-    metadata: {
-      source: 'AI LaTeX Generator'
+    if (!user) {
+      throw new Error('User not found');
     }
-  });
-}
 
-/**
- * Create a new subscription
- */
-export async function createSubscription(
-  customerId: string,
-  tier: SubscriptionTier
-): Promise<Stripe.Subscription> {
-  if (!stripe) throw new Error('Stripe is not configured');
-  
-  // Get price ID for the tier
-  const priceId = PRICE_IDS[tier];
-  
-  if (!priceId) {
-    throw new Error(`No price ID found for tier: ${tier}`);
-  }
-  
-  return stripe.subscriptions.create({
-    customer: customerId,
-    items: [{ price: priceId }],
-    payment_behavior: 'default_incomplete',
-    payment_settings: { 
-      save_default_payment_method: 'on_subscription',
-      payment_method_types: ['link', 'card'],
-    },
-    expand: ['latest_invoice.payment_intent'],
-  });
-}
+    // If user already has Stripe info, handle appropriately
+    if (user.stripeCustomerId && user.stripeSubscriptionId) {
+      // User already has a subscription, let's update it
+      return this.updateSubscription(userId, tier, successUrl, cancelUrl);
+    }
 
-/**
- * Cancel a subscription
- */
-export async function cancelSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
-  if (!stripe) throw new Error('Stripe is not configured');
-  
-  return stripe.subscriptions.update(subscriptionId, {
-    cancel_at_period_end: true
-  });
-}
+    // Create a new Stripe customer if none exists
+    let customerId = user.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email || user.username,
+        name: user.username,
+        metadata: {
+          userId: user.id.toString(),
+        },
+      });
+      customerId = customer.id;
+      
+      // Update user with Stripe customer ID
+      await storage.updateStripeCustomerId(userId, customerId);
+    }
 
-/**
- * Create a billing portal session
- */
-export async function createPortalSession(customerId: string): Promise<Stripe.BillingPortal.Session> {
-  if (!stripe) throw new Error('Stripe is not configured');
-  
-  return stripe.billingPortal.sessions.create({
-    customer: customerId,
-    return_url: process.env.DOMAIN ? `${process.env.DOMAIN}/account` : 'http://localhost:5000/account',
-  });
-}
+    // Create checkout session for subscription
+    const priceId = STRIPE_PRICE_IDS[tier];
+    if (!priceId) {
+      throw new Error(`No price ID found for tier: ${tier}`);
+    }
 
-/**
- * Retrieve a subscription
- */
-export async function getSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
-  if (!stripe) throw new Error('Stripe is not configured');
-  
-  return stripe.subscriptions.retrieve(subscriptionId);
-}
-
-/**
- * Update subscription items
- */
-export async function updateSubscription(
-  subscriptionId: string,
-  tier: SubscriptionTier
-): Promise<Stripe.Subscription> {
-  if (!stripe) throw new Error('Stripe is not configured');
-  
-  // Get subscription to retrieve current items
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-  
-  // Get price ID for the tier
-  const priceId = PRICE_IDS[tier];
-  
-  if (!priceId) {
-    throw new Error(`No price ID found for tier: ${tier}`);
-  }
-  
-  // Get current subscription item ID
-  const itemId = subscription.items.data[0].id;
-  
-  // Update the subscription with the new price
-  return stripe.subscriptions.update(subscriptionId, {
-    items: [{ id: itemId, price: priceId }],
-  });
-}
-
-/**
- * Create a Checkout session for an existing customer
- */
-export async function createCheckoutSession(
-  customerId: string,
-  tier: SubscriptionTier
-): Promise<Stripe.Checkout.Session> {
-  if (!stripe) throw new Error('Stripe is not configured');
-  
-  // Get price ID for the tier
-  const priceId = PRICE_IDS[tier];
-  
-  if (!priceId) {
-    throw new Error(`No price ID found for tier: ${tier}`);
-  }
-  
-  // Create a checkout session with Link enabled
-  return stripe.checkout.sessions.create({
-    customer: customerId,
-    payment_method_types: ['card'],
-    line_items: [
-      {
-        price: priceId,
-        quantity: 1,
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancelUrl,
+      metadata: {
+        userId: userId.toString(),
+        tier,
       },
-    ],
-    mode: 'subscription',
-    success_url: process.env.DOMAIN ? `${process.env.DOMAIN}/account?success=true` : 'http://localhost:5000/account?success=true',
-    cancel_url: process.env.DOMAIN ? `${process.env.DOMAIN}/account?canceled=true` : 'http://localhost:5000/account?canceled=true',
-    // Enable Stripe Link for faster checkout
-    // Always show the Link UI option
-    payment_method_configuration: process.env.STRIPE_LINK_CONFIG_ID,
-    // Store payment details for future use
-    customer_update: {
-      address: 'auto',
-      name: 'auto',
-    },
-  });
-}
+    });
 
-/**
- * Create a Checkout session for purchasing refill packs
- */
-export async function createRefillPackCheckoutSession(
-  customerId: string,
-  quantity: number = 1
-): Promise<Stripe.Checkout.Session> {
-  if (!stripe) throw new Error('Stripe is not configured');
-  
-  // Create a checkout session for one-time purchase
-  return stripe.checkout.sessions.create({
-    customer: customerId,
-    payment_method_types: ['card'],
-    line_items: [
-      {
-        price: REFILL_PACK_PRICE_ID,
-        quantity: quantity,
+    return session;
+  },
+
+  /**
+   * Updates an existing subscription
+   */
+  async updateSubscription(userId: number, tier: SubscriptionTier, successUrl: string, cancelUrl: string) {
+    const user = await storage.getUser(userId);
+
+    if (!user || !user.stripeCustomerId) {
+      throw new Error('User not found or no Stripe customer ID');
+    }
+
+    // If user has an existing subscription, check if we should update or cancel
+    if (user.stripeSubscriptionId) {
+      // Get current subscription
+      const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+      
+      // Cancel at period end and create new subscription
+      await stripe.subscriptions.update(user.stripeSubscriptionId, {
+        cancel_at_period_end: true,
+      });
+    }
+
+    // Create a new checkout session
+    const priceId = STRIPE_PRICE_IDS[tier];
+    if (!priceId) {
+      throw new Error(`No price ID found for tier: ${tier}`);
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      customer: user.stripeCustomerId,
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancelUrl,
+      metadata: {
+        userId: userId.toString(),
+        tier,
       },
-    ],
-    mode: 'payment',
-    success_url: process.env.DOMAIN ? `${process.env.DOMAIN}/account?refill=success` : 'http://localhost:5000/account?refill=success',
-    cancel_url: process.env.DOMAIN ? `${process.env.DOMAIN}/account?refill=canceled` : 'http://localhost:5000/account?refill=canceled',
-    // Enable Stripe Link for faster checkout
-    // Store payment details for future use
-    customer_update: {
-      address: 'auto',
-      name: 'auto',
-    },
-    // Add metadata to identify this is a refill pack purchase
-    metadata: {
-      type: 'refill_pack',
-      quantity: quantity.toString(),
-    },
-  });
-}
+    });
+
+    return session;
+  },
+
+  /**
+   * Creates a checkout session for refill pack
+   */
+  async createRefillSession(userId: number, successUrl: string, cancelUrl: string) {
+    const user = await storage.getUser(userId);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Create a new Stripe customer if none exists
+    let customerId = user.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email || user.username,
+        name: user.username,
+        metadata: {
+          userId: user.id.toString(),
+        },
+      });
+      customerId = customer.id;
+      
+      // Update user with Stripe customer ID
+      await storage.updateStripeCustomerId(userId, customerId);
+    }
+
+    // Create checkout session for one-time purchase
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: STRIPE_PRICE_IDS.refillPack,
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancelUrl,
+      metadata: {
+        userId: userId.toString(),
+        type: 'refill',
+      },
+    });
+
+    return session;
+  },
+
+  /**
+   * Handles subscription webhook events from Stripe
+   */
+  async handleSubscriptionEvent(event: Stripe.Event) {
+    const data = event.data.object as Stripe.Subscription;
+    const userId = Number(data.metadata?.userId);
+    
+    if (!userId) {
+      console.error('No userId in subscription metadata');
+      return;
+    }
+
+    switch (event.type) {
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated':
+        // Update user subscription details
+        if (data.status === 'active' || data.status === 'trialing') {
+          // Get the price ID to determine the tier
+          const priceId = data.items.data[0]?.price.id;
+          let tier = SubscriptionTier.Free;
+          
+          // Find the tier based on price ID
+          for (const [key, value] of Object.entries(STRIPE_PRICE_IDS)) {
+            if (value === priceId && key !== 'refillPack') {
+              tier = key as SubscriptionTier;
+              break;
+            }
+          }
+          
+          await storage.updateSubscription(userId, {
+            stripeSubscriptionId: data.id,
+            tier,
+            subscriptionStatus: data.status,
+            currentPeriodEnd: new Date(data.current_period_end * 1000),
+          });
+        }
+        break;
+      
+      case 'customer.subscription.deleted':
+        // Reset to free tier when subscription is canceled or expires
+        await storage.updateSubscription(userId, {
+          tier: SubscriptionTier.Free,
+          subscriptionStatus: 'canceled',
+          currentPeriodEnd: null,
+        });
+        break;
+    }
+  },
+
+  /**
+   * Handles checkout session completion (for refill packs)
+   */
+  async handleCheckoutCompleted(event: Stripe.Event) {
+    const session = event.data.object as Stripe.Checkout.Session;
+    
+    // Handle one-time purchases (refill packs)
+    if (session.mode === 'payment' && session.metadata?.type === 'refill') {
+      const userId = Number(session.metadata.userId);
+      
+      if (!userId) {
+        console.error('No userId in checkout session metadata');
+        return;
+      }
+      
+      // Get the current user and add credits
+      const user = await storage.getUser(userId);
+      if (user) {
+        await storage.addCredits(userId, 100); // 100 credits for refill pack
+      }
+    }
+  }
+};
