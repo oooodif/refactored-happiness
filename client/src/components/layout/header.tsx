@@ -165,7 +165,7 @@ export default function Header() {
               />
             </svg>
             <h1 className="ml-2 text-xl font-semibold text-gray-800">
-              AI LaTeX Generator
+              AITexGen
             </h1>
           </Link>
         </div>
