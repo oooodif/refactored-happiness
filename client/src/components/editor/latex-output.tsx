@@ -1,8 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import Prism from "prismjs";
 import { copyToClipboard } from "@/lib/utils";
+import { UserContext } from "@/App";
+import { useAnonymousStatus } from "@/hooks/use-anonymous-status";
 
 interface LatexOutputProps {
   latexContent: string;
@@ -19,6 +21,11 @@ export default function LatexOutput({
 }: LatexOutputProps) {
   const codeRef = useRef<HTMLElement>(null);
   const { toast } = useToast();
+  const { session } = useContext(UserContext);
+  const anonymousStatus = useAnonymousStatus();
+  
+  // Check if the user is anonymous
+  const isAnonymous = !session?.user && anonymousStatus.data?.isAnonymous;
 
   // Highlight LaTeX code using Prism.js
   useEffect(() => {
@@ -51,7 +58,15 @@ export default function LatexOutput({
       <div className="flex-1 overflow-auto p-4 bg-gray-50">
         <pre className="h-full rounded-md border border-gray-300 bg-gray-900 overflow-auto p-4 m-0 shadow-inner depth-3d-dark">
           <code ref={codeRef} className="language-latex font-mono text-sm whitespace-pre">
-            {latexContent || '// Generated LaTeX will appear here'}
+            {latexContent || 
+              isAnonymous ? 
+              `// Generated LaTeX will appear here
+
+Welcome to AI LaTeX Generator!
+You're currently using the free anonymous mode which allows for 1 free LaTeX conversion. Sign up from the header to get more conversions and access to all features!` 
+              : 
+              `// Generated LaTeX will appear here`
+            }
           </code>
         </pre>
       </div>

@@ -898,12 +898,6 @@ export default function Home() {
   return (
     <SiteLayout seoTitle="AI LaTeX Generator - Create Professional LaTeX Documents with AI">
       <div className="h-full flex flex-col md:flex-row bg-gradient-soft">
-        {/* Anonymous User Banner */}
-        {isAnonymous && (
-          <div className="absolute top-0 left-0 right-0 z-10 px-4 pt-4">
-            <AnonymousUserBanner usageRemaining={hasRemainingAnonymousUsage} />
-          </div>
-        )}
         
         {/* Left Panel (Input) */}
         <div className="w-full md:w-1/2 h-full relative">
