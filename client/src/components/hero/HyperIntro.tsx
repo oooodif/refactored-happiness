@@ -5,7 +5,8 @@ import { TextPlugin } from 'gsap/TextPlugin';
 import Splitting from 'splitting';
 import 'splitting/dist/splitting.css';
 import 'splitting/dist/splitting-cells.css';
-import barba from '@barba/core';
+// Import only the necessary libraries for our animation
+// Removed Barba.js as it's causing conflicts with React
 import LocomotiveScroll from 'locomotive-scroll';
 import * as THREE from 'three';
 import './HyperIntro.css';
@@ -59,110 +60,121 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
     // Update scroll when window resizes
     window.addEventListener('resize', () => scroll.update());
 
-    // Initialize Particles.js with glowing ultraviolet effects
+    // Create a custom particle system with ultraviolent aesthetic
     if (particlesRef.current) {
-      // Use the particles function directly from the imported library
-      particles(particlesRef.current, {
-        particles: {
-          number: {
-            value: 80,
-            density: {
-              enable: true,
-              value_area: 800
+      // Clear any existing content
+      const particlesContainer = particlesRef.current;
+      particlesContainer.innerHTML = '';
+      particlesContainer.style.position = 'absolute';
+      particlesContainer.style.top = '0';
+      particlesContainer.style.left = '0';
+      particlesContainer.style.width = '100%';
+      particlesContainer.style.height = '100%';
+      particlesContainer.style.overflow = 'hidden';
+      particlesContainer.style.pointerEvents = 'none';
+      
+      // Create custom particles
+      const particleCount = 80;
+      const colors = ['#ff00ff', '#9c27b0', '#673ab7', '#3f51b5'];
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'ultraviolent-particle';
+        
+        // Random position
+        const posX = Math.random() * 100;
+        const posY = Math.random() * 100;
+        
+        // Random size
+        const size = Math.random() * 5 + 2;
+        
+        // Random color from our palette
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        // Set particle styles
+        particle.style.position = 'absolute';
+        particle.style.left = `${posX}%`;
+        particle.style.top = `${posY}%`;
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.borderRadius = '50%';
+        particle.style.backgroundColor = color;
+        particle.style.boxShadow = `0 0 ${size * 2}px ${color}`;
+        particle.style.opacity = `${Math.random() * 0.7 + 0.3}`;
+        
+        // Add random animation with keyframes
+        const duration = Math.random() * 15 + 10;
+        const delay = Math.random() * 10;
+        
+        // Create unique animation name
+        const animName = `particle-${i}-float`;
+        
+        // Create and append style with keyframes
+        const style = document.createElement('style');
+        style.innerHTML = `
+          @keyframes ${animName} {
+            0% {
+              transform: translate(0, 0) scale(1);
+              opacity: ${Math.random() * 0.5 + 0.5};
             }
-          },
-          color: {
-            value: ['#ff00ff', '#9c27b0', '#673ab7', '#3f51b5']
-          },
-          shape: {
-            type: 'circle',
-            stroke: {
-              width: 0,
-              color: '#000000'
+            25% {
+              transform: translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) scale(${Math.random() + 0.5});
             }
-          },
-          opacity: {
-            value: 0.7,
-            random: true,
-            anim: {
-              enable: true,
-              speed: 1,
-              opacity_min: 0.1,
-              sync: false
+            50% {
+              transform: translate(${Math.random() * 200 - 100}px, ${Math.random() * 200 - 100}px) scale(${Math.random() + 0.2});
+              opacity: ${Math.random() * 0.5 + 0.3};
             }
-          },
-          size: {
-            value: 4,
-            random: true,
-            anim: {
-              enable: true,
-              speed: 6,
-              size_min: 0.1,
-              sync: false
+            75% {
+              transform: translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) scale(${Math.random() + 0.5});
             }
-          },
-          line_linked: {
-            enable: true,
-            distance: 150,
-            color: '#9c27b0',
-            opacity: 0.5,
-            width: 1
-          },
-          move: {
-            enable: true,
-            speed: 4,
-            direction: 'none',
-            random: true,
-            straight: false,
-            out_mode: 'out',
-            bounce: false,
-            attract: {
-              enable: true,
-              rotateX: 600,
-              rotateY: 1200
+            100% {
+              transform: translate(0, 0) scale(1);
+              opacity: ${Math.random() * 0.5 + 0.5};
             }
           }
-        },
-        interactivity: {
-          detect_on: 'canvas',
-          events: {
-            onhover: {
-              enable: true,
-              mode: 'repulse'
-            },
-            onclick: {
-              enable: true,
-              mode: 'push'
-            },
-            resize: true
-          },
-          modes: {
-            grab: {
-              distance: 400,
-              line_linked: {
-                opacity: 1
-              }
-            },
-            bubble: {
-              distance: 400,
-              size: 40,
+        `;
+        document.head.appendChild(style);
+        
+        // Apply animation
+        particle.style.animation = `${animName} ${duration}s ease-in-out ${delay}s infinite`;
+        
+        // Add to container
+        particlesContainer.appendChild(particle);
+      }
+      
+      // Add mouse follow effect
+      particlesContainer.addEventListener('mousemove', (e) => {
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+        
+        // Get all particles
+        const particles = particlesContainer.querySelectorAll('.ultraviolent-particle');
+        
+        // Animate particles to slightly follow mouse
+        particles.forEach((particle) => {
+          const rect = particle.getBoundingClientRect();
+          const particleX = rect.left + rect.width / 2;
+          const particleY = rect.top + rect.height / 2;
+          
+          // Calculate distance
+          const distX = mouseX - particleX;
+          const distY = mouseY - particleY;
+          const distance = Math.sqrt(distX * distX + distY * distY);
+          
+          // Only affect particles within 200px
+          if (distance < 200) {
+            const moveX = distX * 0.05;
+            const moveY = distY * 0.05;
+            
+            // Apply gentle attraction effect
+            gsap.to(particle, {
+              x: `+=${moveX}`,
+              y: `+=${moveY}`,
               duration: 2,
-              opacity: 8,
-              speed: 3
-            },
-            repulse: {
-              distance: 200,
-              duration: 0.4
-            },
-            push: {
-              particles_nb: 4
-            },
-            remove: {
-              particles_nb: 2
-            }
+              ease: 'power2.out'
+            });
           }
-        },
-        retina_detect: true
+        });
       });
     }
 
@@ -294,34 +306,25 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
     }
   }, []);
 
-  // Barba.js page transitions
+  // Page transitions using GSAP instead of Barba.js
   useEffect(() => {
-    barba.init({
-      transitions: [{
-        name: 'opacity-transition',
-        async leave(data: any) {
-          const tween = gsap.to(data.current.container, {
-            opacity: 0,
-            duration: 0.5
-          });
-          return new Promise<void>(resolve => {
-            tween.eventCallback('onComplete', resolve);
-          });
-        },
-        async enter(data: any) {
-          const tween = gsap.from(data.next.container, {
-            opacity: 0,
-            duration: 0.5
-          });
-          return new Promise<void>(resolve => {
-            tween.eventCallback('onComplete', resolve);
-          });
+    // Create fade-in animation on component mount
+    if (introContainerRef.current) {
+      gsap.fromTo(introContainerRef.current, 
+        { opacity: 0 },
+        { 
+          opacity: 1, 
+          duration: 0.8, 
+          ease: "power2.out" 
         }
-      }]
-    });
+      );
+    }
 
     return () => {
-      barba.destroy();
+      // Clean up any animations on unmount
+      if (introContainerRef.current) {
+        gsap.killTweensOf(introContainerRef.current);
+      }
     };
   }, []);
 
@@ -331,11 +334,10 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
       className="hyper-intro-container"
       data-scroll-container
     >
-      {/* Particle background */}
+      {/* Custom particle background */}
       <div 
         ref={particlesRef} 
-        className="particles-background"
-        id="particles-js"
+        className="ultraviolent-particles-container"
       ></div>
       
       {/* THREE.js canvas */}
