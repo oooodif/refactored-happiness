@@ -22,22 +22,6 @@ export default function LatexInput({
 }: LatexInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isReady, setIsReady] = useState(true);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  
-  // Detect if the device is mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-    };
-  }, []);
 
   const insertTemplate = (templateId: string) => {
     if (!textareaRef.current) return;
@@ -77,254 +61,87 @@ export default function LatexInput({
   useEffect(() => {
     setIsReady(value.trim().length > 0);
   }, [value]);
-  
-  // Set up keyboard detection (for mobile devices)
-  useEffect(() => {
-    // Only apply this on mobile devices
-    if (!isMobile) return;
-    
-    // Detect iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    
-    // Handle when textarea is focused (keyboard opens)
-    const handleFocus = () => {
-      setIsKeyboardVisible(true);
-      document.body.classList.add('keyboard-visible');
-      
-      if (isIOS) {
-        // iOS-specific focus handling
-        document.documentElement.classList.add('ios-keyboard-open');
-        document.body.classList.add('ios-keyboard-open');
-        
-        // Delay scrolling to ensure keyboard is fully visible
-        setTimeout(() => {
-          window.scrollTo(0, 0);
-          if (textareaRef.current) {
-            textareaRef.current.scrollIntoView({ behavior: 'smooth' });
-          }
-        }, 300);
-      } else {
-        // For other mobile browsers
-        setTimeout(() => {
-          if (textareaRef.current) {
-            textareaRef.current.scrollIntoView({ behavior: 'smooth' });
-          }
-        }, 300);
-      }
-    };
-    
-    // Handle when textarea is blurred (keyboard closes)
-    const handleBlur = () => {
-      setIsKeyboardVisible(false);
-      document.body.classList.remove('keyboard-visible');
-      
-      if (isIOS) {
-        document.documentElement.classList.remove('ios-keyboard-open');
-        document.body.classList.remove('ios-keyboard-open');
-      }
-    };
-    
-    // Track original window height for non-iOS detection
-    const originalHeight = window.innerHeight;
-    
-    // Detect keyboard through resize events (more reliable on some mobile browsers)
-    const handleResize = () => {
-      // If window height significantly decreases, a keyboard likely appeared
-      const heightDifference = originalHeight - window.innerHeight;
-      const visualViewportHeight = window.visualViewport?.height || window.innerHeight;
-      
-      if (heightDifference > 100 || visualViewportHeight < originalHeight * 0.8) {
-        setIsKeyboardVisible(true);
-        document.body.classList.add('keyboard-visible');
-        
-        if (isIOS) {
-          document.documentElement.classList.add('ios-keyboard-open');
-          document.body.classList.add('ios-keyboard-open');
-        }
-        
-        setTimeout(() => {
-          if (textareaRef.current) {
-            textareaRef.current.scrollIntoView({ behavior: 'smooth' });
-          }
-        }, 100);
-      } else {
-        setIsKeyboardVisible(false);
-        document.body.classList.remove('keyboard-visible');
-        
-        if (isIOS) {
-          document.documentElement.classList.remove('ios-keyboard-open');
-          document.body.classList.remove('ios-keyboard-open');
-        }
-      }
-    };
-    
-    // Get the textarea element
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.addEventListener('focus', handleFocus);
-      textarea.addEventListener('blur', handleBlur);
-    }
-    
-    // Add resize and visualViewport listeners for more reliable detection
-    window.addEventListener('resize', handleResize);
-    
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-    }
-    
-    return () => {
-      if (textarea) {
-        textarea.removeEventListener('focus', handleFocus);
-        textarea.removeEventListener('blur', handleBlur);
-      }
-      
-      window.removeEventListener('resize', handleResize);
-      
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-      }
-    };
-  }, [isMobile]);
-
-  // Determine the CSS classes for the container based on keyboard visibility
-  const containerClasses = isMobile
-    ? `w-full h-full flex flex-col border-r border-gray-200 ${
-        isKeyboardVisible 
-          ? "mobile-keyboard-open fixed top-0 left-0 right-0 bottom-0 z-[9999] bg-white transition-all duration-300 ease-in-out ios-fullscreen-input" 
-          : "transition-all duration-300 ease-in-out"
-      }`
-    : "w-full h-full flex flex-col border-r border-gray-200";
-    
-  // Extra iOS safeguard - add meta viewport for iOS
-  useEffect(() => {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    
-    if (isIOS) {
-      // Set viewport meta tag
-      const viewportMeta = document.querySelector('meta[name="viewport"]');
-      if (viewportMeta) {
-        viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1');
-      }
-    }
-  }, []);
-  
-  // Force fullscreen when keyboard is visible
-  useEffect(() => {
-    if (isMobile && isKeyboardVisible) {
-      // Delay slightly to let the keyboard fully appear
-      setTimeout(() => {
-        // Force scrolling to the textarea element
-        if (textareaRef.current) {
-          textareaRef.current.focus();
-          window.scrollTo(0, 0); // Reset scroll position
-        }
-        
-        // Apply a full viewport height to ensure we take over the screen
-        const rootElement = document.documentElement;
-        const viewportHeight = window.visualViewport?.height || window.innerHeight;
-        rootElement.style.setProperty('--keyboard-viewport-height', `${viewportHeight}px`);
-      }, 100);
-    }
-  }, [isMobile, isKeyboardVisible]);
 
   return (
-    <div className={containerClasses}>
-      <div className={`p-4 border-b border-gray-200 glass ${isMobile && isKeyboardVisible ? 'shrink-0' : ''}`}>
+    <div className="w-full h-full flex flex-col border-r border-gray-200">
+      <div className="p-4 border-b border-gray-200 glass">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold enhanced-heading">Input</h2>
           <div className="flex items-center space-x-2">
-            {!isKeyboardVisible && (
-              <Select
-                value={documentType}
-                onValueChange={(value) => onDocumentTypeChange(value)}
-              >
-                <SelectTrigger className="glass-card border border-gray-300 text-gray-700 text-sm rounded-md h-9 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="glass-card">
-                  {DOCUMENT_TYPES.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            {isMobile && isKeyboardVisible && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
-                onClick={() => {
-                  if (textareaRef.current) {
-                    textareaRef.current.blur();
-                  }
-                }}
-              >
-                Done
-              </Button>
-            )}
+            <Select
+              value={documentType}
+              onValueChange={(value) => onDocumentTypeChange(value)}
+            >
+              <SelectTrigger className="glass-card border border-gray-300 text-gray-700 text-sm rounded-md h-9 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="glass-card">
+                {DOCUMENT_TYPES.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
+                    {type.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
-        {(!isMobile || !isKeyboardVisible) && (
-          <div className="flex space-x-2 flex-wrap">
+        <div className="flex space-x-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
+            onClick={() => insertTemplate("math")}
+          >
+            <span className="font-mono gradient-text">Σ</span> Math
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
+            onClick={() => insertTemplate("table")}
+          >
+            <span className="font-mono gradient-text">⊞</span> Table
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
+            onClick={() => insertTemplate("figure")}
+          >
+            <span className="font-mono gradient-text">⊛</span> Figure
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
+            onClick={() => insertTemplate("section")}
+          >
+            <span className="font-mono gradient-text">§</span> Section
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
+            onClick={() => insertTemplate("list")}
+          >
+            <span className="font-mono gradient-text">•</span> List
+          </Button>
+          {documentType === 'presentation' && (
             <Button
               variant="outline"
               size="sm"
               className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-              onClick={() => insertTemplate("math")}
+              onClick={() => insertTemplate("slide")}
             >
-              <span className="font-mono gradient-text">Σ</span> Math
+              <span className="font-mono gradient-text">▦</span> New Slide
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-              onClick={() => insertTemplate("table")}
-            >
-              <span className="font-mono gradient-text">⊞</span> Table
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-              onClick={() => insertTemplate("figure")}
-            >
-              <span className="font-mono gradient-text">⊛</span> Figure
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-              onClick={() => insertTemplate("section")}
-            >
-              <span className="font-mono gradient-text">§</span> Section
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-              onClick={() => insertTemplate("list")}
-            >
-              <span className="font-mono gradient-text">•</span> List
-            </Button>
-            {documentType === 'presentation' && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-2 py-1 mb-2 transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
-                onClick={() => insertTemplate("slide")}
-              >
-                <span className="font-mono gradient-text">▦</span> New Slide
-              </Button>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
-      <div className={`flex-1 overflow-auto p-4 bg-gray-50 ${isMobile && isKeyboardVisible ? 'h-full' : ''}`}>
+      <div className="flex-1 overflow-auto p-4 bg-gray-50">
         <textarea
           ref={textareaRef}
-          className={`w-full h-full p-3 rounded-md border border-gray-300 glass-card font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg ${isMobile ? 'transition-all duration-300 ease-in-out transform' : ''}`}
+          className="w-full h-full p-3 rounded-md border border-gray-300 glass-card font-mono text-sm resize-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg"
           placeholder={documentType === 'presentation' 
             ? "Describe your slide show here, paste report or paper here, or design your slides using the buttons above. Use the 'New Slide' button to add slides."
             : "Enter your content here. Use the buttons above to insert templates, or use tags like <MATHEQ>E = mc^2</MATHEQ> for math equations. No LaTeX knowledge required!"}
@@ -332,7 +149,7 @@ export default function LatexInput({
           onChange={(e) => onChange(e.target.value)}
         />
       </div>
-      <div className={`p-4 glass border-t border-gray-200 ${isMobile && isKeyboardVisible ? 'hidden' : 'transition-opacity duration-300 ease-in-out'}`}>
+      <div className="p-4 glass border-t border-gray-200">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
             <span className={isReady ? "text-emerald-600 pulse-animation" : "text-amber-600"}>● </span>
