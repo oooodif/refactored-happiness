@@ -1,14 +1,16 @@
-import { useEffect, useContext } from "react";
+import { useEffect, useContext, useState } from "react";
 import { useRoute, useLocation } from "wouter";
 import { DOCUMENT_TYPES } from "@/lib/constants";
 import { UserContext } from "@/App";
 import { Loader2 } from "lucide-react";
+import SiteLayout from "@/components/layout/site-layout";
 import { getTemplateSeoData, createSchemaScript, updateDocumentSeo } from "@/lib/seo-utils";
 
 export default function TemplateRedirect() {
   const [, params] = useRoute<{ type: string }>("/template/:type");
   const [, navigate] = useLocation();
   const { session } = useContext(UserContext);
+  const [seoTitle, setSeoTitle] = useState<string>("LaTeX Template - AI LaTeX Generator");
   
   useEffect(() => {
     // Get the template type from the URL
@@ -28,6 +30,9 @@ export default function TemplateRedirect() {
     
     // Update document title and meta tags
     updateDocumentSeo(seoData.title, seoData.description);
+    
+    // Update the SEO title for our SiteLayout
+    setSeoTitle(`${seoData.title} - AI LaTeX Generator`);
     
     // Add schema.org JSON-LD structured data
     const head = document.querySelector('head');
@@ -55,13 +60,14 @@ export default function TemplateRedirect() {
   }, [params, navigate, session]);
   
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">AI LaTeX Generator</h1>
-      <h2 className="text-xl mb-6">Loading template...</h2>
-      <div className="flex items-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Preparing template for you</span>
+    <SiteLayout seoTitle={seoTitle}>
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h2 className="text-xl mb-6">Loading template...</h2>
+        <div className="flex items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Preparing template for you</span>
+        </div>
       </div>
-    </div>
+    </SiteLayout>
   );
 }

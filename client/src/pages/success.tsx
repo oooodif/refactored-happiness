@@ -45,7 +45,7 @@ export default function SuccessPage() {
   }
 
   return (
-    <SiteLayout>
+    <SiteLayout seoTitle="Payment Successful - AI LaTeX Generator Subscription Activated">
       <div className="container mx-auto px-4 py-12">
         <Card className="max-w-lg mx-auto">
           <CardHeader className="text-center">

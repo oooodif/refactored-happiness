@@ -23,7 +23,7 @@ export default function UIPlayground() {
   const isEffectActive = (effect: string) => activeEffects.includes(effect);
   
   return (
-    <SiteLayout>
+    <SiteLayout seoTitle="UI Effects Showcase - AI LaTeX Generator">
       <div className="container mx-auto px-4 py-8 overflow-y-auto max-h-screen">
         <div className="max-w-5xl mx-auto">
           <div className="mb-8 text-center">
