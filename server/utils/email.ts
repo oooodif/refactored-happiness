@@ -8,7 +8,7 @@ const client = process.env.POSTMARK_API_KEY
   ? new ServerClient(process.env.POSTMARK_API_KEY)
   : null;
 
-export const FROM_EMAIL = 'no-reply@ailatexgenerator.com';
+export const FROM_EMAIL = 'no-reply@aitexgen.com';
 
 /**
  * Tests the connection to Postmark API
@@ -61,18 +61,18 @@ export async function sendVerificationEmail(
     // Determine the base URL based on the environment
     // For Railway, use the PRIMARY_DOMAIN environment variable
     // This will ensure the verification link works in both local and production environments
-    const baseUrl = process.env.PRIMARY_DOMAIN || process.env.PUBLIC_URL || 'http://localhost:5000';
+    const baseUrl = process.env.PRIMARY_DOMAIN || process.env.PUBLIC_URL || 'http://aitexgen.com';
     const verificationLink = `${baseUrl}/verify-email?token=${verificationToken}`;
     
     const response = await client.sendEmail({
       From: FROM_EMAIL,
       To: email,
-      Subject: 'Verify your AI LaTeX Generator account',
+      Subject: 'Verify your AITexGen account',
       HtmlBody: `
         <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
           <h1 style="color: #2563eb; margin-bottom: 24px;">Verify your email address</h1>
           <p style="margin-bottom: 24px; font-size: 16px; line-height: 24px;">
-            Thank you for signing up for the AI LaTeX Generator! Please click the button below to verify your email address.
+            Thank you for signing up for AITexGen! Please click the button below to verify your email address.
           </p>
           <div style="text-align: center; margin: 32px 0;">
             <a href="${verificationLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">
@@ -92,9 +92,9 @@ export async function sendVerificationEmail(
         </div>
       `,
       TextBody: `
-        Verify your AI LaTeX Generator account
+        Verify your AITexGen account
         
-        Thank you for signing up for the AI LaTeX Generator! Please visit the link below to verify your email address:
+        Thank you for signing up for AITexGen! Please visit the link below to verify your email address:
         
         ${verificationLink}
         
