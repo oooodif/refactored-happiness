@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { TextPlugin } from 'gsap/TextPlugin';
@@ -8,7 +8,6 @@ import 'splitting/dist/splitting-cells.css';
 import barba from '@barba/core';
 import LocomotiveScroll from 'locomotive-scroll';
 import * as THREE from 'three';
-import particlesJS from 'particlesjs';
 import './HyperIntro.css';
 
 // Register GSAP plugins
@@ -62,7 +61,8 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
 
     // Initialize Particles.js with glowing ultraviolet effects
     if (particlesRef.current) {
-      particlesJS.load(particlesRef.current, {
+      // Use the particles function directly from the imported library
+      particles(particlesRef.current, {
         particles: {
           number: {
             value: 80,
