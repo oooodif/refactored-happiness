@@ -871,18 +871,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/webhook/stripe", 
     express.raw({ type: 'application/json' }),
     async (req: Request, res: Response) => {
-      if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
-        return res.status(500).json({ message: "Stripe is not fully configured" });
-      }
-      
-      const sig = req.headers['stripe-signature'] as string;
-      
       try {
+        console.log('🔔 Received Stripe webhook request');
+        
+        if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
+          console.error('❌ Webhook error: Stripe is not fully configured');
+          return res.status(500).json({ message: "Stripe is not fully configured" });
+        }
+        
+        const sig = req.headers['stripe-signature'] as string;
+        if (!sig) {
+          console.error('❌ Webhook error: No Stripe signature in headers');
+          return res.status(400).send('Webhook Error: No Stripe signature provided');
+        }
+        
         // The raw body must be a Buffer for the Stripe signature verification to work
         if (!Buffer.isBuffer(req.body)) {
-          console.error('Webhook error: req.body is not a Buffer');
+          console.error('❌ Webhook error: req.body is not a Buffer, type:', typeof req.body);
           return res.status(400).send('Webhook Error: req.body must be a Buffer');
         }
+        
+        console.log(`💡 Attempting to verify webhook signature with secret: ${process.env.STRIPE_WEBHOOK_SECRET.substring(0, 8)}...`);
         
         const event = stripe.webhooks.constructEvent(
           req.body,
@@ -890,20 +899,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           process.env.STRIPE_WEBHOOK_SECRET
         );
         
-        console.log(`✅ Webhook received: ${event.type}`);
+        console.log(`✅ Webhook verified and received: ${event.type}`);
+        console.log(`📦 Event data: ${JSON.stringify(event.data.object).substring(0, 200)}...`);
         
         // Handle different webhook events using our stripeService
         if (event.type.startsWith('customer.subscription.')) {
+          console.log(`🔄 Processing subscription event: ${event.type}`);
           // Handle subscription events
-          await stripeService.handleSubscriptionEvent(event);
+          const result = await stripeService.handleSubscriptionEvent(event);
+          console.log(`✅ Subscription event processed:`, result);
         } else if (event.type === 'checkout.session.completed') {
+          console.log(`💰 Processing checkout completion event`);
           // Handle checkout completion (refill packs)
-          await stripeService.handleCheckoutCompleted(event);
+          const result = await stripeService.handleCheckoutCompleted(event);
+          console.log(`✅ Checkout event processed:`, result);
+        } else {
+          console.log(`ℹ️ Ignoring unhandled event type: ${event.type}`);
         }
         
         res.json({ received: true });
       } catch (err) {
-        console.error('Webhook error:', err);
+        console.error('❌ Webhook error:', err);
         return res.status(400).send(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
       }
     }
