@@ -125,8 +125,8 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
   // If no PDF data is available, show a placeholder with Generate PDF button
   if (!pdfData) {
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-gray-100 p-4">
-        <div className="bg-white p-8 rounded-lg shadow text-center max-w-md">
+      <div className="h-full flex flex-col items-center justify-center bg-subtle-rose p-4">
+        <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md glass-card depth-3d">
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
             className="h-16 w-16 mx-auto text-gray-400 mb-4" 
@@ -185,10 +185,10 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
 
   // When we have PDF data
   return (
-    <div className="h-full flex flex-col bg-gray-100">
+    <div className="h-full flex flex-col bg-subtle-green">
       <div className="flex-1 overflow-auto p-4">
         <div className="flex flex-col items-center">
-          <div className="w-full max-w-4xl bg-white shadow-md rounded-md overflow-hidden mb-4">
+          <div className="w-full max-w-4xl bg-white shadow-md rounded-md overflow-hidden mb-4 glass-card depth-3d">
             <div className="p-4 border-b border-gray-200 flex justify-between items-center">
               <div>
                 <h3 className="font-medium text-lg truncate">{title || "Generated Document"}</h3>
@@ -273,14 +273,14 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
                 </Button>
               </div>
             ) : isGenerating ? (
-              <div className="flex items-center justify-center h-[650px] bg-gray-100">
-                <div className="text-center">
+              <div className="flex items-center justify-center h-[650px] bg-subtle-blue">
+                <div className="text-center glass-card p-6 rounded-lg depth-3d">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600 mb-2"></div>
                   <p className="text-gray-500">Loading PDF...</p>
                 </div>
               </div>
             ) : (
-              <div className="pdf-container w-full h-[650px] bg-gray-100">
+              <div className="pdf-container w-full h-[650px] bg-subtle-blue">
                 {isHtml ? (
                   <iframe 
                     key={`html-frame-${iframeKey}`}

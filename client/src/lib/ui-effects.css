@@ -218,28 +218,71 @@
 /* === SUBTLE COLORED BACKGROUNDS === */
 
 .bg-subtle-blue {
-  background-color: rgba(239, 246, 255, 0.6); /* Very light blue */
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.6), rgba(219, 234, 254, 0.4), rgba(239, 246, 255, 0.6));
+  background-size: 200% 200%;
+  animation: subtleGradientBlue 15s ease infinite;
   border: 1px solid rgba(219, 234, 254, 0.8);
 }
 
+@keyframes subtleGradientBlue {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
 .bg-subtle-purple {
-  background-color: rgba(243, 232, 255, 0.6); /* Very light purple */
+  background: linear-gradient(135deg, rgba(243, 232, 255, 0.6), rgba(233, 213, 255, 0.4), rgba(216, 180, 254, 0.3), rgba(243, 232, 255, 0.6));
+  background-size: 300% 300%;
+  animation: subtleGradientPurple 18s ease infinite;
   border: 1px solid rgba(233, 213, 255, 0.8);
 }
 
+@keyframes subtleGradientPurple {
+  0% { background-position: 0% 0%; }
+  25% { background-position: 50% 100%; }
+  50% { background-position: 100% 50%; }
+  75% { background-position: 50% 0%; }
+  100% { background-position: 0% 0%; }
+}
+
 .bg-subtle-green {
-  background-color: rgba(236, 253, 245, 0.7); /* Very light green */
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.7), rgba(209, 250, 229, 0.5), rgba(167, 243, 208, 0.3), rgba(236, 253, 245, 0.7));
+  background-size: 300% 300%;
+  animation: subtleGradientGreen 20s ease infinite;
   border: 1px solid rgba(209, 250, 229, 0.8);
 }
 
+@keyframes subtleGradientGreen {
+  0% { background-position: 0% 0%; }
+  33% { background-position: 100% 100%; }
+  66% { background-position: 0% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
 .bg-subtle-amber {
-  background-color: rgba(255, 251, 235, 0.6); /* Very light amber */
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.6), rgba(254, 243, 199, 0.4), rgba(255, 251, 235, 0.6));
+  background-size: 200% 200%;
+  animation: subtleGradientAmber 12s ease infinite;
   border: 1px solid rgba(254, 243, 199, 0.8);
 }
 
+@keyframes subtleGradientAmber {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
 .bg-subtle-rose {
-  background-color: rgba(255, 241, 242, 0.6); /* Very light rose */
+  background: linear-gradient(135deg, rgba(255, 241, 242, 0.6), rgba(254, 226, 226, 0.4), rgba(252, 165, 165, 0.2), rgba(255, 241, 242, 0.6));
+  background-size: 300% 300%;
+  animation: subtleGradientRose 15s ease infinite;
   border: 1px solid rgba(254, 226, 226, 0.8);
+}
+
+@keyframes subtleGradientRose {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
 }
 
 .subtle-shadow {
