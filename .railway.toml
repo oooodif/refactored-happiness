@@ -1,9 +1,9 @@
-# .railway.toml
+# .railway.toml# .railway.toml
 
 [build]
 builder             = "NIXPACKS"
 buildCommand        = "npm run build"
-postBuildCommand    = "echo 'Build complete'"
+pkgs = ["tectonic"]
 
 [deploy]
 preDeployCommand    = "npm run db:push"
