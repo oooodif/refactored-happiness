@@ -159,8 +159,27 @@ DOCUMENT_TYPES = [
   \\usepackage{amssymb}
   \\usepackage{graphicx}
   \\usepackage{hyperref}
-  
-- Set geometry options: \\geometry{margin=1in}
+-Use the following document class and packages:
+     - \documentclass[12pt]{article}
+     - \usepackage[margin=1in]{geometry}
+     - \usepackage{lmodern}
+     - \usepackage{parskip}
+     - \usepackage{hyperref}
+     - \usepackage{microtype}
+     - \usepackage{amsmath}
+-Format the title block as follows:
+     (- Keep only the title, removing author and date information
+     - Add "Overview" to the title)
+-Structure the document with sections:
+     - Divide the content into logical sections with descriptive headers
+     - Use unnumbered sections (\section*{})
+     - Create sections for: Introduction, main topics (2-3 sections), and Conclusion
+-Improve LaTeX formatting:
+     - Use proper LaTeX notation (\LaTeX{}) for all mentions of LaTeX
+     - Format any mathematical expressions properly with \( \) or $ $ delimiters
+     - Use appropriate math commands for mathematical symbols and expressions
+-Maintain the original content while presenting it in a more structured, professional format
+-Set geometry options: \\geometry{margin=1in}
 - Adds sectioning with \\section{}, \\subsection{}, and \\subsubsection{}
 - Includes page numbering and appropriate margins
 - Supports footnotes, citations, and bibliography
@@ -259,11 +278,7 @@ DOCUMENT_TYPES = [
    - Avoid using the 'quote' environment without the quoting package
 7. For all environments in the report class, ensure they are standard LaTeX environments or that the necessary packages are included.
 
-## Usage Instructions
 
-To use this system, provide text content along with any special requirements or desired document type. The system will analyze the content structure, apply appropriate LaTeX formatting, and return complete, compilable LaTeX code that can be processed by any standard LaTeX engine.
-
-For best results, indicate the desired document type from the available options, or allow the system to determine the most appropriate type based on content analysis.
 `;
 
 /**
