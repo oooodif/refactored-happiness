@@ -93,20 +93,28 @@ export default function LatexInput({
         </div>
         <div className="flex space-x-2 items-center">
           <div className="flex-1 mr-2 relative group">
-            <input
-              type="text"
-              ref={notesInputRef}
-              placeholder={hasLatexContent 
-                ? "Enter modification instructions or text to omit..." 
-                : "Notes (available after generation)"}
-              className={`w-full glass-card border border-gray-300 text-sm rounded-md h-9 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                hasLatexContent ? "text-gray-700" : "text-gray-400 bg-gray-50"
-              }`}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              disabled={generating || !hasLatexContent}
-              title={hasLatexContent ? "Enter instructions to modify your LaTeX" : "Generate LaTeX content first to enable modifications"}
-            />
+            <div className="relative w-full">
+              <input
+                type="text"
+                ref={notesInputRef}
+                placeholder={hasLatexContent 
+                  ? "Enter modification instructions or text to omit..." 
+                  : "Notes (available after generation)"}
+                className={`w-full glass-card border border-gray-300 text-sm rounded-md h-9 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  hasLatexContent ? "text-gray-700" : "text-gray-400 bg-gray-50"
+                }`}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                disabled={generating || !hasLatexContent}
+                title={hasLatexContent ? "Enter instructions to modify your LaTeX" : "Generate LaTeX content first to enable modifications"}
+              />
+              {/* This overlay will only show when the input is disabled */}
+              {!hasLatexContent && (
+                <div className="absolute inset-0 bg-gray-200 bg-opacity-50 rounded-md pointer-events-none flex items-center justify-center">
+                  <div className="text-gray-500 text-xs font-medium">Available after generation</div>
+                </div>
+              )}
+            </div>
             {!hasLatexContent && (
               <div className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 -top-10 left-0 bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
                 Generate LaTeX content first to enable notes
