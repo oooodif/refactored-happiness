@@ -134,7 +134,10 @@ DOCUMENT_TYPES = [
   { id: article, name: "Article"}
 **Purpose**: Create academic articles with proper title and section formatting.
 **Enhancements**:
-- Implements title, author, date, and abstract environments
+- Implements title via \maketitle
+, author, via \author{}
+, date, via \date{\today}
+, and abstract environments
 - Adds sectioning with \section, \subsection, and \subsubsection
 - Includes page numbering and appropriate margins
 - Supports footnotes, citations, and bibliography
