@@ -1,0 +1,137 @@
+1:10:29 AM [express] GET /api/auth/me 401 in 0ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:10:30 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:11:08 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:11:09 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:11:10 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:11:11 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:11:11 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:11:12 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:11:29 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:11:30 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:11:31 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:11:32 AM [express] GET /api/auth/me 401 in 0ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:11:33 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:11:34 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:12:05 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:12:06 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:12:07 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:12:19 AM [express] GET /api/auth/me 401 in 0ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:12:20 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:12:21 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:12:21 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:12:22 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:12:23 AM [express] GET /api/auth/me 401 in 0ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:12:26 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:12:27 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:12:28 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:12:53 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:12:54 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:12:55 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:13:08 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:13:09 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:13:10 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:13:10 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:13:11 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+
+No userId in session
+
+1:13:12 AM [express] GET /api/auth/me 401 in 0ms :: {"message":"Not authenticated"}
