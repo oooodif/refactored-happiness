@@ -66,7 +66,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl">
+      <DialogContent className="w-[95vw] max-w-5xl overflow-y-auto max-h-[90vh] md:w-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-gray-800">
             Choose Your Plan
@@ -79,23 +79,23 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         {/* Monthly Subscription Plans */}
         <h3 className="text-lg font-medium text-gray-800 mt-4 mb-2">Monthly Subscription Plans</h3>
         
-        {/* Compact mobile grid view - ensure this displays at appropriate widths */}
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 md:hidden">
+        {/* Mobile & Tablet Grid View - Simplified Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:hidden">
             {/* Free Tier */}
             <div 
               className={cn(
-                "border rounded-lg p-3 bg-white relative",
-                session.tier === SubscriptionTier.Free ? "border-blue-500 bg-blue-50" : "border-gray-200",
+                "border rounded-lg p-4 relative flex flex-col",
+                session.tier === SubscriptionTier.Free ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
                 "cursor-pointer"
               )}
               onClick={() => handleSelectPlan(SubscriptionTier.Free)}
             >
-              <div className="text-sm font-medium">Free</div>
-              <div className="text-lg font-bold mt-1">$0</div>
-              <div className="text-xs text-gray-600 mt-1">{tierLimits[SubscriptionTier.Free]} generations</div>
+              <div className="text-lg font-medium">Free</div>
+              <div className="text-2xl font-bold mt-1">$0</div>
+              <div className="text-sm text-gray-600 mt-1">{tierLimits[SubscriptionTier.Free]} generations</div>
               {session.tier === SubscriptionTier.Free && (
-                <div className="absolute top-1 right-1">
-                  <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute top-2 right-2">
+                  <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -105,18 +105,18 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             {/* Basic Tier */}
             <div 
               className={cn(
-                "border rounded-lg p-3 bg-white relative",
-                session.tier === SubscriptionTier.Basic ? "border-blue-500 bg-blue-50" : "border-gray-200",
+                "border rounded-lg p-4 relative flex flex-col",
+                session.tier === SubscriptionTier.Basic ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
                 "cursor-pointer"
               )}
               onClick={() => handleSelectPlan(SubscriptionTier.Basic)}
             >
-              <div className="text-sm font-medium">Basic</div>
-              <div className="text-lg font-bold mt-1">$0.99</div>
-              <div className="text-xs text-gray-600 mt-1">{tierLimits[SubscriptionTier.Basic]} generations</div>
+              <div className="text-lg font-medium">Basic</div>
+              <div className="text-2xl font-bold mt-1">$0.99</div>
+              <div className="text-sm text-gray-600 mt-1">{tierLimits[SubscriptionTier.Basic]} generations</div>
               {session.tier === SubscriptionTier.Basic && (
-                <div className="absolute top-1 right-1">
-                  <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute top-2 right-2">
+                  <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -126,18 +126,18 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             {/* Standard Tier */}
             <div 
               className={cn(
-                "border rounded-lg p-3 bg-white relative",
-                session.tier === SubscriptionTier.Tier2 ? "border-blue-500 bg-blue-50" : "border-gray-200",
+                "border rounded-lg p-4 relative flex flex-col",
+                session.tier === SubscriptionTier.Tier2 ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
                 "cursor-pointer"
               )}
               onClick={() => handleSelectPlan(SubscriptionTier.Tier2)}
             >
-              <div className="text-sm font-medium">Standard</div>
-              <div className="text-lg font-bold mt-1">$2.99</div>
-              <div className="text-xs text-gray-600 mt-1">{tierLimits[SubscriptionTier.Tier2]} generations</div>
+              <div className="text-lg font-medium">Standard</div>
+              <div className="text-2xl font-bold mt-1">$2.99</div>
+              <div className="text-sm text-gray-600 mt-1">{tierLimits[SubscriptionTier.Tier2]} generations</div>
               {session.tier === SubscriptionTier.Tier2 && (
-                <div className="absolute top-1 right-1">
-                  <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute top-2 right-2">
+                  <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -147,18 +147,18 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             {/* Pro Tier */}
             <div 
               className={cn(
-                "border rounded-lg p-3 bg-white relative",
-                session.tier === SubscriptionTier.Pro ? "border-blue-500 bg-blue-50" : "border-gray-200",
+                "border rounded-lg p-4 relative flex flex-col",
+                session.tier === SubscriptionTier.Pro ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
                 "cursor-pointer"
               )}
               onClick={() => handleSelectPlan(SubscriptionTier.Pro)}
             >
-              <div className="text-sm font-medium">Pro</div>
-              <div className="text-lg font-bold mt-1">$6.99</div>
-              <div className="text-xs text-gray-600 mt-1">{tierLimits[SubscriptionTier.Pro]} generations</div>
+              <div className="text-lg font-medium">Pro</div>
+              <div className="text-2xl font-bold mt-1">$6.99</div>
+              <div className="text-sm text-gray-600 mt-1">{tierLimits[SubscriptionTier.Pro]} generations</div>
               {session.tier === SubscriptionTier.Pro && (
-                <div className="absolute top-1 right-1">
-                  <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute top-2 right-2">
+                  <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -168,18 +168,18 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             {/* Advanced Tier */}
             <div 
               className={cn(
-                "border rounded-lg p-3 bg-white relative",
-                session.tier === SubscriptionTier.Tier4 ? "border-blue-500 bg-blue-50" : "border-gray-200",
+                "border rounded-lg p-4 relative flex flex-col",
+                session.tier === SubscriptionTier.Tier4 ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
                 "cursor-pointer"
               )}
               onClick={() => handleSelectPlan(SubscriptionTier.Tier4)}
             >
-              <div className="text-sm font-medium">Advanced</div>
-              <div className="text-lg font-bold mt-1">$11.99</div>
-              <div className="text-xs text-gray-600 mt-1">{tierLimits[SubscriptionTier.Tier4]} generations</div>
+              <div className="text-lg font-medium">Advanced</div>
+              <div className="text-2xl font-bold mt-1">$11.99</div>
+              <div className="text-sm text-gray-600 mt-1">{tierLimits[SubscriptionTier.Tier4]} generations</div>
               {session.tier === SubscriptionTier.Tier4 && (
-                <div className="absolute top-1 right-1">
-                  <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute top-2 right-2">
+                  <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -189,23 +189,23 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             {/* Power Tier */}
             <div 
               className={cn(
-                "border rounded-lg p-3 bg-white relative",
-                session.tier === SubscriptionTier.Power ? "border-blue-500 bg-blue-50" : "border-blue-100",
+                "border rounded-lg p-4 relative flex flex-col",
+                session.tier === SubscriptionTier.Power ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
                 "cursor-pointer"
               )}
               onClick={() => handleSelectPlan(SubscriptionTier.Power)}
             >
-              <div className="text-sm font-medium">Power</div>
-              <div className="text-lg font-bold mt-1">$19.99</div>
-              <div className="text-xs text-gray-600 mt-1">{tierLimits[SubscriptionTier.Power]} generations</div>
+              <div className="text-lg font-medium">Power</div>
+              <div className="text-2xl font-bold mt-1">$19.99</div>
+              <div className="text-sm text-gray-600 mt-1">{tierLimits[SubscriptionTier.Power]} generations</div>
               {session.tier === SubscriptionTier.Power && (
-                <div className="absolute top-1 right-1">
-                  <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute top-2 right-2">
+                  <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
               )}
-              <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-[8px] px-1 rounded-full">
+              <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
                 Popular
               </div>
             </div>
@@ -461,7 +461,7 @@ function SubscriptionPlanCard({
       <Button
         onClick={() => onSelect(tier)}
         className={cn(
-          "w-full mt-8 transition-colors duration-150 ease-in-out font-medium",
+          "w-full mt-8 transition-colors duration-150 ease-in-out font-medium whitespace-nowrap text-center",
           isCurrentPlan
             ? "bg-gray-100 hover:bg-gray-200 text-gray-700"
             : isPopular
@@ -469,7 +469,12 @@ function SubscriptionPlanCard({
             : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-300"
         )}
       >
-        {isCurrentPlan ? "Current Plan" : `Upgrade to ${name}`}
+        {isCurrentPlan ? "Current Plan" : (
+          <>
+            <span className="hidden md:inline">{`Upgrade to ${name}`}</span>
+            <span className="inline md:hidden">{name}</span>
+          </>
+        )}
       </Button>
     </div>
   );
