@@ -90,7 +90,7 @@ ${latex}
 `;
 
       // Use AI to fix the LaTeX
-      const result = await generateLatex(errorReport, 'article', {
+      const result = await generateLatex(errorReport, 'articles', {
         model: 'gpt-4o'  // Use the most capable model for fixing errors
       });
       

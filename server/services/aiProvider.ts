@@ -376,10 +376,13 @@ function preparePrompt(
     useMath?: boolean;
   }
 ): string {
-  let prompt = content;
+  // Check if content is empty or undefined
+  if (!content || content.trim() === '') {
+    content = 'Generate a simple example document.';
+  }
   
-  // Add document type information
-  prompt = `Document Type: ${documentType}\n\n${prompt}`;
+  // Format the prompt with document type first, then user content clearly marked
+  let prompt = `Document Type: ${documentType}\n\nUSER CONTENT:\n${content}\n`;
   
   // Add options
   if (options) {
@@ -394,12 +397,13 @@ function preparePrompt(
     }
     
     if (optionsText.length > 0) {
-      prompt = `${prompt}\n\nOptions:\n${optionsText.join('\n')}`;
+      prompt = `${prompt}\nOptions:\n${optionsText.join('\n')}`;
     }
   }
   
   // Add specific instructions to prevent unwanted math equations in regenerations
-  prompt = `${prompt}\n\nIMPORTANT: DO NOT ADD ANY MATH EQUATIONS UNLESS EXPLICITLY REQUESTED. DO NOT INSERT $\\sqrt{2}$ OR ANY MATHEMATICAL EXPRESSIONS THAT ARE NOT LITERALLY PRESENT IN THE INPUT TEXT. TREAT ALL TEXT LITERALLY, ESPECIALLY WHEN REGENERATING CONTENT.`;
+  // and emphasize that user content must be incorporated exactly as provided
+  prompt = `${prompt}\n\nIMPORTANT INSTRUCTIONS:\n1. INCORPORATE THE USER CONTENT EXACTLY AS PROVIDED - DO NOT IGNORE OR REPLACE THE TEXT ABOVE.\n2. DO NOT ADD ANY MATH EQUATIONS UNLESS EXPLICITLY REQUESTED.\n3. DO NOT INSERT MATHEMATICAL EXPRESSIONS THAT ARE NOT LITERALLY PRESENT IN THE USER CONTENT.\n4. TREAT ALL USER TEXT LITERALLY, ESPECIALLY WHEN REGENERATING CONTENT.`;
   
   return prompt;
 }
