@@ -66,7 +66,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-5xl overflow-y-auto max-h-[90vh] md:w-auto">
+      <DialogContent className="w-[95vw] max-w-6xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-gray-800">
             Choose Your Plan
@@ -212,11 +212,11 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           </div>
         
         {/* Desktop view with simplified cards - same style as mobile */}
-        <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="hidden md:flex md:flex-wrap justify-center gap-4 lg:grid lg:grid-cols-6">
           {/* Free Tier */}
           <div 
             className={cn(
-              "border rounded-lg p-5 relative flex flex-col",
+              "border rounded-lg p-5 relative flex flex-col w-48",
               session.tier === SubscriptionTier.Free ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
               "cursor-pointer hover:border-blue-300 transition-colors"
             )}
@@ -237,7 +237,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           {/* Basic Tier */}
           <div 
             className={cn(
-              "border rounded-lg p-5 relative flex flex-col",
+              "border rounded-lg p-5 relative flex flex-col w-48",
               session.tier === SubscriptionTier.Basic ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
               "cursor-pointer hover:border-blue-300 transition-colors"
             )}
@@ -258,7 +258,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           {/* Standard Tier */}
           <div 
             className={cn(
-              "border rounded-lg p-5 relative flex flex-col",
+              "border rounded-lg p-5 relative flex flex-col w-48",
               session.tier === SubscriptionTier.Tier2 ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
               "cursor-pointer hover:border-blue-300 transition-colors"
             )}
@@ -279,7 +279,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           {/* Pro Tier */}
           <div 
             className={cn(
-              "border rounded-lg p-5 relative flex flex-col",
+              "border rounded-lg p-5 relative flex flex-col w-48",
               session.tier === SubscriptionTier.Pro ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
               "cursor-pointer hover:border-blue-300 transition-colors"
             )}
@@ -300,7 +300,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           {/* Advanced Tier */}
           <div 
             className={cn(
-              "border rounded-lg p-5 relative flex flex-col",
+              "border rounded-lg p-5 relative flex flex-col w-48",
               session.tier === SubscriptionTier.Tier4 ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
               "cursor-pointer hover:border-blue-300 transition-colors"
             )}
@@ -364,9 +364,9 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             </div>
             
             {/* Desktop view for refill pack */}
-            <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="hidden md:flex md:justify-center">
               <div 
-                className="border border-emerald-200 rounded-lg p-5 bg-emerald-50 relative cursor-pointer flex flex-col"
+                className="border border-emerald-200 rounded-lg p-5 bg-emerald-50 relative cursor-pointer flex flex-col max-w-sm"
                 onClick={() => {
                   onClose();
                   navigate("/refill");
