@@ -2,6 +2,7 @@ import Header from "./header";
 import Footer from "./footer";
 import { ReactNode } from "react";
 import { VisuallyHiddenHeading } from "@/components/seo/visually-hidden-heading";
+import MobileDisclaimer from "@/components/dialogs/mobile-disclaimer";
 
 interface SiteLayoutProps {
   children: ReactNode;
@@ -25,6 +26,9 @@ export default function SiteLayout({
         {children}
       </main>
       {!hideFooter && <Footer />}
+      
+      {/* Mobile disclaimer popup - currently disabled but can be enabled by setting SHOW_MOBILE_DISCLAIMER to true */}
+      <MobileDisclaimer />
     </div>
   );
 }

@@ -176,3 +176,18 @@ export function getUsageColor(used: number, limit: number): string {
   if (percentage >= 70) return "text-amber-600";
   return "text-emerald-600";
 }
+
+/**
+ * Checks if the current device is a mobile device
+ * @returns {boolean} true if the device is mobile
+ */
+export function isMobileDevice(): boolean {
+  // Simple check for mobile devices using window.innerWidth
+  if (typeof window !== 'undefined') {
+    // Check for mobile screen sizes (typically under 768px)
+    return window.innerWidth < 768 || 
+      // Also check user agent as a fallback
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }
+  return false;
+}
