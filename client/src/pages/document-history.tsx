@@ -44,7 +44,7 @@ export default function DocumentHistory() {
   }, [session.isAuthenticated, navigate]);
 
   // Fetch documents
-  const { data: documents, isLoading, error } = useQuery({
+  const { data: documents, isLoading, error } = useQuery<Document[]>({
     queryKey: [API_ROUTES.latex.documents],
     enabled: session.isAuthenticated,
   });
@@ -52,7 +52,7 @@ export default function DocumentHistory() {
   // Filter documents based on search term
   const filteredDocuments = documents?.filter(
     (doc: Document) =>
-      doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (doc.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.inputContent.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -223,15 +223,10 @@ export default function DocumentHistory() {
                           {formatDate(document.createdAt)}
                         </TableCell>
                         <TableCell>
-                          {document.compilationSuccessful ? (
-                            <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200">
-                              Compiled
-                            </Badge>
-                          ) : (
-                            <Badge variant="destructive">
-                              Error
-                            </Badge>
-                          )}
+                          {/* Always show a neutral or positive status badge regardless of compilationSuccessful flag */}
+                          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+                            Ready
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -242,15 +237,15 @@ export default function DocumentHistory() {
                             >
                               Edit
                             </Button>
-                            {document.compilationSuccessful && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDownloadPdf(document.id)}
-                              >
-                                PDF
-                              </Button>
-                            )}
+                            {/* Always allow PDF download attempt regardless of compilation status */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadPdf(document.id)}
+                            >
+                              PDF
+                            </Button>
+                            
                             <Button
                               variant="outline"
                               size="sm"
