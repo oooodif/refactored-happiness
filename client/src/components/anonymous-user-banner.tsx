@@ -26,31 +26,15 @@ export function AnonymousUserBanner({ usageRemaining }: AnonymousUserBannerProps
           <div>
             <p className="mb-2">
               You're currently using the free anonymous mode which allows for 1 free LaTeX conversion.
-              Sign up to get more conversions and access to all features!
+              Sign up from the header to get more conversions and access to all features!
             </p>
-            <div className="flex gap-2 mt-3">
-              <Button asChild size="sm" variant="outline">
-                <Link href="/register">Create Account</Link>
-              </Button>
-              <Button asChild size="sm" variant="outline">
-                <Link href="/login">Login</Link>
-              </Button>
-            </div>
           </div>
         ) : (
           <div>
             <p className="mb-2">
-              You've already used your free LaTeX conversion. Sign up now to get 
+              You've already used your free LaTeX conversion. Sign up from the header to get 
               more conversions and access to all premium features!
             </p>
-            <div className="flex gap-2 mt-3">
-              <Button asChild size="sm">
-                <Link href="/register">Create Account</Link>
-              </Button>
-              <Button asChild size="sm" variant="outline">
-                <Link href="/login">Login</Link>
-              </Button>
-            </div>
           </div>
         )}
       </AlertDescription>
