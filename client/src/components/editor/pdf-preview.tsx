@@ -68,6 +68,24 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
   // Format data for iframe based on content type
   const formattedData = pdfData ? formatData(pdfData, isHtml) : null;
 
+  // Handle loading timeouts
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    
+    if (isGenerating) {
+      // Set a timeout to clear the loading state after 15 seconds if still loading
+      timeoutId = setTimeout(() => {
+        console.log("PDF loading timeout reached");
+        setIsGenerating(false);
+        setErrorMessage("PDF generation timeout. Please try again.");
+      }, 15000);
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isGenerating]);
+
   // Reset generating state when data changes
   useEffect(() => {
     if (pdfData) {
@@ -249,6 +267,16 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
                     className="w-full h-full border-0"
                     title="HTML Preview"
                     sandbox="allow-scripts"
+                    onError={(e) => {
+                      console.error("HTML iframe load error:", e);
+                      setErrorMessage("Failed to load HTML preview. Please try again.");
+                    }}
+                    onLoad={() => {
+                      console.log("HTML iframe loaded successfully");
+                      // Make sure we're not showing loading or error states
+                      setIsGenerating(false);
+                      setErrorMessage(null);
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center">
@@ -257,6 +285,16 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
                         src={formattedData || "about:blank"}
                         className="w-full h-full border-0"
                         title="PDF Preview"
+                        onError={(e) => {
+                          console.error("PDF iframe load error:", e);
+                          setErrorMessage("Failed to load PDF viewer. Please try again.");
+                        }}
+                        onLoad={() => {
+                          console.log("PDF iframe loaded successfully");
+                          // Make sure we're not showing loading or error states
+                          setIsGenerating(false);
+                          setErrorMessage(null);
+                        }}
                       />
                     ) : (
                       <div className="flex items-center justify-center">
