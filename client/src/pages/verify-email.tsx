@@ -94,7 +94,8 @@ export default function VerifyEmail() {
   }, [token]);
   
   const goToLogin = () => {
-    setLocation("/login");
+    // Redirect to home with a verified parameter that will trigger session check
+    setLocation("/?verified=true");
   };
   
   const renderContent = () => {

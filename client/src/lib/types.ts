@@ -28,6 +28,7 @@ export interface UserSession {
     resetDate: string;
   };
   refillPackCredits: number;
+  lastAuthCheck?: number; // Timestamp of last successful auth check
 }
 
 export interface AuthResponse {

@@ -28,16 +28,24 @@ export default function Header() {
   }, [session]);
   
   // This function forces a check of auth status immediately
-  const forceAuthCheck = async () => {
+  const forceAuthCheck = async (retryCount = 0, maxRetries = 1) => {
     try {
-      console.log("FORCE CHECKING AUTH STATUS");
+      // Avoid excessive checks if we just checked (debounce for 2 seconds)
+      const now = Date.now();
+      if (session.lastAuthCheck && now - session.lastAuthCheck < 2000) {
+        console.log("SKIPPING AUTH CHECK - too soon since last check");
+        return;
+      }
+      
+      console.log(`FORCE CHECKING AUTH STATUS (attempt ${retryCount + 1}/${maxRetries + 1})`);
       const response = await fetch(API_ROUTES.auth.me, {
         method: 'GET',
         credentials: 'include',
         headers: {
           'Accept': 'application/json',
           'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
+          'Pragma': 'no-cache',
+          'X-Request-Time': now.toString() // Add timestamp to prevent caching
         }
       });
       
@@ -48,6 +56,13 @@ export default function Header() {
         console.log("FORCE AUTH CHECK SUCCESS:", data);
         
         if (data && data.user) {
+          // Update local storage backup
+          localStorage.setItem('userLoggedIn', 'true');
+          localStorage.setItem('userData', JSON.stringify({
+            username: data.user.username,
+            lastChecked: now
+          }));
+          
           // Update session with user data
           setSession({
             user: data.user,
@@ -59,34 +74,114 @@ export default function Header() {
               limit: data.usageLimit || 3,
               resetDate: data.user.usageResetDate || new Date().toISOString()
             },
-            refillPackCredits: data.user.refillPackCredits || 0
+            refillPackCredits: data.user.refillPackCredits || 0,
+            lastAuthCheck: now
           });
+          
+          // Show a success toast if coming from verification
+          const params = new URLSearchParams(window.location.search);
+          if (params.get('verified') === 'true') {
+            toast({
+              title: "Login successful!",
+              description: "Your email has been verified and you're now logged in.",
+            });
+            
+            // Clear the query param
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
         } else {
           console.log("No user data in response");
           setSession(prev => ({
             ...prev,
             isAuthenticated: false,
-            isLoading: false
+            isLoading: false,
+            lastAuthCheck: now
           }));
         }
+      } else if (response.status === 401 && retryCount < maxRetries) {
+        console.log(`AUTH CHECK FAILED (${response.status}), retrying in 1 second...`);
+        setTimeout(() => {
+          forceAuthCheck(retryCount + 1, maxRetries);
+        }, 1000);
+        return;
       } else {
         console.log("FORCE AUTH CHECK FAILED:", response.status);
         // User is not authenticated
         setSession(prev => ({
           ...prev,
           isAuthenticated: false,
-          isLoading: false
+          isLoading: false,
+          lastAuthCheck: now
         }));
       }
     } catch (error) {
       console.error("FORCE AUTH CHECK ERROR:", error);
-      // On error, maintain current state but set loading to false
-      setSession(prev => ({
-        ...prev,
-        isLoading: false
-      }));
+      // Retry on error if we have retries left
+      if (retryCount < maxRetries) {
+        console.log(`AUTH CHECK ERROR, retrying in 1 second... (${retryCount + 1}/${maxRetries + 1})`);
+        setTimeout(() => {
+          forceAuthCheck(retryCount + 1, maxRetries);
+        }, 1000);
+        return;
+      }
+      
+      // Check if we have a local storage backup
+      const userLoggedIn = localStorage.getItem('userLoggedIn');
+      const userDataStr = localStorage.getItem('userData');
+      const now = Date.now();
+      
+      if (userLoggedIn === 'true' && userDataStr) {
+        try {
+          const userData = JSON.parse(userDataStr);
+          console.log("USING LOCAL STORAGE BACKUP:", userData);
+          
+          // Show warning toast
+          toast({
+            title: "Connection Issue",
+            description: "Using locally stored session data. Some features may be limited.",
+            variant: "destructive"
+          });
+          
+          // Set partial session data
+          setSession(prev => ({
+            ...prev,
+            isAuthenticated: true,
+            isLoading: false,
+            user: {
+              ...prev.user,
+              username: userData.username
+            },
+            lastAuthCheck: now
+          }));
+        } catch (e) {
+          console.error("Failed to parse local storage user data:", e);
+          setSession(prev => ({
+            ...prev,
+            isAuthenticated: false,
+            isLoading: false,
+            lastAuthCheck: now
+          }));
+        }
+      } else {
+        // No backup, set as not authenticated
+        setSession(prev => ({
+          ...prev,
+          isAuthenticated: false,
+          isLoading: false,
+          lastAuthCheck: now
+        }));
+      }
     }
   };
+
+  // Check for query parameters that indicate we're coming from a verification link
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('verified') === 'true') {
+      console.log("DETECTED VERIFICATION REDIRECT - FORCING AUTH CHECK");
+      forceAuthCheck();
+    }
+  }, [location]);
 
   // Perform a force check when the header mounts
   useEffect(() => {

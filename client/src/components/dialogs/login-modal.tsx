@@ -202,9 +202,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           : "You have successfully logged in.",
       });
       
-      // Close the modal and navigate to the home page
+      // Close the modal and navigate to the home page with verified flag to trigger a session check
       onClose();
-      navigate("/");
+      navigate("/?verified=true");
     } catch (error) {
       console.error(showRegister ? "Registration error:" : "Login error:", error);
       toast({
