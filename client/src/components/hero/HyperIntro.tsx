@@ -9,6 +9,7 @@ import barba from '@barba/core';
 import LocomotiveScroll from 'locomotive-scroll';
 import * as THREE from 'three';
 import particlesJS from 'particlesjs';
+import './HyperIntro.css';
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger, TextPlugin);
@@ -26,14 +27,14 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
   
   // Reference for Three.js scene
   const threeScene = useRef<{
-    scene: THREE.Scene;
-    camera: THREE.PerspectiveCamera;
-    renderer: THREE.WebGLRenderer;
-    geometry: THREE.TorusGeometry;
-    material: THREE.MeshNormalMaterial;
-    torus: THREE.Mesh;
-    animate: () => void;
-  }>(null);
+    scene?: THREE.Scene;
+    camera?: THREE.PerspectiveCamera;
+    renderer?: THREE.WebGLRenderer;
+    geometry?: THREE.TorusGeometry;
+    material?: THREE.MeshNormalMaterial;
+    torus?: THREE.Mesh;
+    animate?: () => void;
+  }>({});
 
   // Initialize Splitting.js for text effects
   useEffect(() => {
@@ -44,8 +45,9 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
     });
     
     // Initialize LocomotiveScroll for smooth scrolling
+    const scrollContainer = document.querySelector('[data-scroll-container]');
     const scroll = new LocomotiveScroll({
-      el: document.querySelector('[data-scroll-container]'),
+      el: scrollContainer as HTMLElement,
       smooth: true,
       smartphone: {
         smooth: true
@@ -199,15 +201,13 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
       };
       
       // Store references to objects
-      threeScene.current = {
-        scene,
-        camera,
-        renderer,
-        geometry,
-        material,
-        torus,
-        animate
-      };
+      threeScene.current.scene = scene;
+      threeScene.current.camera = camera;
+      threeScene.current.renderer = renderer;
+      threeScene.current.geometry = geometry;
+      threeScene.current.material = material;
+      threeScene.current.torus = torus;
+      threeScene.current.animate = animate;
       
       // Begin animation
       animate();
@@ -299,16 +299,22 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
     barba.init({
       transitions: [{
         name: 'opacity-transition',
-        leave(data) {
-          return gsap.to(data.current.container, {
+        async leave(data) {
+          const tween = gsap.to(data.current.container, {
             opacity: 0,
             duration: 0.5
           });
+          return new Promise(resolve => {
+            tween.eventCallback('onComplete', resolve);
+          });
         },
-        enter(data) {
-          return gsap.from(data.next.container, {
+        async enter(data) {
+          const tween = gsap.from(data.next.container, {
             opacity: 0,
             duration: 0.5
+          });
+          return new Promise(resolve => {
+            tween.eventCallback('onComplete', resolve);
           });
         }
       }]

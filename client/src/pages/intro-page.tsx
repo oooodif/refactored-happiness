@@ -1,92 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import HyperIntro from '@/components/hero/HyperIntro';
-import '../components/hero/HyperIntro.css';
+import './intro-page.css';
 
+/**
+ * Intro page with animated storytelling experience
+ * Features:
+ * - Ultra-modern animations using GSAP, Three.js, Splitting.js
+ * - Interactive particle system
+ * - Smooth transitions with Barba.js
+ * - Skip button for users who want to directly access the app
+ */
 const IntroPage: React.FC = () => {
   const [, navigate] = useLocation();
-  const [introComplete, setIntroComplete] = useState(false);
-  
-  // Anthropomorphized blobs and glow effects for the background
+  const [showSkipButton, setShowSkipButton] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+
+  // Show skip button after a short delay
   useEffect(() => {
-    // Create glowing blobs
-    const createGlowElements = () => {
-      const container = document.getElementById('intro-container');
-      if (!container) return;
-      
-      // Create ultraviolet glows
-      for (let i = 1; i <= 3; i++) {
-        const glow = document.createElement('div');
-        glow.className = `ultraviolet-glow glow-${i}`;
-        container.appendChild(glow);
-      }
-      
-      // Create animated blobs
-      for (let i = 1; i <= 3; i++) {
-        const blob = document.createElement('div');
-        blob.className = `animated-blob blob-${i}`;
-        container.appendChild(blob);
-      }
-    };
-    
-    createGlowElements();
-    
-    // Create sparkle effect on mouse move
-    const handleMouseMove = (e: MouseEvent) => {
-      // Create sparkle at random intervals
-      if (Math.random() > 0.9) {
-        const sparkle = document.createElement('div');
-        sparkle.className = 'sparkle';
-        sparkle.style.left = `${e.pageX}px`;
-        sparkle.style.top = `${e.pageY}px`;
-        document.body.appendChild(sparkle);
-        
-        // Remove sparkle after animation completes
-        setTimeout(() => {
-          sparkle.remove();
-        }, 1500);
-      }
-    };
-    
-    document.addEventListener('mousemove', handleMouseMove);
-    
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-    };
+    const timer = setTimeout(() => {
+      setShowSkipButton(true);
+    }, 1500); // Show after 1.5 seconds
+
+    return () => clearTimeout(timer);
   }, []);
-  
-  // Handle the completion of the intro animation
+
+  // Handle completion of the intro animation
   const handleIntroComplete = () => {
-    setIntroComplete(true);
+    setIsCompleting(true);
     
-    // Navigate to the main application after a delay
+    // Add the fade-out class to container
+    const container = document.querySelector('.intro-page-container');
+    if (container) {
+      container.classList.add('fade-out');
+    }
+    
+    // Navigate to main app after fade animation completes
     setTimeout(() => {
       navigate('/');
     }, 1000);
   };
-  
-  // Function to skip intro and go directly to the application
-  const handleSkipIntro = () => {
-    setIntroComplete(true);
-    navigate('/');
+
+  // Handle skip button click
+  const handleSkip = () => {
+    handleIntroComplete();
   };
-  
+
   return (
-    <div 
-      id="intro-container" 
-      className={`intro-page-container ${introComplete ? 'fade-out' : ''}`}
-    >
+    <div className={`intro-page-container ${isCompleting ? 'fade-out' : ''}`}>
+      {/* Skip intro button */}
+      {showSkipButton && (
+        <button 
+          className="skip-intro-button"
+          onClick={handleSkip}
+          aria-label="Skip intro animation"
+        >
+          Skip Intro
+        </button>
+      )}
+      
+      {/* Main intro animation component */}
       <HyperIntro onComplete={handleIntroComplete} />
-      
-      {/* Skip button */}
-      <button 
-        className="skip-intro-button"
-        onClick={handleSkipIntro}
-      >
-        Skip Intro
-      </button>
-      
-      {/* Additional UI elements could be added here */}
     </div>
   );
 };
