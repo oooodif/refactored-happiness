@@ -88,11 +88,17 @@ export default function LatexInput({
     
     // Handle when textarea is focused (keyboard opens)
     const handleFocus = () => {
+      // Force immediate keyboard visibility for iOS Safari
       setIsKeyboardVisible(true);
+      
+      // For iOS Safari, we need to add a class to the body
+      document.body.classList.add('keyboard-visible');
       
       // Scroll the textarea into view with a small delay to ensure it works after layout changes
       setTimeout(() => {
         if (textareaRef.current) {
+          // Ensure we're in focus and scrolled properly
+          textareaRef.current.focus();
           textareaRef.current.scrollIntoView({ behavior: 'smooth' });
         }
       }, 300);
@@ -101,6 +107,7 @@ export default function LatexInput({
     // Handle when textarea is blurred (keyboard closes)
     const handleBlur = () => {
       setIsKeyboardVisible(false);
+      document.body.classList.remove('keyboard-visible');
     };
     
     // Detect keyboard through resize events (more reliable on iOS)
@@ -109,9 +116,10 @@ export default function LatexInput({
       const heightDifference = originalHeight - window.innerHeight;
       const visualViewportHeight = window.visualViewport?.height || window.innerHeight;
       
-      // Check if the height change is significant (keyboard appearance)
-      if (heightDifference > 150 || visualViewportHeight < originalHeight * 0.75) {
+      // More aggressive detection for iOS Safari
+      if (heightDifference > 100 || visualViewportHeight < originalHeight * 0.8) {
         setIsKeyboardVisible(true);
+        document.body.classList.add('keyboard-visible');
         
         // When keyboard appears through resize, scroll textarea into view
         if (textareaRef.current) {
@@ -119,6 +127,7 @@ export default function LatexInput({
         }
       } else {
         setIsKeyboardVisible(false);
+        document.body.classList.remove('keyboard-visible');
       }
     };
     
@@ -154,10 +163,28 @@ export default function LatexInput({
   const containerClasses = isMobile
     ? `w-full h-full flex flex-col border-r border-gray-200 ${
         isKeyboardVisible 
-          ? "mobile-keyboard-open fixed top-0 left-0 right-0 bottom-0 z-50 bg-white transition-all duration-300 ease-in-out" 
+          ? "mobile-keyboard-open fixed top-0 left-0 right-0 bottom-0 z-[9999] bg-white transition-all duration-300 ease-in-out ios-fullscreen-input" 
           : "transition-all duration-300 ease-in-out"
       }`
     : "w-full h-full flex flex-col border-r border-gray-200";
+    
+  // Extra safeguard for forcing fullscreen on iOS
+  useEffect(() => {
+    if (isMobile && isKeyboardVisible) {
+      // Delay slightly to let the keyboard fully appear
+      setTimeout(() => {
+        // Force scrolling to the textarea element
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          window.scrollTo(0, 0); // Reset scroll position
+        }
+        
+        // Apply a full viewport height to ensure we take over the screen
+        const rootElement = document.documentElement;
+        rootElement.style.setProperty('--keyboard-viewport-height', `${window.visualViewport?.height || window.innerHeight}px`);
+      }, 100);
+    }
+  }, [isMobile, isKeyboardVisible]);
 
   return (
     <div className={containerClasses}>
