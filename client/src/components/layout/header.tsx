@@ -12,7 +12,7 @@ import { Loader2 } from "lucide-react";
 
 export default function Header() {
   const [location, navigate] = useLocation();
-  const { session, setSession } = useContext(UserContext);
+  const { session, setSession, checkAndUpdateSession } = useContext(UserContext);
   const { toast } = useToast();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
@@ -326,7 +326,7 @@ export default function Header() {
     });
     
     try {
-      // Force auth check with retries (this is a better approach than reloading the page)
+      // Use the existing forceAuthCheck function with more retries
       await forceAuthCheck(0, 3);
       
       toast({

@@ -212,6 +212,30 @@ function App() {
     });
   }, []);
 
+  // Add a loading timeout to ensure we never stay in loading state forever
+  useEffect(() => {
+    if (session.isLoading) {
+      // Create a timeout to force the loading state to resolve after 5 seconds
+      console.log("Setting loading timeout failsafe");
+      const loadingTimeout = setTimeout(() => {
+        console.log("Loading timeout triggered - forcing loading state to resolve");
+        setSession(prev => {
+          if (prev.isLoading) {
+            return {
+              ...prev,
+              isLoading: false
+            };
+          }
+          return prev;
+        });
+      }, 5000); // 5 second timeout
+      
+      return () => {
+        clearTimeout(loadingTimeout);
+      };
+    }
+  }, [session.isLoading]);
+  
   // Initial auth check on app start
   useEffect(() => {
     console.log("INITIAL AUTH CHECK STARTED");
