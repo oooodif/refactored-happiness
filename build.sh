@@ -3,8 +3,11 @@
 # Update package lists
 apt-get update -y
 
-# Install necessary dependencies
-apt-get install -y curl unzip build-essential libfontconfig1-dev libharfbuzz-dev libfreetype6-dev libgraphite2-dev libicu-dev libssl-dev zlib1g-dev
+# Install necessary dependencies and fonts
+apt-get install -y curl unzip build-essential libfontconfig1-dev libharfbuzz-dev libfreetype6-dev libgraphite2-dev libicu-dev libssl-dev zlib1g-dev \
+texlive-fonts-recommended texlive-fonts-extra \
+texlive-latex-base texlive-latex-recommended \
+texlive-science texlive-pictures
 
 # Download and install Tectonic binary
 curl --proto '=https' --tlsv1.2 -fsSL https://drop-sh.fullyjustified.net | sh

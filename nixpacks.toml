@@ -1,5 +1,5 @@
 [phases.setup]
-aptPkgs = ["build-essential", "fontconfig", "libfontconfig1-dev", "libharfbuzz-dev", "libfreetype6-dev", "libgraphite2-dev", "libicu-dev", "libssl-dev", "zlib1g-dev", "curl", "unzip"]
+aptPkgs = ["build-essential", "fontconfig", "libfontconfig1-dev", "libharfbuzz-dev", "libfreetype6-dev", "libgraphite2-dev", "libicu-dev", "libssl-dev", "zlib1g-dev", "curl", "unzip", "texlive-fonts-recommended", "texlive-fonts-extra", "texlive-latex-base", "texlive-latex-recommended", "texlive-science", "texlive-pictures"]
 
 [phases.build]
 cmds = [
