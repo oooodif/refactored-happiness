@@ -148,7 +148,7 @@ export default function PrivacyPolicy() {
       </motion.div>
       
       <div className="container max-w-4xl mx-auto py-12 px-4 relative">
-        <div className="gradient-animation opacity-30" />
+        <div className="gradient-animation opacity-50" />
         <AnimatedSection delay={0.2}>
           <div className="flex justify-between items-center mb-10">
             <p className="text-lg font-medium text-gray-600 dark:text-gray-400">
@@ -184,7 +184,15 @@ export default function PrivacyPolicy() {
                   { title: "LaTeX Generation Data", description: "Input content you provide and the LaTeX content generated" },
                 ].map((item, i) => (
                   <AnimatedSection key={i} delay={0.1 * i}>
-                    <div className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-md border border-gray-100 dark:border-gray-700 h-full">
+                    <div 
+                      className="p-6 rounded-xl h-full transition-all duration-300 cursor-default
+                        bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm
+                        shadow-md border border-gray-100/80 dark:border-gray-700/80 
+                        hover:shadow-lg hover:translate-y-[-3px] 
+                        hover:bg-white/90 dark:hover:bg-gray-800/90
+                        hover:border-blue-100/50 dark:hover:border-blue-900/50
+                        hover:backdrop-blur-md"
+                    >
                       <h3 className="text-xl font-semibold mb-3 text-blue-600 dark:text-blue-400">{item.title}</h3>
                       <p className="text-gray-600 dark:text-gray-400">{item.description}</p>
                     </div>
@@ -211,7 +219,15 @@ export default function PrivacyPolicy() {
                   "Process payments and maintain records",
                 ].map((item, i) => (
                   <AnimatedSection key={i} delay={0.05 * i}>
-                    <div className="flex items-start space-x-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                    <div className="flex items-start space-x-3 p-4 rounded-lg
+                          transition-all duration-300 cursor-default
+                          bg-gray-50/80 dark:bg-gray-800/50 backdrop-blur-sm
+                          border border-transparent 
+                          hover:shadow-lg hover:translate-y-[-2px] 
+                          hover:bg-gray-50/90 dark:hover:bg-gray-800/60
+                          hover:border-blue-100/40 dark:hover:border-blue-900/30
+                          hover:backdrop-blur-md"
+                    >
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-xs">
                         {i + 1}
                       </div>
@@ -228,7 +244,14 @@ export default function PrivacyPolicy() {
             <SectionHeading number="3" title="Data Retention & Security" />
             <div className="grid md:grid-cols-2 gap-8">
               <AnimatedSection>
-                <div className="h-full p-6 rounded-xl bg-white dark:bg-gray-800 shadow-md border border-gray-100 dark:border-gray-700 relative overflow-hidden">
+                <div className="h-full p-6 rounded-xl relative overflow-hidden
+                  transition-all duration-300 cursor-default
+                  bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm
+                  shadow-md border border-gray-100/80 dark:border-gray-700/80 
+                  hover:shadow-lg hover:translate-y-[-3px] 
+                  hover:bg-white/90 dark:hover:bg-gray-800/90
+                  hover:border-blue-100/50 dark:hover:border-blue-900/50
+                  hover:backdrop-blur-md">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blue-500/10 to-transparent rounded-bl-full"></div>
                   <h3 className="text-xl font-semibold mb-4 text-blue-600 dark:text-blue-400">Data Retention</h3>
                   <p className="relative z-10 text-gray-700 dark:text-gray-300">
@@ -239,7 +262,14 @@ export default function PrivacyPolicy() {
               </AnimatedSection>
               
               <AnimatedSection delay={0.1}>
-                <div className="h-full p-6 rounded-xl bg-white dark:bg-gray-800 shadow-md border border-gray-100 dark:border-gray-700 relative overflow-hidden">
+                <div className="h-full p-6 rounded-xl relative overflow-hidden
+                  transition-all duration-300 cursor-default
+                  bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm
+                  shadow-md border border-gray-100/80 dark:border-gray-700/80 
+                  hover:shadow-lg hover:translate-y-[-3px] 
+                  hover:bg-white/90 dark:hover:bg-gray-800/90
+                  hover:border-cyan-100/50 dark:hover:border-cyan-900/50
+                  hover:backdrop-blur-md">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-cyan-500/10 to-transparent rounded-bl-full"></div>
                   <h3 className="text-xl font-semibold mb-4 text-cyan-600 dark:text-cyan-400">Data Security</h3>
                   <p className="relative z-10 text-gray-700 dark:text-gray-300">
@@ -283,7 +313,14 @@ export default function PrivacyPolicy() {
                       linkText: "Learn how Google uses data"
                     },
                   ].map((item, i) => (
-                    <AnimatedSection key={i} delay={0.1 * i} className="flex gap-4 p-4 rounded-lg bg-white/50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
+                    <AnimatedSection key={i} delay={0.1 * i} className="flex gap-4 p-4 rounded-lg 
+                      transition-all duration-300 
+                      bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm
+                      border border-gray-100/70 dark:border-gray-700/70
+                      hover:shadow-lg hover:translate-y-[-3px] 
+                      hover:bg-white/80 dark:hover:bg-gray-800/80
+                      hover:border-blue-100/50 dark:hover:border-blue-900/50
+                      hover:backdrop-blur-md">
                       <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -329,7 +366,14 @@ export default function PrivacyPolicy() {
                   "Withdraw consent at any time"
                 ].map((right, i) => (
                   <AnimatedSection key={i} delay={0.05 * i}>
-                    <div className="p-4 h-full rounded-lg bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 shadow border border-gray-100 dark:border-gray-700 flex items-center">
+                    <div className="p-4 h-full rounded-lg flex items-center
+                      transition-all duration-300 
+                      bg-gradient-to-br from-gray-50/80 to-white/80 dark:from-gray-800/80 dark:to-gray-700/80 
+                      backdrop-blur-sm shadow border border-gray-100/70 dark:border-gray-700/70
+                      hover:shadow-lg hover:translate-y-[-3px] 
+                      hover:from-gray-50/90 hover:to-white/90 dark:hover:from-gray-800/90 dark:hover:to-gray-700/90
+                      hover:border-blue-100/50 dark:hover:border-blue-900/50
+                      hover:backdrop-blur-md">
                       <div className="w-2 h-2 rounded-full bg-blue-500 mr-3 flex-shrink-0"></div>
                       <p className="text-gray-700 dark:text-gray-300">{right}</p>
                     </div>
@@ -368,7 +412,8 @@ export default function PrivacyPolicy() {
           <section className="mt-16">
             <AnimatedSection>
               <div className="rounded-2xl overflow-hidden bg-gradient-to-r from-blue-500 to-cyan-500 p-[2px]">
-                <div className="bg-white dark:bg-gray-900 rounded-2xl p-8">
+                <div className="bg-white/90 dark:bg-gray-900/90 rounded-2xl p-8 relative overflow-hidden backdrop-blur-sm">
+                  <div className="gradient-animation opacity-30 z-0" />
                   <h3 className="text-2xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500">Contact Us</h3>
                   <p className="text-gray-700 dark:text-gray-300 mb-4">
                     If you have any questions about this Privacy Policy, please contact us at:
