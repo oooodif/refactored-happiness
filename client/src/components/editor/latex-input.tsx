@@ -95,26 +95,50 @@ export default function LatexInput({
           <div className="flex-1 mr-2">
             <input
               type="text"
-              id="notes-input"
-              placeholder="Enter notes or omission instructions here..."
+              ref={notesInputRef}
+              placeholder={hasLatexContent 
+                ? "Enter modification instructions or text to omit..." 
+                : "Enter notes for generation..."}
               className="w-full glass-card border border-gray-300 text-gray-700 text-sm rounded-md h-9 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              disabled={generating}
             />
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-3 py-1 transition-all duration-300 hover:shadow-md hover:bg-red-50 hover:border-red-300"
-            onClick={() => {
-              const notesInput = document.getElementById('notes-input') as HTMLInputElement;
-              if (notesInput && notesInput.value.trim()) {
-                // Format the omission with tags
-                const omitText = `<OMIT>${notesInput.value.trim()}</OMIT>`;
-                notesInput.value = omitText;
-              }
-            }}
-          >
-            <span className="font-mono text-red-600 mr-1">✂</span> OMIT
-          </Button>
+          {hasLatexContent && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-3 py-1 transition-all duration-300 hover:shadow-md hover:bg-red-50 hover:border-red-300"
+              onClick={() => {
+                if (notes.trim() && onModify) {
+                  // Call modify with isOmit=true
+                  onModify(notes.trim(), true);
+                  setNotes("");
+                }
+              }}
+              disabled={!notes.trim() || generating}
+            >
+              <span className="font-mono text-red-600 mr-1">✂</span> OMIT
+            </Button>
+          )}
+          {hasLatexContent && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs glass-card border border-gray-300 text-gray-700 rounded px-3 py-1 transition-all duration-300 hover:shadow-md hover:bg-blue-50 hover:border-blue-300"
+              onClick={() => {
+                if (notes.trim() && onModify) {
+                  // Call modify with isOmit=false
+                  onModify(notes.trim(), false);
+                  setNotes("");
+                }
+              }}
+              disabled={!notes.trim() || generating}
+            >
+              <span className="font-mono text-blue-600 mr-1">✏️</span> MODIFY
+            </Button>
+          )}
         </div>
       </div>
       <div className="flex-1 overflow-auto p-4 bg-gray-50">

@@ -7,7 +7,7 @@ import LatexInput from "@/components/editor/latex-input";
 import LatexOutput from "@/components/editor/latex-output";
 import PDFPreview from "@/components/editor/pdf-preview";
 import ErrorNotification from "@/components/dialogs/error-notification";
-import { generateLatex, compileLatex, saveDocument, extractTitleFromLatex } from "@/lib/aiProvider";
+import { generateLatex, compileLatex, saveDocument, extractTitleFromLatex, modifyLatex } from "@/lib/aiProvider";
 import { downloadPdf } from "@/lib/utils";
 import { TabItem, EditorState, ErrorNotificationData } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
@@ -451,6 +451,69 @@ export default function Home() {
       toast({
         title: "Generation Failed",
         description: error instanceof Error ? error.message : "Failed to generate LaTeX. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle modifying existing LaTeX with notes or OMIT instructions
+  const handleModifyLatex = async (notes: string, isOmit: boolean) => {
+    if (!editorState.latexContent) {
+      toast({
+        title: "No LaTeX content to modify",
+        description: "Please generate LaTeX content first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Verify user's authentication and usage limits
+    if (!session.isAuthenticated) {
+      setShowAuthPrompt(true);
+      return;
+    }
+    
+    if (session.isAuthenticated && session.usage.current >= session.usage.limit) {
+      setErrorNotification({
+        title: "Usage Limit Reached",
+        message: `You've reached your monthly limit of ${session.usage.limit} generations. Upgrade your plan to get more.`,
+        actions: [
+          {
+            label: "Upgrade Plan",
+            action: () => navigate("/subscribe"),
+          },
+        ],
+      });
+      return;
+    }
+    
+    setEditorState(prev => ({ ...prev, isGenerating: true }));
+    
+    try {
+      // Call the API to modify the LaTeX with the existing content and modification notes
+      const result = await modifyLatex(editorState.latexContent, notes, isOmit);
+      
+      setEditorState(prev => ({
+        ...prev,
+        latexContent: result.latex,
+        compilationResult: null, // Reset compilation result as the LaTeX has changed
+        isGenerating: false,
+      }));
+      
+      toast({
+        title: isOmit ? "Content Removed" : "Content Modified",
+        description: isOmit 
+          ? "The specified content has been removed from your LaTeX." 
+          : "Your LaTeX has been modified according to your instructions.",
+      });
+      
+    } catch (error) {
+      console.error("Error modifying LaTeX:", error);
+      setEditorState(prev => ({ ...prev, isGenerating: false }));
+      
+      toast({
+        title: "Modification Failed",
+        description: error instanceof Error ? error.message : "Failed to modify LaTeX. Please try again.",
         variant: "destructive",
       });
     }
