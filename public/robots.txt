@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Don't index administrative or authentication pages
+Disallow: /api/
+Disallow: /verify-email
+Disallow: /success
+
+# Sitemap location
+Sitemap: https://aitexgen.com/sitemap.xml
