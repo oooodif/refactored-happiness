@@ -428,9 +428,19 @@ function extractLatexFromResponse(response: string): string {
     return codeMatch[1].trim();
   }
   
-  // If no code blocks found, try to find LaTeX by presence of \documentclass
+  // If no code blocks found, try to find LaTeX content by looking for \documentclass and \end{document}
+  const documentClassRegex = /\\documentclass[\s\S]*?\\end{document}/;
+  const documentClassMatch = response.match(documentClassRegex);
+  
+  if (documentClassMatch && documentClassMatch[0]) {
+    return documentClassMatch[0].trim();
+  }
+  
+  // If we just have \documentclass but not a full match
   if (response.includes('\\documentclass')) {
-    return response.trim();
+    // Find the starting position of \documentclass
+    const startPos = response.indexOf('\\documentclass');
+    return response.substring(startPos).trim();
   }
   
   // Return the whole response as a fallback
