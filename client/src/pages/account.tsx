@@ -37,9 +37,17 @@ export default function Account() {
 
   // Force a session check when the component mounts
   useEffect(() => {
-    const verifySession = async () => {
+    const verifySession = async (retryCount = 0, maxRetries = 2) => {
       try {
-        console.log("Account page: Verifying session...");
+        console.log(`Account page: Verifying session... (attempt ${retryCount + 1}/${maxRetries + 1})`);
+        
+        // If we already have a valid session, skip the check
+        if (session.isAuthenticated && session.user && !session.isLoading) {
+          console.log("Account page: Already has valid session:", session.user.username);
+          setPageIsLoading(false);
+          return;
+        }
+        
         const authData = await checkAuthStatus();
         
         if (authData.isAuthenticated && authData.user) {
@@ -59,25 +67,45 @@ export default function Account() {
             refillPackCredits: authData.user.refillPackCredits || 0,
             lastAuthCheck: Date.now()
           });
+          setPageIsLoading(false);
+        } else if (retryCount < maxRetries) {
+          // Not authenticated but we have retries left
+          console.log(`Account page: Auth check failed, retrying (${retryCount + 1}/${maxRetries})...`);
+          
+          // Wait 1 second before retrying
+          setTimeout(() => {
+            verifySession(retryCount + 1, maxRetries);
+          }, 1000);
+          return;
         } else {
-          console.log("Account page: Not authenticated");
+          console.log("Account page: Not authenticated after retries");
           toast({
             title: "Session Expired",
             description: "Your session has expired. Please log in again.",
             variant: "destructive"
           });
+          setPageIsLoading(false);
           navigate("/");
         }
       } catch (error) {
         console.error("Account page: Error verifying session:", error);
+        
+        // Retry on error
+        if (retryCount < maxRetries) {
+          console.log(`Account page: Error, retrying (${retryCount + 1}/${maxRetries})...`);
+          setTimeout(() => {
+            verifySession(retryCount + 1, maxRetries);
+          }, 1000);
+          return;
+        }
+        
         toast({
           title: "Error Loading Account",
           description: "There was a problem loading your account information. Please try again.",
           variant: "destructive"
         });
-        navigate("/");
-      } finally {
         setPageIsLoading(false);
+        navigate("/");
       }
     };
     

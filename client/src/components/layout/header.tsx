@@ -28,7 +28,7 @@ export default function Header() {
   }, [session]);
   
   // This function forces a check of auth status immediately
-  const forceAuthCheck = async (retryCount = 0, maxRetries = 1) => {
+  const forceAuthCheck = async (retryCount = 0, maxRetries = 2) => {
     try {
       // Avoid excessive checks if we just checked (debounce for 2 seconds)
       const now = Date.now();
@@ -37,7 +37,28 @@ export default function Header() {
         return;
       }
       
+      // If we're already authenticated and this is a periodic check, don't show loading state
+      const isPeriodicCheck = retryCount === 0 && session.isAuthenticated;
+      
+      // Only set loading state if we're not already authenticated
+      if (!isPeriodicCheck && !session.isAuthenticated) {
+        setSession(prev => ({
+          ...prev,
+          isLoading: true
+        }));
+      }
+      
       console.log(`FORCE CHECKING AUTH STATUS (attempt ${retryCount + 1}/${maxRetries + 1})`);
+      const timeoutId = setTimeout(() => {
+        // If it takes more than 5 seconds, stop showing loading state
+        if (!isPeriodicCheck) {
+          setSession(prev => ({
+            ...prev,
+            isLoading: false
+          }));
+        }
+      }, 5000);
+      
       const response = await fetch(API_ROUTES.auth.me, {
         method: 'GET',
         credentials: 'include',
@@ -49,6 +70,7 @@ export default function Header() {
         }
       });
       
+      clearTimeout(timeoutId);
       console.log("FORCE AUTH CHECK RESPONSE:", response.status);
       
       if (response.ok) {
