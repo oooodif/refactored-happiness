@@ -2,13 +2,16 @@
 
 [phases.setup]
 nixPkgs = [
+  # Runtime environments
+  "nodejs_20",
+  "nodePackages.typescript",
   # Tectonic and its dependencies
   "tectonic",
   "fontconfig",
   "harfbuzz",
   "openssl",
   # Ensure necessary fonts are available
-  "dejavu_fonts",
+  "dejavu_fonts", 
   "cm_unicode",
   "lmodern",
   # Note: latin-modern-math was removed - package doesn't exist in Nixpkgs
@@ -29,4 +32,4 @@ cmds = [
 ]
 
 [start]
-cmd = "NODE_ENV=production NODE_PATH=. tsx server/index.ts"
+cmd = "NODE_ENV=production NODE_PATH=. npx tsx server/index.ts"

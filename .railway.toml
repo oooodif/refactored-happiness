@@ -3,7 +3,7 @@
 [build]
 builder             = "NIXPACKS"
 buildCommand        = "npm run build"
-packages            = "tectonic"
+packages            = "nodejs_20 nodePackages.typescript tectonic"
 
 [deploy]
 preDeployCommand    = "npm run db:push"
