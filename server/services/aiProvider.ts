@@ -467,19 +467,55 @@ export async function modifyLatex(
       ? `EXISTING LATEX CODE:\n\`\`\`latex\n${latexContent}\n\`\`\`\n\nREMOVE THE FOLLOWING CONTENT FROM THE LATEX CODE (make no other changes):\n${notes}\n\nReturn the complete modified LaTeX code with the specified content removed.`
       : `EXISTING LATEX CODE:\n\`\`\`latex\n${latexContent}\n\`\`\`\n\nMODIFY THE LATEX CODE ACCORDING TO THESE INSTRUCTIONS:\n${notes}\n\nReturn the complete modified LaTeX code with the requested changes applied.`;
 
-    // Default to using Groq for modifications
-    // This ensures good quality at lower cost
-    const modelToUse = options.model || 'llama-3-70b-8192';
+    // Try the specified model first
+    if (options.model) {
+      try {
+        const latex = await callProviderWithModel(options.model, prompt);
+        const modifiedLatex = extractLatexFromResponse(latex);
+        return {
+          success: true,
+          latex: modifiedLatex
+        };
+      } catch (error) {
+        console.error(`Error with specified model ${options.model}:`, error);
+        // Fall through to provider chain
+      }
+    }
     
-    // Use the provider selection logic we already have
-    const result = await callProviderWithModel(modelToUse, prompt);
+    // Provider fallback chain - try providers in order
+    const providerChain = determineProviderChain();
     
-    // Extract the LaTeX from the response
-    const modifiedLatex = extractLatexFromResponse(result);
+    for (const provider of providerChain) {
+      try {
+        // Skip if provider is unavailable or rate limited
+        if (!providerStatus[provider].available || providerStatus[provider].rateLimited) {
+          continue;
+        }
+        
+        // Get default model for the provider
+        const defaultModel = Object.keys(providers[provider].models)[0];
+        
+        // Call the provider
+        const latex = await providers[provider].generateLatex(prompt, defaultModel);
+        console.log(`Successfully modified LaTeX using ${providers[provider].name}`);
+        
+        // Extract the LaTeX from the response
+        const modifiedLatex = extractLatexFromResponse(latex);
+        
+        return {
+          success: true,
+          latex: modifiedLatex
+        };
+      } catch (error) {
+        console.error(`Error with provider ${provider}:`, error);
+        // Continue to next provider
+      }
+    }
     
+    // If we get here, all providers failed
     return {
-      success: true,
-      latex: modifiedLatex
+      success: false,
+      error: "All available AI providers failed to process your request. Please try again later."
     };
   } catch (error) {
     console.error('Error modifying LaTeX:', error);
