@@ -30,10 +30,10 @@ export function AnonymousUserBanner({ usageRemaining }: AnonymousUserBannerProps
             </p>
             <div className="flex gap-2 mt-3">
               <Button asChild size="sm" variant="outline">
-                <Link href="/auth?tab=register">Create Account</Link>
+                <Link href="/register">Create Account</Link>
               </Button>
               <Button asChild size="sm" variant="outline">
-                <Link href="/auth?tab=login">Login</Link>
+                <Link href="/login">Login</Link>
               </Button>
             </div>
           </div>
@@ -45,10 +45,10 @@ export function AnonymousUserBanner({ usageRemaining }: AnonymousUserBannerProps
             </p>
             <div className="flex gap-2 mt-3">
               <Button asChild size="sm">
-                <Link href="/auth?tab=register">Create Account</Link>
+                <Link href="/register">Create Account</Link>
               </Button>
               <Button asChild size="sm" variant="outline">
-                <Link href="/auth?tab=login">Login</Link>
+                <Link href="/login">Login</Link>
               </Button>
             </div>
           </div>
