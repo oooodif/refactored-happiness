@@ -1,0 +1,116 @@
+
+
+copying path '/nix/store/pv4y28xgcblpas5sc23317gp19vsnzfg-typescript-5.7.2' from 'https://cache.nixos.org';...
+
+building '/nix/store/zvqlpd1xr4kppsc61plpfsaw8nfwpj7q-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7-env.drv'...
+
+created 564 symlinks in user environment
+
+building '/nix/store/jc67ngz23l0mwj9nhidv6ccavy2jy2gy-user-environment.drv'...
+
+removing old generations of profile /nix/var/nix/profiles/per-user/root/profile
+
+removing profile version 2
+
+removing old generations of profile /nix/var/nix/profiles/per-user/root/channels
+
+removing old generations of profile /nix/var/nix/profiles/per-user/root/profile
+
+removing old generations of profile /nix/var/nix/profiles/per-user/root/channels
+
+finding garbage collector roots...
+
+removing stale link from '/nix/var/nix/gcroots/auto/v73nmmh5d8van4ja5c8jn0gjlwhxbz3a' to '/nix/var/nix/profiles/per-user/root/profile-2-link'
+
+deleting garbage...
+
+deleting '/nix/store/lwi59jcfwk2lnrakmm1y5vw85hj3n1bi-source'
+
+deleting '/nix/store/4ig84cyqi6qy4n0sanrbzsw1ixa497jx-stdenv-linux'
+
+deleting '/nix/store/d29r1bdmlvwmj52apgcdxfl1mm9c5782-update-autotools-gnu-config-scripts-hook'
+
+deleting '/nix/store/b5ada0c9y9cj43l0ccw56jc0l1sdkyrs-libraries'
+
+deleting '/nix/store/1m67ipsk39xvhyqrxnzv2m2p48pil8kl-gnu-config-2024-01-01'
+
+deleting '/nix/store/5yja5dpk2qw1v5mbfbl2d7klcdfrh90w-patch-2.7.6'
+
+deleting '/nix/store/74h4z8k82pmp24xryflv4lxkz8jlpqqd-ed-1.20.2'
+
+deleting '/nix/store/jqrz1vq5nz4lnv9pqzydj0ir58wbjfy1-findutils-4.10.0'
+
+deleting '/nix/store/abm77lnrkrkb58z6xp1qwjcr1xgkcfwm-gnused-4.9'
+
+deleting '/nix/store/9cwwj1c9csmc85l2cqzs3h9hbf1vwl6c-gnutar-1.35'
+
+deleting '/nix/store/na4c03201p0gmhn3bqr089x0xqia157w-source'
+
+deleting '/nix/store/fp6cjl1zcmm6mawsnrb5yak1wkz2ma8l-gnumake-4.4.1'
+
+deleting '/nix/store/a3c47r5z1q2c4rz0kvq8hlilkhx2s718-gawk-5.3.1'
+
+deleting '/nix/store/00g69vw7c9lycy63h45ximy0wmzqx5y6-diffutils-3.10'
+
+deleting '/nix/store/srfxqk119fijwnprgsqvn68ys9kiw0bn-patchelf-0.15.0'
+
+deleting '/nix/store/c4rj90r2m89rxs64hmm857mipwjhig5d-file-5.46'
+
+deleting '/nix/store/wf5zj2gbib3gjqllkabxaw4dh0gzcla3-builder.pl'
+
+deleting '/nix/store/5q154c0kqyja8hjj5iqvrflg2znnawb0-user-environment.drv'
+
+deleting '/nix/store/3jjimb9v9hc78vyp8g6mj86xwz4qqwxm-user-environment'
+
+deleting '/nix/store/9virg6mk4pgjf5j8k9p9ibby40x8qvfr-env-manifest.nix'
+
+deleting unused links...
+
+note: currently hard linking saves 27.14 MiB
+
+20 store paths deleted, 187.10 MiB freed
+
+[stage-0  6/17] RUN nix-env -if .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix && nix-collect-garbage -d  ✔ 36s
+
+[stage-0  7/17] COPY .nixpacks/assets /assets/
+
+[stage-0  7/17] COPY .nixpacks/assets /assets/  ✔ 265ms
+
+[stage-0  8/17] COPY . /app/.
+
+[stage-0  8/17] COPY . /app/.  ✔ 55ms
+
+[stage-0  9/17] RUN  npm run db:push
+
+npm warn config production Use `--omit=dev` instead.
+
+
+> rest-express@1.0.0 db:push
+> drizzle-kit push --force --config=./drizzle.config.ts
+
+
+sh: 1: drizzle-kit: not found
+
+✕ [stage-0  9/17] RUN  npm run db:push 
+process "/bin/bash -ol pipefail -c npm run db:push" did not complete successfully: exit code: 127
+ 
+
+Dockerfile:18
+
+-------------------
+
+16 |     # deploy phase
+
+17 |     COPY . /app/.
+
+18 | >>> RUN  npm run db:push
+
+19 |
+
+20 |     # setup phase
+
+-------------------
+
+ERROR: failed to solve: process "/bin/bash -ol pipefail -c npm run db:push" did not complete successfully: exit code: 127
+
+Error: Docker build failed

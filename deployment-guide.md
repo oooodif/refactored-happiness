@@ -230,7 +230,7 @@ If you encounter errors like "Error: Docker build failed":
      packages            = "nodejs_20 nodePackages.typescript tectonic"
      
      [deploy]
-     preDeployCommand    = "npm run db:push"
+     preDeployCommand    = "npm install && npm install drizzle-kit -g && npm run db:push"
      startCommand        = "NODE_ENV=production NODE_PATH=. npx tsx server/index.ts"
      
      healthcheckPath     = "/health"
@@ -250,7 +250,7 @@ If you encounter errors like "Error: Docker build failed":
          "packages": ["nodejs_20", "nodePackages.typescript", "tectonic"]
        },
        "deploy": {
-         "preDeployCommand": "npm run build && npm run db:push",
+         "preDeployCommand": "npm install && npm run build && npm install drizzle-kit -g && npm run db:push",
          "startCommand": "NODE_ENV=production NODE_PATH=. npx tsx server/index.ts",
          "healthcheckPath": "/health",
          "healthcheckTimeout": 180,
@@ -311,6 +311,11 @@ If you encounter errors like "Error: Docker build failed":
    - **Error: npm: command not found**
      - Railway is not installing Node.js before running npm commands.
      - Solution: Add "nodejs_20" and "nodePackages.typescript" to the packages list in all config files.
+     
+   - **Error: drizzle-kit: command not found**
+     - The db:push script is failing because drizzle-kit is not installed.
+     - Solution: Modify deployment commands to install drizzle-kit globally before running db:push.
+     - Example: `preDeployCommand = "npm install && npm install drizzle-kit -g && npm run db:push"`
 
    - **Error: tsx: command not found**
      - The tsx command isn't in PATH after Node.js installation.

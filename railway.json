@@ -8,7 +8,7 @@
   },
 
   "deploy": {
-    "preDeployCommand": "npm run build && npm run db:push",
+    "preDeployCommand": "npm install && npm run build && npm install drizzle-kit -g && npm run db:push",
     "startCommand": "NODE_ENV=production NODE_PATH=. npx tsx server/index.ts",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 180,

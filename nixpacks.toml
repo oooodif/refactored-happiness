@@ -28,6 +28,8 @@ cmds = [
 
 [phases.deploy]
 cmds = [
+  "npm install",
+  "npm install drizzle-kit -g",
   "npm run db:push"
 ]
 
