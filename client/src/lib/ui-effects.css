@@ -79,7 +79,7 @@
 
 /* Enhanced heading with subtle gradient */
 .enhanced-heading {
-  background: linear-gradient(90deg, #f97316, #c2410c);
+  background: linear-gradient(90deg, #2563eb, #4f46e5);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -166,12 +166,12 @@
 
 /* Glow effect on focus or hover */
 .glow-effect:focus, .glow-effect:hover {
-  box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
 }
 
 /* Animated background gradient */
 .animated-gradient-bg {
-  background: linear-gradient(270deg, #f97316, #ea580c, #c2410c);
+  background: linear-gradient(270deg, #4f46e5, #3b82f6, #8b5cf6);
   background-size: 600% 600%;
   animation: gradientShift 8s ease infinite;
 }
@@ -216,20 +216,6 @@
 }
 
 /* === SUBTLE COLORED BACKGROUNDS === */
-
-.app-background {
-  background: linear-gradient(135deg, rgba(249, 250, 251, 0.8), rgba(243, 244, 246, 0.7), rgba(236, 252, 253, 0.8), rgba(242, 245, 250, 0.7));
-  background-size: 400% 400%;
-  animation: appBackgroundGradient 40s ease infinite;
-}
-
-@keyframes appBackgroundGradient {
-  0% { background-position: 0% 0%; }
-  25% { background-position: 50% 25%; }
-  50% { background-position: 100% 50%; }
-  75% { background-position: 50% 75%; }
-  100% { background-position: 0% 0%; }
-}
 
 .bg-subtle-blue {
   background: linear-gradient(135deg, rgba(239, 246, 255, 0.6), rgba(219, 234, 254, 0.4), rgba(239, 246, 255, 0.6));
@@ -296,21 +282,6 @@
 @keyframes subtleGradientRose {
   0% { background-position: 0% 0%; }
   50% { background-position: 100% 100%; }
-  100% { background-position: 0% 0%; }
-}
-
-.bg-subtle-orange {
-  background: linear-gradient(135deg, rgba(255, 247, 237, 0.6), rgba(255, 237, 213, 0.4), rgba(254, 215, 170, 0.3), rgba(255, 247, 237, 0.6));
-  background-size: 300% 300%;
-  animation: subtleGradientOrange 15s ease infinite;
-  border: 1px solid rgba(255, 237, 213, 0.8);
-}
-
-@keyframes subtleGradientOrange {
-  0% { background-position: 0% 0%; }
-  25% { background-position: 50% 100%; }
-  50% { background-position: 100% 50%; }
-  75% { background-position: 50% 0%; }
   100% { background-position: 0% 0%; }
 }
 

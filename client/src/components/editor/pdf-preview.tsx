@@ -125,7 +125,7 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
   // If no PDF data is available, show a placeholder with Generate PDF button
   if (!pdfData) {
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-white bg-opacity-60 p-4">
+      <div className="h-full flex flex-col items-center justify-center bg-subtle-rose p-4">
         <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md glass-card depth-3d">
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
@@ -158,7 +158,7 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
           
           <Button 
             onClick={handleGeneratePdf}
-            className="bg-gradient-to-r from-orange-500 to-orange-700 text-white w-full"
+            className="bg-blue-600 hover:bg-blue-700 text-white w-full"
             disabled={isGenerating}
           >
             {isGenerating ? (
@@ -185,7 +185,7 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
 
   // When we have PDF data
   return (
-    <div className="h-full flex flex-col bg-white bg-opacity-60">
+    <div className="h-full flex flex-col bg-subtle-green">
       <div className="flex-1 overflow-auto p-4">
         <div className="flex flex-col items-center">
           <div className="w-full max-w-4xl bg-white shadow-md rounded-md overflow-hidden mb-4 glass-card depth-3d">
@@ -210,7 +210,7 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
                         setErrorMessage("Failed to download document");
                       }
                     }}
-                    className="bg-gradient-to-r from-orange-500 to-orange-700 text-white text-sm"
+                    className="bg-green-600 hover:bg-green-700 text-white text-sm"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -221,7 +221,7 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
                 {errorMessage && (
                   <Button 
                     onClick={handleGeneratePdf}
-                    className="bg-gradient-to-r from-orange-500 to-orange-700 text-white text-sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
                     disabled={isGenerating}
                   >
                     {isGenerating ? "Regenerating..." : "Try Regenerating PDF"}
@@ -251,7 +251,7 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
                 <p className="text-gray-600 mb-4">{errorMessage}</p>
                 <Button 
                   onClick={handleGeneratePdf}
-                  className="bg-gradient-to-r from-orange-500 to-orange-700 text-white"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                   disabled={isGenerating}
                 >
                   {isGenerating ? (
@@ -273,14 +273,14 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
                 </Button>
               </div>
             ) : isGenerating ? (
-              <div className="flex items-center justify-center h-[650px] bg-white bg-opacity-60">
+              <div className="flex items-center justify-center h-[650px] bg-subtle-blue">
                 <div className="text-center glass-card p-6 rounded-lg depth-3d">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-orange-600 mb-2"></div>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600 mb-2"></div>
                   <p className="text-gray-500">Loading PDF...</p>
                 </div>
               </div>
             ) : (
-              <div className="pdf-container w-full h-[650px] bg-white bg-opacity-60">
+              <div className="pdf-container w-full h-[650px] bg-subtle-blue">
                 {isHtml ? (
                   <iframe 
                     key={`html-frame-${iframeKey}`}
@@ -341,7 +341,7 @@ export default function PDFPreview({ pdfData, title, onCompilePdf, isHtml = fals
                       />
                     ) : (
                       <div className="flex items-center justify-center">
-                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-orange-600"></div>
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600"></div>
                         <p className="ml-2 text-gray-500">Loading PDF...</p>
                       </div>
                     )}

@@ -48,14 +48,14 @@ export default function LatexOutput({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-auto p-4 bg-white bg-opacity-60">
+      <div className="flex-1 overflow-auto p-4 bg-subtle-amber bg-opacity-30">
         <pre className="h-full rounded-md border border-gray-300 bg-gray-900 overflow-auto p-4 m-0 shadow-inner depth-3d-dark">
           <code ref={codeRef} className="language-latex font-mono text-sm whitespace-pre">
             {latexContent || '// Generated LaTeX will appear here'}
           </code>
         </pre>
       </div>
-      <div className="p-4 glass border-t border-gray-200 bg-white bg-opacity-80 rounded-b-lg">
+      <div className="p-4 glass border-t border-gray-200 bg-subtle-amber rounded-b-lg">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
             {latexContent ? (
@@ -92,7 +92,7 @@ export default function LatexOutput({
               Copy
             </Button>
             <Button
-              className="bg-gradient-to-r from-orange-500 to-orange-700 text-white rounded-md px-4 py-2 text-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-1px] flex items-center"
+              className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-md px-4 py-2 text-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-1px] flex items-center"
               onClick={onDownloadPdf}
               disabled={!compilationSuccess}
             >

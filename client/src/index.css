@@ -33,10 +33,10 @@
     --radius: 0.5rem;
 
     /* Modern UI effect variables */
-    --gradient-from: #f97316;
-    --gradient-to: #ea580c;
-    --gradient-from-hover: #ea580c;
-    --gradient-to-hover: #c2410c;
+    --gradient-from: #3b82f6;
+    --gradient-to: #8b5cf6;
+    --gradient-from-hover: #2563eb;
+    --gradient-to-hover: #7c3aed;
     --glass-opacity: 0.7;
     --glass-blur: 12px;
   }
@@ -122,10 +122,4 @@ code[class*="language-"] {
 .fade-exit-active {
   opacity: 0;
   transition: opacity 200ms;
-}
-
-/* Application background */
-.app-background {
-  @apply bg-gray-50;
-  background-image: linear-gradient(to bottom right, rgba(255, 255, 255, 0.8), rgba(249, 250, 251, 0.8));
 }

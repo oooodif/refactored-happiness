@@ -64,7 +64,7 @@ export default function LatexInput({
 
   return (
     <div className="w-full h-full flex flex-col border-r border-gray-200">
-      <div className="p-4 border-b border-gray-200 glass bg-subtle-orange rounded-t-lg">
+      <div className="p-4 border-b border-gray-200 glass bg-subtle-purple rounded-t-lg">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold enhanced-heading">Input</h2>
           <div className="flex items-center space-x-2">
@@ -72,7 +72,7 @@ export default function LatexInput({
               value={documentType}
               onValueChange={(value) => onDocumentTypeChange(value)}
             >
-              <SelectTrigger className="glass-card border border-gray-300 text-gray-700 text-sm rounded-md h-9 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 w-40">
+              <SelectTrigger className="glass-card border border-gray-300 text-gray-700 text-sm rounded-md h-9 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="glass-card">
@@ -138,10 +138,10 @@ export default function LatexInput({
           )}
         </div>
       </div>
-      <div className="flex-1 overflow-auto p-4 bg-white bg-opacity-60">
+      <div className="flex-1 overflow-auto p-4 bg-subtle-purple bg-opacity-30">
         <textarea
           ref={textareaRef}
-          className="w-full h-full p-3 rounded-md border border-gray-300 glass-card font-mono text-sm resize-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:shadow-lg"
+          className="w-full h-full p-3 rounded-md border border-gray-300 glass-card font-mono text-sm resize-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg"
           placeholder={documentType === 'presentation' 
             ? "Describe your slide show here, paste report or paper here, or design your slides using the buttons above. Use the 'New Slide' button to add slides."
             : "Enter your content here. Use the buttons above to insert templates, or use tags like <MATHEQ>E = mc^2</MATHEQ> for math equations. No LaTeX knowledge required!"}
@@ -149,7 +149,7 @@ export default function LatexInput({
           onChange={(e) => onChange(e.target.value)}
         />
       </div>
-      <div className="p-4 glass border-t border-gray-200 bg-white bg-opacity-80 rounded-b-lg">
+      <div className="p-4 glass border-t border-gray-200 bg-subtle-purple rounded-b-lg">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
             <span className={isReady ? "text-emerald-600 pulse-animation" : "text-amber-600"}>● </span>
@@ -165,7 +165,7 @@ export default function LatexInput({
               Clear
             </Button>
             <Button
-              className="bg-gradient-to-r from-orange-500 to-orange-700 text-white transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
+              className="bg-gradient-to-r from-blue-500 to-blue-700 text-white transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]"
               onClick={onGenerate}
               disabled={!isReady || generating}
             >
