@@ -158,212 +158,44 @@ export default function Home() {
     }
   }, []);
   
-  // Ultra-robust keyboard dismissal detection and animation with multiple fallbacks
+  // Ultra-robust keyboard dismissal detection and scrolling with Locomotive Scroll
   useEffect(() => {
-    // This function handles everything in one place - works on iOS Safari
-    const ultraRobustKeyboardManager = () => {
-      // Only apply this on mobile devices in portrait mode
-      if (window.innerWidth >= 768) return;
+    // Import dynamically to avoid SSR issues
+    import('../lib/mobile-keyboard-helper').then((module) => {
+      const getMobileKeyboardHelper = module.default;
       
-      console.log("Setting up ultra-robust keyboard detection");
+      // Add animation attributes to UI elements
+      const header = document.querySelector('header');
+      const inputPanel = document.getElementById('FloatingRectInput');
+      const outputPanel = document.getElementById('FloatingRectOutput');
       
-      // State tracking
-      let isKeyboardOpen = false;
-      let initialHeight = window.innerHeight;
-      let touchStartY = 0;
-      let focusedElement: Element | null = null;
+      if (header) header.setAttribute('data-animate-on-keyboard-dismiss', 'true');
+      if (inputPanel) {
+        inputPanel.setAttribute('data-animate-on-keyboard-dismiss', 'true');
+        inputPanel.setAttribute('data-stagger', 'true');
+      }
+      if (outputPanel) {
+        outputPanel.setAttribute('data-animate-on-keyboard-dismiss', 'true');
+        outputPanel.setAttribute('data-stagger', 'true');
+      }
       
-      // Force scroll to top with different methods for maximum compatibility
-      const forceScrollTop = () => {
-        console.log("📱 Scrolling to top with multiple methods");
-        
-        // Method 1: Standard smooth scroll
-        window.scrollTo({
-          top: 0,
-          left: 0,
-          behavior: 'smooth'
-        });
-        
-        // Method 2: Set scroll directly (fallback)
-        setTimeout(() => {
-          window.scrollTo(0, 0);
-        }, 50);
-        
-        // Method 3: Force body to top
-        setTimeout(() => {
-          if (window.scrollY > 0) {
-            document.body.scrollTop = 0; // For Safari
-            document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
-          }
-        }, 100);
-        
-        // Animate UI elements for visual interest
-        animateUI();
-      };
+      // Configure and initialize the keyboard helper
+      const keyboardHelper = getMobileKeyboardHelper({
+        debug: true, // Enable debug logs
+        mobileBreakpoint: 768,
+        animationDuration: 800,
+        animateUI: true,
+        useLocomotiveScroll: true
+      });
       
-      // Apply cool animations to UI elements
-      const animateUI = () => {
-        // Get UI elements
-        const header = document.querySelector('header');
-        const floatingRect1 = document.getElementById('FloatingRectInput');
-        const floatingRect2 = document.getElementById('FloatingRectOutput');
-        
-        // Dynamic animation classes based on what exists in the DOM
-        if (header) {
-          header.classList.add('header-parallax-animate');
-          setTimeout(() => header.classList.remove('header-parallax-animate'), 800);
-        }
-        
-        if (floatingRect1) {
-          floatingRect1.classList.add('scroll-reveal-animate', 'ripple-out-animate');
-          setTimeout(() => {
-            floatingRect1.classList.remove('scroll-reveal-animate', 'ripple-out-animate');
-          }, 800);
-        }
-        
-        if (floatingRect2) {
-          floatingRect2.classList.add('scroll-reveal-animate');
-          setTimeout(() => floatingRect2.classList.remove('scroll-reveal-animate'), 800);
-        }
-      };
-
-      // DETECTION METHOD 1: Direct focus/blur tracking on input fields
-      const setupInputListeners = () => {
-        // Focus event - keyboard opening
-        document.addEventListener('focusin', (e) => {
-          if (e.target instanceof HTMLElement) {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-              console.log("📱 Input focused - keyboard likely visible");
-              isKeyboardOpen = true;
-              focusedElement = e.target;
-            }
-          }
-        }, true);
-        
-        // Blur event - keyboard dismissal
-        document.addEventListener('focusout', (e) => {
-          if (e.target instanceof HTMLElement) {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-              console.log("📱 Input blurred - keyboard likely dismissed");
-              
-              // Wait to ensure keyboard is fully dismissed
-              setTimeout(() => {
-                if (document.activeElement !== e.target) {
-                  isKeyboardOpen = false;
-                  focusedElement = null;
-                  forceScrollTop();
-                }
-              }, 250);
-            }
-          }
-        }, true);
-      };
+      // Initialize the helper
+      keyboardHelper.init();
       
-      // DETECTION METHOD 2: Window resize monitoring for keyboard
-      const setupResizeListener = () => {
-        window.addEventListener('resize', () => {
-          // Keyboard opening (window height decreases)
-          if (!isKeyboardOpen && window.innerHeight < initialHeight * 0.8) {
-            console.log("📱 Window height decreased - keyboard detected");
-            isKeyboardOpen = true;
-          }
-          
-          // Keyboard dismissal (window height increases)
-          if (isKeyboardOpen && window.innerHeight > initialHeight * 0.9) {
-            console.log("📱 Window height increased - keyboard dismissed");
-            isKeyboardOpen = false;
-            forceScrollTop();
-          }
-        });
-      };
-      
-      // DETECTION METHOD 3: Touch events to catch dismissals
-      const setupTouchListeners = () => {
-        // Track touch start position
-        document.addEventListener('touchstart', (e) => {
-          touchStartY = e.touches[0].clientY;
-        }, { passive: true });
-        
-        // Detect downward swipes which often dismiss keyboard
-        document.addEventListener('touchend', (e) => {
-          if (isKeyboardOpen && e.changedTouches[0].clientY - touchStartY > 30) {
-            console.log("📱 Downward swipe detected - likely keyboard dismissal");
-            
-            // Short delay to let native keyboard animation complete
-            setTimeout(() => {
-              isKeyboardOpen = false;
-              forceScrollTop();
-            }, 300);
-          }
-        }, { passive: true });
-      };
-      
-      // DETECTION METHOD 4: Visibility change (user switches apps/tabs and returns)
-      const setupVisibilityListener = () => {
-        document.addEventListener('visibilitychange', () => {
-          if (!document.hidden && isKeyboardOpen) {
-            console.log("📱 Page became visible again - checking keyboard state");
-            
-            // User returned to the page - keyboard likely dismissed
-            setTimeout(() => {
-              if (window.innerHeight > initialHeight * 0.9) {
-                isKeyboardOpen = false;
-                forceScrollTop();
-              }
-            }, 300);
-          }
-        });
-      };
-      
-      // Special button press listener for iOS
-      const setupButtonPress = () => {
-        // iOS "Done" button is typically at the bottom right of keyboard
-        // Clicking anywhere near bottom of screen after typing might indicate Done button
-        document.addEventListener('click', (e) => {
-          if (isKeyboardOpen && e.clientY > window.innerHeight * 0.7) {
-            console.log("📱 Bottom screen click detected - might be keyboard dismissal");
-            
-            setTimeout(() => {
-              if (document.activeElement !== focusedElement) {
-                isKeyboardOpen = false;
-                forceScrollTop();
-              }
-            }, 200);
-          }
-        });
-      };
-      
-      // Initialize all listeners
-      setupInputListeners();
-      setupResizeListener();
-      setupTouchListeners();
-      setupVisibilityListener();
-      setupButtonPress();
-      
-      // Record initial height periodically to handle orientation changes
-      setInterval(() => {
-        if (!isKeyboardOpen) {
-          initialHeight = window.innerHeight;
-        }
-      }, 5000);
-      
-      // Return cleanup function
+      // Clean up on component unmount
       return () => {
-        document.removeEventListener('focusin', () => {});
-        document.removeEventListener('focusout', () => {});
-        document.removeEventListener('touchstart', () => {});
-        document.removeEventListener('touchend', () => {});
-        document.removeEventListener('visibilitychange', () => {});
-        document.removeEventListener('click', () => {});
-        window.removeEventListener('resize', () => {});
+        keyboardHelper.destroy();
       };
-    };
-    
-    // Initialize the manager and store cleanup function
-    const cleanup = ultraRobustKeyboardManager();
-    
-    // Return cleanup function
-    return cleanup;
+    });
   }, []);
   
   // Check localStorage for preselected template when coming from template URL

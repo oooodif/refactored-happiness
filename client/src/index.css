@@ -5,6 +5,127 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Animation keyframes for mobile keyboard dismissal effects */
+@keyframes parallax-rise {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-20px); opacity: 1; }
+}
+
+@keyframes scroll-reveal {
+  0% { transform: translateY(5px); opacity: 0.9; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes ripple-out {
+  0% { box-shadow: 0 0 0 rgba(100, 149, 237, 0); }
+  50% { box-shadow: 0 0 10px rgba(100, 149, 237, 0.4); }
+  100% { box-shadow: 0 0 0 rgba(100, 149, 237, 0); }
+}
+
+/* Animation classes */
+.header-parallax-animate {
+  animation: parallax-rise 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.scroll-reveal-animate {
+  animation: scroll-reveal 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.ripple-out-animate {
+  animation: ripple-out 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+/* Main keyboard dismissal animation class */
+.keyboard-dismiss-animate {
+  animation: scroll-reveal 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Staggered animation delays */
+.stagger-item-1 { animation-delay: 0s; }
+.stagger-item-2 { animation-delay: 0.1s; }
+.stagger-item-3 { animation-delay: 0.2s; }
+.stagger-item-4 { animation-delay: 0.3s; }
+.stagger-item-5 { animation-delay: 0.4s; }
+
+/* Parallax layers */
+.parallax-layer-0 { transform: translateZ(0); }
+.parallax-layer-1 { transform: translateZ(-10px); }
+.parallax-container { perspective: 1000px; }
+
+/* Locomotive Scroll styles */
+html.has-scroll-smooth {
+  overflow: hidden;
+}
+html.has-scroll-dragging {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.has-scroll-smooth body {
+  overflow: hidden;
+}
+.has-scroll-smooth [data-scroll-container] {
+  min-height: 100vh;
+}
+[data-scroll-direction="horizontal"] [data-scroll-container] {
+  height: 100vh;
+  display: inline-block;
+  white-space: nowrap;
+}
+[data-scroll-direction="horizontal"] [data-scroll-section] {
+  display: inline-block;
+  vertical-align: top;
+  white-space: nowrap;
+  height: 100%;
+}
+.c-scrollbar {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 11px;
+  height: 100%;
+  transform-origin: center right;
+  transition: transform 0.3s, opacity 0.3s;
+  opacity: 0;
+}
+.c-scrollbar:hover {
+  transform: scaleX(1.45);
+}
+.c-scrollbar:hover, .has-scroll-scrolling .c-scrollbar, .has-scroll-dragging .c-scrollbar {
+  opacity: 1;
+}
+[data-scroll-direction="horizontal"] .c-scrollbar {
+  width: 100%;
+  height: 10px;
+  top: auto;
+  bottom: 0;
+  transform: scaleY(1);
+}
+[data-scroll-direction="horizontal"] .c-scrollbar:hover {
+  transform: scaleY(1.3);
+}
+.c-scrollbar_thumb {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: black;
+  opacity: 0.5;
+  width: 7px;
+  border-radius: 10px;
+  margin: 2px;
+  cursor: -webkit-grab;
+  cursor: grab;
+}
+.has-scroll-dragging .c-scrollbar_thumb {
+  cursor: -webkit-grabbing;
+  cursor: grabbing;
+}
+[data-scroll-direction="horizontal"] .c-scrollbar_thumb {
+  right: auto;
+  bottom: 0;
+}
+
 @layer base {
   * {
     @apply border-border;
