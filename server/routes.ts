@@ -35,6 +35,7 @@ import {
   createPortalSession,
   createRefillPackCheckoutSession
 } from "./services/stripeService";
+import { testPostmarkConnection, generateVerificationToken, sendVerificationEmail } from "./utils/email";
 import Stripe from "stripe";
 import session from "express-session";
 import pgSession from "connect-pg-simple";
@@ -115,13 +116,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { username, email, password } = req.body;
     
     try {
-      const result = await storage.createUser(username, email, password);
+      // Generate verification token
+      const verificationToken = await generateVerificationToken();
       
-      if (result.success) {
+      // Create user with verification token
+      const result = await storage.createUser(username, email, password, verificationToken);
+      
+      if (result.success && result.user) {
+        // Send verification email
+        const emailResult = await sendVerificationEmail(email, verificationToken);
+        
+        if (!emailResult.success) {
+          console.warn(`Failed to send verification email: ${emailResult.message}`);
+          // Continue with registration even if email fails
+        }
+        
+        // Set the user ID in the session
         req.session.userId = result.user.id;
+        
         return res.status(201).json({
           user: result.user,
-          usageLimit: result.usageLimit
+          usageLimit: result.usageLimit,
+          emailVerificationSent: emailResult.success
         });
       } else {
         return res.status(400).json({ message: result.error });
@@ -132,6 +148,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Email verification endpoint
+  app.get("/api/auth/verify-email", async (req: Request, res: Response) => {
+    const { token } = req.query;
+    
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ message: "Invalid verification token" });
+    }
+    
+    try {
+      const result = await storage.verifyUserEmail(token);
+      
+      if (result.success && result.user) {
+        // Set the user ID in the session
+        req.session.userId = result.user.id;
+        
+        return res.status(200).json({
+          success: true,
+          message: "Email verified successfully",
+          user: result.user
+        });
+      } else {
+        return res.status(400).json({ 
+          success: false,
+          message: result.error || "Email verification failed" 
+        });
+      }
+    } catch (error) {
+      console.error("Email verification error:", error);
+      return res.status(500).json({ 
+        success: false,
+        message: "Email verification failed due to server error" 
+      });
+    }
+  });
+
+  // Test Postmark connection endpoint
+  app.get("/api/auth/test-email", async (req: Request, res: Response) => {
+    try {
+      const result = await testPostmarkConnection();
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error("Test email error:", error);
+      return res.status(500).json({ 
+        success: false,
+        message: "Failed to test email connection" 
+      });
+    }
+  });
+  
+  // Resend verification email endpoint
+  app.post("/api/auth/resend-verification", async (req: Request, res: Response) => {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+    
+    try {
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        // For security reasons, still return success even if user doesn't exist
+        return res.status(200).json({
+          success: true,
+          message: "If your email is registered, a verification link has been sent"
+        });
+      }
+      
+      // If already verified, no need to resend
+      if (user.emailVerified) {
+        return res.status(200).json({
+          success: true,
+          message: "Your email is already verified, please log in"
+        });
+      }
+      
+      // Generate new verification token
+      const verificationToken = await generateVerificationToken();
+      
+      // Update user with new token
+      const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      const [updatedUser] = await db.update(users)
+        .set({
+          verificationToken,
+          verificationTokenExpiry: tokenExpiry,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, user.id))
+        .returning();
+      
+      if (!updatedUser) {
+        return res.status(500).json({
+          success: false,
+          message: "Failed to update verification token"
+        });
+      }
+      
+      // Send verification email
+      const emailResult = await sendVerificationEmail(email, verificationToken);
+      
+      return res.status(200).json({
+        success: true,
+        message: "Verification email has been sent",
+        emailSent: emailResult.success
+      });
+    } catch (error) {
+      console.error("Resend verification error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to resend verification email"
+      });
+    }
+  });
+
   app.post("/api/auth/login", async (req: Request, res: Response) => {
     const { email, password } = req.body;
     
@@ -139,6 +270,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await storage.validateUser(email, password);
       
       if (result.success && result.user) {
+        // Check if email is verified
+        if (!result.user.emailVerified) {
+          return res.status(403).json({ 
+            message: "Please verify your email before logging in",
+            requiresEmailVerification: true
+          });
+        }
+        
         // Set the user ID in the session
         req.session.userId = result.user.id;
         
