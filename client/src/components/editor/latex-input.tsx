@@ -83,14 +83,43 @@ export default function LatexInput({
     // Only apply this on mobile devices
     if (!isMobile) return;
     
+    // Track original window height
+    const originalHeight = window.innerHeight;
+    
     // Handle when textarea is focused (keyboard opens)
     const handleFocus = () => {
       setIsKeyboardVisible(true);
+      
+      // Scroll the textarea into view with a small delay to ensure it works after layout changes
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 300);
     };
     
     // Handle when textarea is blurred (keyboard closes)
     const handleBlur = () => {
       setIsKeyboardVisible(false);
+    };
+    
+    // Detect keyboard through resize events (more reliable on iOS)
+    const handleResize = () => {
+      // If window height significantly decreases, a keyboard likely appeared
+      const heightDifference = originalHeight - window.innerHeight;
+      const visualViewportHeight = window.visualViewport?.height || window.innerHeight;
+      
+      // Check if the height change is significant (keyboard appearance)
+      if (heightDifference > 150 || visualViewportHeight < originalHeight * 0.75) {
+        setIsKeyboardVisible(true);
+        
+        // When keyboard appears through resize, scroll textarea into view
+        if (textareaRef.current) {
+          textareaRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else {
+        setIsKeyboardVisible(false);
+      }
     };
     
     // Get the textarea element
@@ -100,17 +129,34 @@ export default function LatexInput({
       textarea.addEventListener('blur', handleBlur);
     }
     
+    // Add resize and visualViewport listeners for more reliable detection
+    window.addEventListener('resize', handleResize);
+    
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+    }
+    
     return () => {
       if (textarea) {
         textarea.removeEventListener('focus', handleFocus);
         textarea.removeEventListener('blur', handleBlur);
       }
+      
+      window.removeEventListener('resize', handleResize);
+      
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+      }
     };
   }, [isMobile]);
 
   // Determine the CSS classes for the container based on keyboard visibility
-  const containerClasses = isMobile && isKeyboardVisible
-    ? "w-full h-full flex flex-col border-r border-gray-200 mobile-keyboard-open fixed top-0 left-0 right-0 bottom-0 z-50 bg-white"
+  const containerClasses = isMobile
+    ? `w-full h-full flex flex-col border-r border-gray-200 ${
+        isKeyboardVisible 
+          ? "mobile-keyboard-open fixed top-0 left-0 right-0 bottom-0 z-50 bg-white transition-all duration-300 ease-in-out" 
+          : "transition-all duration-300 ease-in-out"
+      }`
     : "w-full h-full flex flex-col border-r border-gray-200";
 
   return (
@@ -210,7 +256,7 @@ export default function LatexInput({
       <div className={`flex-1 overflow-auto p-4 bg-gray-50 ${isMobile && isKeyboardVisible ? 'h-full' : ''}`}>
         <textarea
           ref={textareaRef}
-          className="w-full h-full p-3 rounded-md border border-gray-300 glass-card font-mono text-sm resize-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg"
+          className={`w-full h-full p-3 rounded-md border border-gray-300 glass-card font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg ${isMobile ? 'transition-all duration-300 ease-in-out transform' : ''}`}
           placeholder={documentType === 'presentation' 
             ? "Describe your slide show here, paste report or paper here, or design your slides using the buttons above. Use the 'New Slide' button to add slides."
             : "Enter your content here. Use the buttons above to insert templates, or use tags like <MATHEQ>E = mc^2</MATHEQ> for math equations. No LaTeX knowledge required!"}
@@ -218,7 +264,7 @@ export default function LatexInput({
           onChange={(e) => onChange(e.target.value)}
         />
       </div>
-      <div className="p-4 glass border-t border-gray-200">
+      <div className={`p-4 glass border-t border-gray-200 ${isMobile && isKeyboardVisible ? 'hidden' : 'transition-opacity duration-300 ease-in-out'}`}>
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
             <span className={isReady ? "text-emerald-600 pulse-animation" : "text-amber-600"}>● </span>
