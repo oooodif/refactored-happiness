@@ -85,7 +85,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           <SubscriptionPlanCard
             tier={SubscriptionTier.Basic}
             name="Basic"
-            price={4.99}
+            price={0.99}
             features={SUBSCRIPTION_FEATURES[SubscriptionTier.Basic]}
             isCurrentPlan={session.tier === SubscriptionTier.Basic}
             onSelect={handleSelectPlan}
@@ -95,7 +95,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           <SubscriptionPlanCard
             tier={SubscriptionTier.Pro}
             name="Pro"
-            price={9.99}
+            price={6.99}
             features={SUBSCRIPTION_FEATURES[SubscriptionTier.Pro]}
             isCurrentPlan={session.tier === SubscriptionTier.Pro}
             onSelect={handleSelectPlan}
