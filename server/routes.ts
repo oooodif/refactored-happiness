@@ -64,6 +64,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/health', (req, res) => {
     res.status(200).send('OK');
   });
+  
+  // Track 404 paths to return correct status codes for SEO
+  const notFoundPaths = new Map<string, number>();
+  
+  // API endpoint to set status code for a path
+  app.post('/api/set-status', (req, res) => {
+    const status = parseInt(req.query.status as string) || 404;
+    const path = req.query.path as string;
+    
+    if (path && status === 404) {
+      // Store this path as a 404 path
+      notFoundPaths.set(path, status);
+      console.log(`Registered 404 path: ${path}`);
+    }
+    
+    res.status(200).json({ success: true });
+  });
+  
+  // Middleware to check if a path has been registered as a 404
+  app.use((req, res, next) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
+    
+    // Check if this path has been registered as a 404
+    if (notFoundPaths.has(req.path)) {
+      console.log(`Serving registered 404 path: ${req.path}`);
+      // Set status but continue to next handler to serve SPA
+      res.status(404);
+    }
+    
+    next();
+  });
 
   // Enhanced session middleware configuration with maximum reliability
   const PostgresStore = pgSession(session);
