@@ -375,7 +375,7 @@ export default function UIPlayground() {
       </div>
       
       {/* Add custom styles for the effects */}
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         ${isEffectActive('glassmorphism') ? `
           .bg-opacity-70 {
             background-color: rgba(255, 255, 255, 0.7);
@@ -425,7 +425,7 @@ export default function UIPlayground() {
             cursor: pointer;
           }
         ` : ''}
-      `}</style>
+      ` }} />
     </SiteLayout>
   );
 }
