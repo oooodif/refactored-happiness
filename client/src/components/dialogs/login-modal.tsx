@@ -8,6 +8,7 @@ import { UserContext } from "@/App";
 import { useLocation } from "wouter";
 import { API_ROUTES } from "@/lib/constants";
 import { LoginCredentials, SubscriptionTier } from "@shared/schema";
+import { Loader2, Mail, AlertCircle } from "lucide-react";
 
 import {
   Dialog,
@@ -51,6 +52,9 @@ const registerSchema = z.object({
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [requiresVerification, setRequiresVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
   const { toast } = useToast();
   const { setSession } = useContext(UserContext);
   const [, navigate] = useLocation();
@@ -75,10 +79,48 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         },
   });
 
+  // Handles resending verification email
+  const handleResendVerification = async () => {
+    if (!verificationEmail) return;
+    
+    setIsResendingVerification(true);
+    try {
+      const response = await apiRequest("POST", API_ROUTES.auth.resendVerification, { 
+        email: verificationEmail 
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        toast({
+          title: "Verification Email Sent",
+          description: "Please check your inbox for the verification link",
+        });
+      } else {
+        toast({
+          title: "Failed to Resend",
+          description: data.message || "Please try again later",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Resend verification error:", error);
+      toast({
+        title: "Failed to Resend",
+        description: "An error occurred. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResendingVerification(false);
+    }
+  };
+
   // Type-safe onSubmit that handles both login and register forms
   const onSubmit = async (values: any) => {
     setIsLoading(true);
     try {
+      // Reset verification state
+      setRequiresVerification(false);
+      
       // Choose the endpoint based on whether we're registering or logging in
       const endpoint = showRegister ? API_ROUTES.auth.register : API_ROUTES.auth.login;
       
@@ -96,9 +138,44 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       
       // Make the API request
       const response = await apiRequest("POST", endpoint, requestData);
+      
+      // Check for 403 status which might indicate email verification needed
+      if (response.status === 403) {
+        const data = await response.json();
+        
+        if (data.requiresEmailVerification) {
+          // Store the email for resend functionality
+          setVerificationEmail(values.email);
+          setRequiresVerification(true);
+          return;
+        }
+      }
+      
       const data = await response.json();
       
-      // Set the session with the user data
+      // If registration was successful but email verification is pending
+      if (showRegister && data.emailVerificationSent === false) {
+        toast({
+          title: "Account Created",
+          description: "However, we couldn't send the verification email. Please try again later.",
+          variant: "destructive",
+        });
+      }
+      
+      // If registration was successful with email verification
+      if (showRegister && data.emailVerificationSent === true) {
+        toast({
+          title: "Account Created!",
+          description: "Please check your email to verify your account.",
+        });
+        
+        // Store the email for resend functionality
+        setVerificationEmail(values.email);
+        setRequiresVerification(true);
+        return;
+      }
+      
+      // Set the session with the user data for successful login
       setSession({
         user: data.user,
         isAuthenticated: true,
@@ -145,130 +222,181 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {showRegister ? "Create an Account" : "Sign In"}
+            {requiresVerification 
+              ? "Email Verification Required" 
+              : showRegister 
+                ? "Create an Account" 
+                : "Sign In"
+            }
           </DialogTitle>
           <DialogDescription>
-            {showRegister
-              ? "Join to get more LaTeX generations and premium features"
-              : "Enter your credentials to access your account"}
+            {requiresVerification
+              ? "Please verify your email address to continue"
+              : showRegister
+                ? "Join to get more LaTeX generations and premium features"
+                : "Enter your credentials to access your account"
+            }
           </DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Username field - only show when registering */}
-            {showRegister && (
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="yourname"
-                        type="text"
-                        autoComplete="username"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+        {requiresVerification ? (
+          <div className="py-6 space-y-4">
+            <div className="flex flex-col items-center justify-center text-center space-y-3">
+              <div className="bg-blue-50 p-3 rounded-full">
+                <Mail className="h-6 w-6 text-blue-500" />
+              </div>
+              <div>
+                <h3 className="font-medium text-lg">Check your email</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  We sent a verification link to <span className="font-medium">{verificationEmail}</span>
+                </p>
+              </div>
+              <div className="mt-4 text-sm text-gray-600">
+                <p>Didn't receive the email? Check your spam folder or</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-2"
+                  onClick={handleResendVerification}
+                  disabled={isResendingVerification}
+                >
+                  {isResendingVerification ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    "Resend verification email"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {/* Username field - only show when registering */}
+                {showRegister && (
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="yourname"
+                            type="text"
+                            autoComplete="username"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
-            )}
-            
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="you@example.com"
-                      type="email"
-                      autoComplete="email"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="••••••••"
-                      type="password"
-                      autoComplete={showRegister ? "new-password" : "current-password"}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {!showRegister && (
-              <div className="flex items-center justify-between">
+                
                 <FormField
                   control={form.control}
-                  name="rememberMe"
+                  name="email"
                   render={({ field }) => (
-                    <FormItem className="flex items-center space-x-2">
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          id="remember"
+                        <Input
+                          placeholder="you@example.com"
+                          type="email"
+                          autoComplete="email"
+                          {...field}
                         />
                       </FormControl>
-                      <label
-                        htmlFor="remember"
-                        className="text-sm text-gray-700"
-                      >
-                        Remember me
-                      </label>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button variant="link" className="p-0 h-auto text-sm">
-                  Forgot password?
-                </Button>
-              </div>
-            )}
 
-            <DialogFooter className="flex flex-col sm:flex-row sm:justify-between sm:space-x-0">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="••••••••"
+                          type="password"
+                          autoComplete={showRegister ? "new-password" : "current-password"}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {!showRegister && (
+                  <div className="flex items-center justify-between">
+                    <FormField
+                      control={form.control}
+                      name="rememberMe"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              id="remember"
+                            />
+                          </FormControl>
+                          <label
+                            htmlFor="remember"
+                            className="text-sm text-gray-700"
+                          >
+                            Remember me
+                          </label>
+                        </FormItem>
+                      )}
+                    />
+                    <Button variant="link" className="p-0 h-auto text-sm">
+                      Forgot password?
+                    </Button>
+                  </div>
+                )}
+
+                <DialogFooter className="flex flex-col sm:flex-row sm:justify-between sm:space-x-0">
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      showRegister ? "Create Account" : "Sign In"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+
+            <div className="text-center mt-4">
+              <span className="text-sm text-gray-600">
+                {showRegister ? "Already have an account?" : "Don't have an account?"}
+              </span>
               <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
+                variant="link"
+                className="text-sm font-medium text-blue-600 hover:text-blue-500 p-0 h-auto ml-1"
+                onClick={toggleRegister}
               >
-                {isLoading ? "Processing..." : showRegister ? "Create Account" : "Sign In"}
+                {showRegister ? "Sign in" : "Create one"}
               </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-
-        <div className="text-center mt-4">
-          <span className="text-sm text-gray-600">
-            {showRegister ? "Already have an account?" : "Don't have an account?"}
-          </span>
-          <Button
-            variant="link"
-            className="text-sm font-medium text-blue-600 hover:text-blue-500 p-0 h-auto ml-1"
-            onClick={toggleRegister}
-          >
-            {showRegister ? "Sign in" : "Create one"}
-          </Button>
-        </div>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

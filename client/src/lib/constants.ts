@@ -65,7 +65,9 @@ export const API_ROUTES = {
     login: "/api/auth/login",
     register: "/api/auth/register",
     logout: "/api/auth/logout",
-    me: "/api/auth/me"
+    me: "/api/auth/me",
+    resendVerification: "/api/auth/resend-verification",
+    verifyEmail: "/api/auth/verify-email"
   },
   latex: {
     generate: "/api/latex/generate",
