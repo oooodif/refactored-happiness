@@ -10,7 +10,7 @@ import {
   tierLimits
 } from "@shared/schema";
 import { hashPassword, comparePassword } from "./services/authService";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, isNull } from "drizzle-orm";
 
 /**
  * Storage interface for database operations
@@ -226,71 +226,21 @@ export const storage = {
     }
   },
   
-  async getUserByVerificationToken(token: string): Promise<User | null> {
+  async updateUserVerificationToken(userId: number, token: string, expiry: Date): Promise<User | null> {
     try {
-      const user = await db.query.users.findFirst({
-        where: (users) => eq(users.verificationToken, token)
-      });
-      
-      return user || null;
-    } catch (error) {
-      console.error('Get user by verification token error:', error);
-      return null;
-    }
-  },
-  
-  async verifyUserEmail(token: string): Promise<{
-    success: boolean;
-    user?: User;
-    error?: string;
-  }> {
-    try {
-      // Find user by token
-      const user = await this.getUserByVerificationToken(token);
-      
-      if (!user) {
-        return {
-          success: false,
-          error: 'Invalid verification token'
-        };
-      }
-      
-      // Check if token has expired
-      if (user.verificationTokenExpiry && new Date() > new Date(user.verificationTokenExpiry)) {
-        return {
-          success: false,
-          error: 'Verification token has expired'
-        };
-      }
-      
-      // Update user to verified
       const [updatedUser] = await db.update(users)
         .set({
-          emailVerified: true,
-          verificationToken: null,
-          verificationTokenExpiry: null,
+          verificationToken: token,
+          verificationTokenExpiry: expiry,
           updatedAt: new Date()
         })
-        .where(eq(users.id, user.id))
+        .where(eq(users.id, userId))
         .returning();
       
-      if (!updatedUser) {
-        return {
-          success: false,
-          error: 'Failed to verify email'
-        };
-      }
-      
-      return {
-        success: true,
-        user: updatedUser
-      };
+      return updatedUser || null;
     } catch (error) {
-      console.error('Verify email error:', error);
-      return {
-        success: false,
-        error: 'Failed to verify email'
-      };
+      console.error('Update user verification token error:', error);
+      return null;
     }
   },
   

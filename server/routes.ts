@@ -230,14 +230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update user with new token
       const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-      const [updatedUser] = await db.update(users)
-        .set({
-          verificationToken,
-          verificationTokenExpiry: tokenExpiry,
-          updatedAt: new Date()
-        })
-        .where(eq(users.id, user.id))
-        .returning();
+      const updatedUser = await storage.updateUserVerificationToken(user.id, verificationToken, tokenExpiry);
       
       if (!updatedUser) {
         return res.status(500).json({
