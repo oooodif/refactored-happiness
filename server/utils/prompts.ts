@@ -169,7 +169,7 @@ DOCUMENT_TYPES = [
      - \usepackage{amsmath}
 -Format the title block as follows:
      (- Keep only the title, removing author and date information
-     - Add "Overview" to the title)
+     - Add "Overview" to the title
 -Structure the document with sections:
      - Divide the content into logical sections with descriptive headers
      - Use unnumbered sections (\section*{})
@@ -179,13 +179,10 @@ DOCUMENT_TYPES = [
      - Format any mathematical expressions properly with \( \) or $ $ delimiters
      - Use appropriate math commands for mathematical symbols and expressions
 -Maintain the original content while presenting it in a more structured, professional format
--Set geometry options: \\geometry{margin=1in}
-- Adds sectioning with \\section{}, \\subsection{}, and \\subsubsection{}
 - Includes page numbering and appropriate margins
-- Supports footnotes, citations, and bibliography
-- Sets up for double-column format if requested using \documentclass[12pt,twocolumn]{article}
-- Optimized for scholarly publications, conference submissions, and journal articles
-- Appropriate for users preparing academic papers or structured documents with clear hierarchy
+- Supports footnotes, citations, and bibliography, if provided
+- Sets up for double-column format if requested, using \documentclass[12pt,twocolumn]{article}
+
 
 
 
