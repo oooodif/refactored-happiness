@@ -344,51 +344,48 @@ export default function Home() {
       user: session.user
     });
     
-    // Guest mode is disabled - non-authenticated users cannot generate content
-    
-    // If user is not authenticated, show auth prompt
+    // Check anonymous user status for non-authenticated users
     if (!session.isAuthenticated) {
-      // Stop the generating animation if it was started
-      setEditorState(prev => ({ ...prev, isGenerating: false }));
-      
-      console.log("User not authenticated, showing auth prompt");
-      
-      // Try directly setting the auth prompt to true
-      try {
-        // Show auth required dialog
-        setShowAuthPrompt(true);
-        console.log("Set showAuthPrompt to true");
+      // Check if this is an anonymous user with remaining free usage
+      if (isAnonymous && hasRemainingAnonymousUsage) {
+        // Anonymous user with remaining usage, allow one free generation
+        console.log("Anonymous user with remaining usage, allowing generation");
+      } else {
+        // Stop the generating animation if it was started
+        setEditorState(prev => ({ ...prev, isGenerating: false }));
         
-        // Force a dialog to appear (fallback)
-        toast({
-          title: "Authentication Required",
-          description: "Please sign in or create an account to generate LaTeX.",
-          action: (
-            <div className="flex gap-2 mt-2">
-              <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
-                Login
-              </Button>
-              <Button 
-                size="sm" 
-                onClick={() => navigate("/register")}
-                className="bg-primary text-white hover:bg-primary/90"
-              >
-                Create Account
-              </Button>
-            </div>
-          ),
-        });
-      } catch (err) {
-        console.error("Error showing auth prompt:", err);
+        console.log("User not authenticated, showing auth prompt");
+        
+        // Try directly setting the auth prompt to true
+        try {
+          // Show auth required dialog
+          setShowAuthPrompt(true);
+          console.log("Set showAuthPrompt to true");
+          
+          // Force a dialog to appear (fallback)
+          toast({
+            title: "Authentication Required",
+            description: "Please sign in or create an account to generate LaTeX.",
+            action: (
+              <div className="flex gap-2 mt-2">
+                <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
+                  Login
+                </Button>
+                <Button 
+                  size="sm" 
+                  onClick={() => navigate("/register")}
+                  className="bg-primary text-white hover:bg-primary/90"
+                >
+                  Create Account
+                </Button>
+              </div>
+            ),
+          });
+        } catch (err) {
+          console.error("Error showing auth prompt:", err);
+        }
+        return;
       }
-      return;
-    }
-    
-    // Guest mode has been disabled
-    
-    // Only authenticated users can proceed with generation
-    if (!session.isAuthenticated) {
-      return;
     }
     
     console.log("User is authenticated, proceeding with generation");
@@ -476,8 +473,14 @@ export default function Home() {
     
     // Verify user's authentication and usage limits
     if (!session.isAuthenticated) {
-      setShowAuthPrompt(true);
-      return;
+      // Check if this is an anonymous user with remaining free usage
+      if (isAnonymous && hasRemainingAnonymousUsage) {
+        // Anonymous user with remaining usage, allow one free modification
+        console.log("Anonymous user with remaining usage, allowing modification");
+      } else {
+        setShowAuthPrompt(true);
+        return;
+      }
     }
     
     if (session.isAuthenticated && session.usage.current >= session.usage.limit) {
