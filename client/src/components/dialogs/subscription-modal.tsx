@@ -211,8 +211,8 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             </div>
           </div>
         
-        {/* Desktop view with simplified cards - same style as mobile */}
-        <div className="hidden md:flex md:flex-wrap justify-center gap-4 lg:grid lg:grid-cols-6">
+        {/* Desktop view with simplified cards - 3x3 grid for large screens */}
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
           {/* Free Tier */}
           <div 
             className={cn(
