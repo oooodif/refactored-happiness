@@ -6,6 +6,40 @@ import { v4 as uuidv4 } from 'uuid';
 import { generateLatex } from '../services/aiProvider';
 
 /**
+ * Check if Tectonic is installed and available
+ */
+let tectonicAvailable: boolean | null = null; // Cache the result
+
+export async function isTectonicAvailable(): Promise<boolean> {
+  // Return cached result if available
+  if (tectonicAvailable !== null) {
+    return tectonicAvailable;
+  }
+  
+  return new Promise((resolve) => {
+    const tectonic = spawn('tectonic', ['--version']);
+    
+    tectonic.on('close', (code) => {
+      tectonicAvailable = code === 0;
+      resolve(tectonicAvailable);
+    });
+    
+    tectonic.on('error', () => {
+      tectonicAvailable = false;
+      resolve(false);
+    });
+    
+    // Set a timeout just in case
+    setTimeout(() => {
+      if (tectonicAvailable === null) {
+        tectonicAvailable = false;
+        resolve(false);
+      }
+    }, 2000);
+  });
+}
+
+/**
  * Compile LaTeX to PDF using Tectonic
  */
 export async function compileTex(latexContent: string): Promise<{
@@ -15,6 +49,21 @@ export async function compileTex(latexContent: string): Promise<{
   errorDetails?: { line: number; message: string }[];
 }> {
   console.log('[LATEX DEBUG] Starting PDF compilation process');
+  
+  // Check if Tectonic is available
+  const available = await isTectonicAvailable();
+  
+  if (!available) {
+    console.log('[LATEX DEBUG] Tectonic is not installed or not available');
+    return {
+      success: false,
+      error: 'PDF generation is not available on this server. Tectonic LaTeX compiler is not installed. Please download the LaTeX code and compile it locally, or contact support to enable PDF compilation.',
+      errorDetails: [{
+        line: 0,
+        message: 'Server configuration: Tectonic is not installed'
+      }]
+    };
+  }
   
   // Create temporary directory
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'latex-'));

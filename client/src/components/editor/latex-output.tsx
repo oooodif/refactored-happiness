@@ -115,7 +115,23 @@ export default function LatexOutput({
         {errorMessage && !compilationSuccess && (
           <div className="mt-2 text-sm text-red-600 p-2 bg-red-50 rounded-md border border-red-200">
             <p className="font-medium">Compilation Error:</p>
-            <p className="font-mono">{errorMessage}</p>
+            {errorMessage.includes("Tectonic is not installed") ? (
+              <>
+                <p className="mb-2">
+                  PDF generation is not available on this server. The Tectonic LaTeX compiler is not installed.
+                </p>
+                <p className="mb-2">
+                  <strong>Alternative options:</strong>
+                </p>
+                <ol className="list-decimal list-inside ml-2 text-red-700">
+                  <li className="my-1">Copy the LaTeX code and compile it locally with your LaTeX installation</li>
+                  <li className="my-1">Use an online LaTeX compiler like Overleaf (copy and paste this code)</li>
+                  <li className="my-1">Contact support to request PDF generation capability</li>
+                </ol>
+              </>
+            ) : (
+              <p className="font-mono">{errorMessage}</p>
+            )}
           </div>
         )}
       </div>
