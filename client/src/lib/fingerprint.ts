@@ -1,7 +1,7 @@
 /**
  * Simple browser fingerprinting implementation
  * This creates a basic fingerprint based on browser and device characteristics
- * For production use, consider using a more robust solution like FingerprintJS Pro
+ * For production use, consider using a moe robust solution like FingerprintJS Pro
  */
 
 interface BrowserDetails {
@@ -26,18 +26,20 @@ interface BrowserDetails {
  * Gets all components needed for fingerprinting
  */
 function getFingerPrintComponents(): BrowserDetails {
-  const screenResolution = typeof window.screen.width !== 'undefined' 
-    ? [window.screen.width, window.screen.height] 
-    : [];
+  const screenResolution =
+    typeof window.screen.width !== "undefined"
+      ? [window.screen.width, window.screen.height]
+      : [];
 
-  const availableScreenResolution = typeof window.screen.availWidth !== 'undefined' 
-    ? [window.screen.availWidth, window.screen.availHeight] 
-    : [];
+  const availableScreenResolution =
+    typeof window.screen.availWidth !== "undefined"
+      ? [window.screen.availWidth, window.screen.availHeight]
+      : [];
 
   // Get installed plugins
   const getPlugins = (): string[] => {
     const plugins: string[] = [];
-    
+
     // Some browsers don't support navigator.plugins
     if (navigator.plugins) {
       for (let i = 0; i < navigator.plugins.length; i++) {
@@ -45,43 +47,43 @@ function getFingerPrintComponents(): BrowserDetails {
         plugins.push(plugin.name);
       }
     }
-    
+
     return plugins;
   };
 
   // Canvas fingerprinting - render a sample canvas and hash the result
   const getCanvasFingerprint = (): string => {
     try {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return '';
-      
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return "";
+
       // Draw a sample text
       canvas.width = 200;
       canvas.height = 50;
-      ctx.textBaseline = 'top';
-      ctx.font = '14px Arial';
-      ctx.fillStyle = '#123456';
-      ctx.fillText('FingerPrint Sample', 2, 2);
+      ctx.textBaseline = "top";
+      ctx.font = "14px Arial";
+      ctx.fillStyle = "#123456";
+      ctx.fillText("FingerPrint Sample", 2, 2);
       return canvas.toDataURL().slice(-50); // Use just a small part of the data URL
     } catch (e) {
-      return '';
+      return "";
     }
   };
 
   // WebGL fingerprinting - get WebGL information
   const getWebGLFingerprint = (): string => {
     try {
-      const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl');
-      if (!gl) return '';
-      
+      const canvas = document.createElement("canvas");
+      const gl = canvas.getContext("webgl");
+      if (!gl) return "";
+
       const renderer = gl.getParameter(gl.RENDERER);
       const vendor = gl.getParameter(gl.VENDOR);
-      
+
       return `${vendor}-${renderer}`;
     } catch (e) {
-      return '';
+      return "";
     }
   };
 
@@ -100,7 +102,7 @@ function getFingerPrintComponents(): BrowserDetails {
     indexedDb: !!window.indexedDB,
     plugins: getPlugins(),
     canvas: getCanvasFingerprint(),
-    webgl: getWebGLFingerprint()
+    webgl: getWebGLFingerprint(),
   };
 }
 
@@ -111,7 +113,7 @@ function getFingerPrintComponents(): BrowserDetails {
 export function generateFingerprint(): string {
   const components = getFingerPrintComponents();
   const jsonString = JSON.stringify(components);
-  
+
   // Simple hash function for demonstration purposes
   // For production, use a cryptographic hash function
   return simpleHash(jsonString);
@@ -124,13 +126,13 @@ export function generateFingerprint(): string {
 function simpleHash(str: string): string {
   let hash = 0;
   if (str.length === 0) return hash.toString(36);
-  
+
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32bit integer
   }
-  
+
   return Math.abs(hash).toString(36);
 }
 
@@ -139,7 +141,7 @@ function simpleHash(str: string): string {
  */
 export function storeFingerprint(): string {
   const fingerprint = generateFingerprint();
-  localStorage.setItem('device_fingerprint', fingerprint);
+  localStorage.setItem("device_fingerprint", fingerprint);
   return fingerprint;
 }
 
@@ -147,9 +149,9 @@ export function storeFingerprint(): string {
  * Get the stored fingerprint or generate a new one
  */
 export function getFingerprint(): string {
-  const stored = localStorage.getItem('device_fingerprint');
+  const stored = localStorage.getItem("device_fingerprint");
   if (stored) return stored;
-  
+
   return storeFingerprint();
 }
 
@@ -159,31 +161,31 @@ export function getFingerprint(): string {
 export function initializeFingerprinting(): void {
   // Generate and store the fingerprint if it doesn't exist
   getFingerprint();
-  
+
   // Store fingerprint in multiple storage locations for persistence
   try {
     // Local Storage
-    localStorage.setItem('device_id', getFingerprint());
-    
+    localStorage.setItem("device_id", getFingerprint());
+
     // Session Storage
-    sessionStorage.setItem('device_id', getFingerprint());
-    
+    sessionStorage.setItem("device_id", getFingerprint());
+
     // IndexedDB
-    const request = indexedDB.open('fingerprint_store', 1);
-    request.onupgradeneeded = function() {
+    const request = indexedDB.open("fingerprint_store", 1);
+    request.onupgradeneeded = function () {
       const db = request.result;
-      if (!db.objectStoreNames.contains('fingerprints')) {
-        db.createObjectStore('fingerprints', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains("fingerprints")) {
+        db.createObjectStore("fingerprints", { keyPath: "id" });
       }
     };
-    
-    request.onsuccess = function() {
+
+    request.onsuccess = function () {
       const db = request.result;
-      const tx = db.transaction('fingerprints', 'readwrite');
-      const store = tx.objectStore('fingerprints');
+      const tx = db.transaction("fingerprints", "readwrite");
+      const store = tx.objectStore("fingerprints");
       store.put({ id: 1, fingerprint: getFingerprint() });
     };
   } catch (e) {
-    console.warn('Error storing fingerprint', e);
+    console.warn("Error storing fingerprint", e);
   }
 }
