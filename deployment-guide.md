@@ -329,7 +329,7 @@ If you encounter errors like "Error: Docker build failed":
        - GROQ_API_KEY
        - SESSION_SECRET (can be any secure random string)
        - STRIPE_SECRET_KEY
-       - VITE_STRIPE_PUBLISHABLE_KEY
+       - VITE_STRIPE_PUBLIC_KEY
 
 7. **Last resort: Start from a fresh project**:
    - If you continue to encounter Docker-related failures, consider creating a new Railway project

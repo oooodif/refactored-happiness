@@ -596,7 +596,7 @@
       const { id } = await response.json();
       
       // Redirect to checkout
-      const stripe = await loadStripe(process.env.STRIPE_PUBLIC_KEY);
+      const stripe = await loadStripe(process.env.VITE_STRIPE_PUBLIC_KEY);
       stripe.redirectToCheckout({ sessionId: id });
     }
     
