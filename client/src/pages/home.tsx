@@ -146,10 +146,25 @@ export default function Home() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
+  // Check localStorage for preselected template when coming from template URL
+  const getInitialDocumentType = () => {
+    try {
+      const selectedTemplate = localStorage.getItem("selectedTemplate");
+      if (selectedTemplate) {
+        // Clear the localStorage after reading to avoid persisting selection across sessions
+        localStorage.removeItem("selectedTemplate");
+        return selectedTemplate;
+      }
+    } catch (error) {
+      console.error("Error reading from localStorage:", error);
+    }
+    return "basic"; // Default document type
+  };
+
   const [editorState, setEditorState] = useState<EditorState>({
     inputContent: "",
     latexContent: "",
-    documentType: "basic",
+    documentType: getInitialDocumentType(),
     compilationResult: null,
     isGenerating: false,
     title: "Untitled Document",
