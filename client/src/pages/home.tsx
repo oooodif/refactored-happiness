@@ -359,9 +359,13 @@ export default function Home() {
       // Use the extracted title if available, otherwise fall back to the current title or a default
       const titleToUse = extractedTitle || editorState.title || "latex-document";
       
+      // Check if the content is HTML (from fallback mechanism)
+      const isHtml = editorState.compilationResult?.isHtml || false;
+      
       downloadPdf(
         editorState.compilationResult.pdf,
-        titleToUse
+        titleToUse,
+        isHtml
       );
       
       // If we got a good title and it's different from the current one, update the editor state
@@ -381,9 +385,11 @@ export default function Home() {
       console.error("Error in download process:", error);
       
       // Fallback to basic download if title extraction fails
+      const isHtml = editorState.compilationResult?.isHtml || false;
       downloadPdf(
         editorState.compilationResult.pdf, 
-        editorState.title || "latex-document"
+        editorState.title || "latex-document",
+        isHtml
       );
     }
   };

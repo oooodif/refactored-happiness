@@ -104,21 +104,31 @@ export function downloadBlob(blob: Blob, filename: string): void {
   }, 100);
 }
 
-export function downloadPdf(base64Pdf: string, filename: string): void {
+export function downloadPdf(base64Data: string, filename: string, isHtml: boolean = false): void {
   try {
     // Create a properly formatted filename from the title
     const properFilename = getReadableFilename(filename);
     
-    // Create the blob from the base64 data
-    const blob = base64ToBlob(base64Pdf, "application/pdf");
-    
-    // Download the blob with the formatted filename
-    downloadBlob(blob, `${properFilename}.pdf`);
-    
-    console.log(`PDF download initiated with filename: ${properFilename}.pdf`);
+    if (isHtml) {
+      // Handle HTML content
+      const blob = base64ToBlob(base64Data, "text/html");
+      
+      // Download as HTML file
+      downloadBlob(blob, `${properFilename}.html`);
+      
+      console.log(`HTML download initiated with filename: ${properFilename}.html`);
+    } else {
+      // Handle PDF content (default)
+      const blob = base64ToBlob(base64Data, "application/pdf");
+      
+      // Download as PDF file
+      downloadBlob(blob, `${properFilename}.pdf`);
+      
+      console.log(`PDF download initiated with filename: ${properFilename}.pdf`);
+    }
   } catch (error) {
-    console.error("Error downloading PDF:", error);
-    throw new Error("Failed to download PDF");
+    console.error("Error downloading document:", error);
+    throw new Error("Failed to download document");
   }
 }
 
