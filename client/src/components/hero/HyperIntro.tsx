@@ -180,7 +180,7 @@ const HyperIntro: React.FC<HyperIntroProps> = ({ onComplete }) => {
       renderer.setPixelRatio(window.devicePixelRatio);
       
       // Create glowing torus geometry
-      const geometry = new THREE.TorusGeometry(6, 1.5, 16, 100);
+      const geometry = new THREE.TorusGeometry(6, 1.5, 16, 100, Math.PI * 2);
       const material = new THREE.MeshNormalMaterial({
         wireframe: true
       });
