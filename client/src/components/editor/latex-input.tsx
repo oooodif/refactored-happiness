@@ -177,8 +177,8 @@ export default function LatexInput({
           ref={textareaRef}
           className="w-full h-full p-3 rounded-md border border-gray-300 glass-card font-mono text-sm resize-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg"
           placeholder={documentType === 'presentation' 
-            ? "Describe your slide show here, paste report or paper here, or design your slides using the buttons above. Use the 'New Slide' button to add slides."
-            : "Enter your content here. Use the buttons above to insert templates, or use tags like <MATHEQ>E = mc^2</MATHEQ> for math equations. No LaTeX knowledge required!"}
+            ? "Describe your slide presentation here. Our AI will convert your text into professional LaTeX slides. After generating, use the Notes field above to make specific modifications or remove content."
+            : "Enter your content in plain text - no LaTeX knowledge needed! After generating, use the Notes field to request changes (with MODIFY) or remove specific content (with OMIT). The AI handles all the LaTeX code for you."}
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
