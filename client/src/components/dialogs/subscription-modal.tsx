@@ -321,7 +321,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           {/* Power Tier */}
           <div 
             className={cn(
-              "border rounded-lg p-5 relative flex flex-col w-48 depth-3d",
+              "border rounded-lg p-5 relative flex flex-col w-48 depth-3d floating-card",
               session.tier === SubscriptionTier.Power ? "border-blue-500 bg-blue-50" : "glass-card",
               "cursor-pointer transition-all duration-300"
             )}
@@ -337,7 +337,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 </svg>
               </div>
             )}
-            <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
+            <div className="absolute -top-1 -right-1 animated-gradient-bg text-white text-xs px-2 py-0.5 rounded-full shadow-md">
               Popular
             </div>
           </div>
@@ -351,14 +351,14 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             {/* Mobile view for refill pack */}
             <div className="block md:hidden">
               <div 
-                className="border border-emerald-200 rounded-lg p-5 bg-emerald-50 relative cursor-pointer"
+                className="border border-emerald-200 rounded-lg p-5 relative cursor-pointer depth-3d glass-card tilt-on-hover"
                 onClick={() => {
                   onClose();
                   navigate("/refill");
                 }}
               >
                 <div className="text-lg font-semibold text-emerald-800">LaTeX Generation Refill</div>
-                <div className="text-2xl font-bold mt-2 text-emerald-700">${REFILL_PACK_PRICE.toFixed(2)}</div>
+                <div className="text-2xl font-bold mt-2 gradient-text" style={{background: "linear-gradient(90deg, #059669, #10b981)"}}>${REFILL_PACK_PRICE.toFixed(2)}</div>
                 <div className="text-sm text-emerald-600 mt-3">{REFILL_PACK_CREDITS} generations • Never expire</div>
               </div>
             </div>
@@ -366,14 +366,14 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             {/* Desktop view for refill pack */}
             <div className="hidden md:flex md:justify-center">
               <div 
-                className="border border-emerald-200 rounded-lg p-5 relative cursor-pointer flex flex-col max-w-sm depth-3d glass-card"
+                className="border border-emerald-200 rounded-lg p-5 relative cursor-pointer flex flex-col max-w-sm depth-3d glass-card tilt-on-hover"
                 onClick={() => {
                   onClose();
                   navigate("/refill");
                 }}
               >
                 <div className="text-lg font-semibold text-emerald-800">LaTeX Generation Refill</div>
-                <div className="text-3xl font-bold mt-2 text-emerald-700">${REFILL_PACK_PRICE.toFixed(2)}</div>
+                <div className="text-3xl font-bold mt-2 gradient-text" style={{background: "linear-gradient(90deg, #059669, #10b981)"}}>${REFILL_PACK_PRICE.toFixed(2)}</div>
                 <div className="text-sm text-emerald-600 mt-3">{REFILL_PACK_CREDITS} generations • Never expire</div>
               </div>
             </div>

@@ -1,159 +1,216 @@
-/* Modern UI Effects - Applied throughout the application */
+/**
+ * Modern UI Effects for AI LaTeX Generator
+ * Implements:
+ * - Glassmorphism with blur effects and transparent panels
+ * - 3D depth elements with subtle shadows and transforms
+ * - Variable blending/colors with gradient backgrounds and text
+ * - Morphing micro-interactions with hover animations and ripple effects
+ */
 
-/* Glass Card - Special variant for the application */
+/* === GLASSMORPHISM EFFECTS === */
+
+/* Basic glass element with blur background */
+.glass {
+  background: rgba(255, 255, 255, var(--glass-opacity, 0.7));
+  backdrop-filter: blur(var(--glass-blur, 12px));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 12px));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Card with glass effect */
 .glass-card {
-  background-color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   transition: all 0.3s ease;
 }
 
 .glass-card:hover {
-  box-shadow: 0 12px 24px 0 rgba(31, 38, 135, 0.1);
-  transform: translateY(-5px);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
 }
 
-.dark .glass-card {
-  background-color: rgba(17, 24, 39, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
-}
-
-/* 1. Glassmorphism 2.0 */
-.glass {
-  background-color: rgba(255, 255, 255, 0.7);
+/* Error message with glass effect */
+.glass-error {
+  background: rgba(254, 226, 226, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  transition: all 0.3s ease;
 }
 
-.glass-dark {
-  background-color: rgba(17, 24, 39, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
-}
+/* === 3D DEPTH EFFECTS === */
 
-/* 2. 3D Elements with Depth */
+/* Add subtle 3D depth to elements */
 .depth-3d {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 
+    0 2px 5px rgba(0, 0, 0, 0.1),
+    0 5px 15px rgba(0, 0, 0, 0.05);
+  transform: translateZ(0);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .depth-3d:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow: 
+    0 5px 15px rgba(0, 0, 0, 0.1),
+    0 15px 35px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px) translateZ(0);
 }
 
-.depth-subtle {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* Depth effect for dark backgrounds */
+.depth-3d-dark {
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    0 6px 20px rgba(0, 0, 0, 0.2);
+  transform: translateZ(0);
 }
 
-.depth-subtle:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 5px -2px rgba(0, 0, 0, 0.06);
-}
+/* === VARIABLE BLENDING/COLORS === */
 
-/* 3. Variable Blending Colors */
-.variable-gradient {
-  background: linear-gradient(135deg, var(--gradient-from, #3b82f6), var(--gradient-to, #8b5cf6));
-  transition: background 0.5s ease;
-}
-
-.variable-gradient:hover {
-  background: linear-gradient(135deg, var(--gradient-from-hover, #2563eb), var(--gradient-to-hover, #7c3aed));
-}
-
-.text-gradient {
-  background-clip: text;
+/* Text with gradient effect */
+.gradient-text {
+  background: linear-gradient(90deg, var(--gradient-from, #3b82f6), var(--gradient-to, #8b5cf6));
   -webkit-background-clip: text;
+  background-clip: text;
   color: transparent;
-  background-image: linear-gradient(to right, var(--gradient-from, #3b82f6), var(--gradient-to, #8b5cf6));
+  display: inline-block;
 }
 
-/* 4. Morphing Micro-interactions */
-.morph-button {
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.3s ease;
+/* Enhanced heading with subtle gradient */
+.enhanced-heading {
+  background: linear-gradient(90deg, #2563eb, #4f46e5);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+  font-weight: 600;
+}
+
+/* === MORPHING MICRO-INTERACTIONS === */
+
+/* Ripple effect for buttons */
+.ripple-effect {
   position: relative;
   overflow: hidden;
 }
 
-.morph-button:active {
-  transform: scale(0.97);
-}
-
-.morph-button::after {
-  content: '';
+.ripple-effect::after {
+  content: "";
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  background: rgba(255, 255, 255, 0.5);
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.3) 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
   opacity: 0;
-  border-radius: 100%;
-  transform: scale(1, 1) translate(-50%, -50%);
-  transform-origin: 50% 50%;
+  transition: transform 0.5s, opacity 0.8s;
 }
 
-.morph-button:focus:not(:active)::after {
-  animation: ripple 0.6s ease-out;
+.ripple-effect:active::after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
 }
 
-@keyframes ripple {
+/* Pulse animation for status indicators */
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+.pulse-animation-error {
+  animation: pulse-error 2s infinite;
+}
+
+.pulse-animation-slow {
+  animation: pulse 3s infinite;
+}
+
+@keyframes pulse {
   0% {
-    transform: scale(0, 0);
-    opacity: 0.5;
-  }
-  20% {
-    transform: scale(25, 25);
-    opacity: 0.3;
-  }
-  100% {
-    opacity: 0;
-    transform: scale(40, 40);
-  }
-}
-
-/* Enhanced Typography */
-.enhanced-heading {
-  font-weight: 700;
-  line-height: 1.2;
-  background: linear-gradient(to right, #3b82f6, #8b5cf6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* Background gradient for page sections */
-.bg-gradient-soft {
-  background-image: linear-gradient(
-    135deg,
-    rgba(59, 130, 246, 0.05),
-    rgba(147, 51, 234, 0.05)
-  );
-  background-attachment: fixed;
-}
-
-/* Animated gradient backgrounds */
-.animated-gradient {
-  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-  background-size: 400% 400%;
-  animation: gradient-shift 15s ease infinite;
-}
-
-@keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
+    opacity: 1;
   }
   50% {
-    background-position: 100% 50%;
+    opacity: 0.6;
   }
   100% {
-    background-position: 0% 50%;
+    opacity: 1;
   }
+}
+
+@keyframes pulse-error {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Transition effects */
+.hover-lift {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Glow effect on focus or hover */
+.glow-effect:focus, .glow-effect:hover {
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+}
+
+/* Animated background gradient */
+.animated-gradient-bg {
+  background: linear-gradient(270deg, #4f46e5, #3b82f6, #8b5cf6);
+  background-size: 600% 600%;
+  animation: gradientShift 8s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Floating effect for cards */
+.floating-card {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transition: all 0.5s ease;
+  animation: floating 4s ease-in-out infinite;
+}
+
+@keyframes floating {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+/* Button tilt effect */
+.tilt-on-hover {
+  transition: transform 0.2s ease;
+}
+
+.tilt-on-hover:hover {
+  transform: perspective(1000px) rotateX(2deg) rotateY(2deg);
+}
+
+/* Typing cursor animation for editor input */
+.typing-cursor::after {
+  content: '|';
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
