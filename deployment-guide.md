@@ -6,10 +6,11 @@ This guide provides a comprehensive approach to deploying the AI LaTeX Generator
 
 1. [Prerequisites](#prerequisites)
 2. [Deployment Configuration](#deployment-configuration)
-3. [Fallback Mechanism](#fallback-mechanism)
-4. [Environment Variables](#environment-variables)
-5. [Database Setup](#database-setup)
-6. [Troubleshooting](#troubleshooting)
+3. [Important: Docker Conflicts](#important-docker-conflicts)
+4. [Fallback Mechanism](#fallback-mechanism)
+5. [Environment Variables](#environment-variables)
+6. [Database Setup](#database-setup)
+7. [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
 
@@ -21,6 +22,29 @@ This guide provides a comprehensive approach to deploying the AI LaTeX Generator
   - Groq API key (optional)
 
 ## Deployment Configuration
+
+## Important: Docker Conflicts
+
+When deploying to Railway, you may encounter errors related to Docker or Nix package installation:
+
+```
+[stage-0 6/17] RUN nix-env -if .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix && nix-collect-garbage -d
+"nix-env -if .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix && nix-collect-garbage -d" did not complete successfully: exit code: 1
+```
+
+Or Docker-related messages like:
+
+```
+[internal] load build definition from Dockerfile
+```
+
+To resolve these issues:
+
+1. **Remove any Dockerfile** from your project - Railway will attempt to use Docker if it finds a Dockerfile, which conflicts with Nixpacks
+2. **Check for `.dockerignore`** - Remove this file as well to avoid confusing the build system
+3. **Use Railway's service settings** - In your Railway dashboard, navigate to your service settings and explicitly set the builder to "Nixpacks"
+4. **Verify nixpacks.toml** - Ensure your nixpacks.toml file is in the root directory and uses compatible package names
+5. **Check for conflicting configuration** - Remove any docker-compose.yml or similar files
 
 ### Nixpacks Configuration
 
@@ -167,3 +191,84 @@ If database connections fail:
 1. Verify that the PostgreSQL addon is properly connected in Railway
 2. Check that `DATABASE_URL` is properly set
 3. Ensure database migrations are running during deployment
+
+### Docker Build Failures
+
+If you encounter errors like "Error: Docker build failed":
+
+1. **Manually override the builder**:
+   - In your Railway dashboard, go to your service settings
+   - Set the "Builder" to "Nixpacks" explicitly
+   - Save settings and redeploy
+
+2. **Clean your repository**:
+   - Ensure there are no Docker-related files in your repository:
+     ```
+     rm -f Dockerfile docker-compose.yml .dockerignore
+     ```
+   - Check for Docker files in node_modules (these can cause conflicts):
+     ```
+     find ./node_modules -name "Dockerfile" -o -name "docker-compose.yml"
+     ```
+   - For deployment, you may need to temporarily rename these files:
+     ```
+     find ./node_modules -name "docker-compose.yml" -exec mv {} {}.bak \;
+     ```
+   - Commit and push these changes to your repository
+
+3. **Verify your `.railway.toml` file**:
+   - You already have this file configured properly:
+     ```toml
+     [build]
+     builder             = "NIXPACKS"
+     buildCommand        = "npm run build"
+     packages            = "tectonic"
+     
+     [deploy]
+     preDeployCommand    = "npm run db:push"
+     startCommand        = "NODE_ENV=production NODE_PATH=. tsx server/index.ts"
+     
+     healthcheckPath     = "/health"
+     healthcheckTimeout  = 180
+     restartPolicyType   = "ON_FAILURE"
+     ```
+
+4. **Verify your railway.json file**:
+   - Your railway.json file looks good:
+     ```json
+     {
+       "$schema": "https://railway.app/railway.schema.json",
+       "build": {
+         "builder": "NIXPACKS",
+         "buildCommand": "npm run build",
+         "packages": ["tectonic"]
+       },
+       "deploy": {
+         "preDeployCommand": "npm run build && npm run db:push",
+         "startCommand": "NODE_ENV=production NODE_PATH=. tsx server/index.ts",
+         "healthcheckPath": "/health",
+         "healthcheckTimeout": 180,
+         "restartPolicyType": "ON_FAILURE",
+         "restartPolicyMaxRetries": 10
+       }
+     }
+     ```
+   - Note: The duplicate "npm run build" in both buildCommand and preDeployCommand may be redundant but shouldn't cause issues
+
+5. **Create an .npmignore file**:
+   - Create an .npmignore file to explicitly exclude Docker-related files in node_modules:
+     ```
+     **/Dockerfile
+     **/docker-compose.yml
+     **/docker-compose.yaml
+     **/.dockerignore
+     **/docker/
+     ```
+   - This helps prevent Railway from detecting these files during deployment
+
+6. **Last resort: Start from a fresh project**:
+   - If you continue to encounter Docker-related failures, consider creating a new Railway project
+   - Connect it to your repository
+   - Add the PostgreSQL plugin
+   - Set your environment variables
+   - Deploy with Nixpacks explicitly selected
