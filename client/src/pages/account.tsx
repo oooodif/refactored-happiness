@@ -341,7 +341,7 @@ export default function Account() {
                             <Button 
                               size="sm" 
                               variant="default"
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 border-transparent text-white"
                               onClick={() => navigate("/refill")}
                             >
                               Refill 100 Credits for $0.99
@@ -350,6 +350,7 @@ export default function Account() {
                           <Button 
                             size="sm" 
                             variant={session.tier === 'free' ? "default" : "outline"}
+                            className={session.tier === 'free' ? "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 border-transparent" : ""}
                             onClick={() => setIsSubscriptionModalOpen(true)}
                           >
                             {session.tier === 'free' ? 'Upgrade Plan' : 'View All Plans'}
