@@ -772,9 +772,11 @@ export default function Home() {
               value={editorState.inputContent}
               onChange={handleInputChange}
               onGenerate={handleGenerate}
+              onModify={handleModifyLatex}
               documentType={editorState.documentType}
               onDocumentTypeChange={handleDocumentTypeChange}
               generating={editorState.isGenerating}
+              hasLatexContent={!!editorState.latexContent}
             />
           </div>
         </div>
