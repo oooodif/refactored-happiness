@@ -17,7 +17,12 @@ import { eq, and, desc } from "drizzle-orm";
  */
 export const storage = {
   // User operations
-  async createUser(username: string, email: string, password: string): Promise<{
+  async createUser(
+    username: string, 
+    email: string, 
+    password: string, 
+    verificationToken?: string
+  ): Promise<{
     success: boolean;
     user?: User;
     error?: string;
@@ -40,6 +45,9 @@ export const storage = {
       // Hash password
       const hashedPassword = await hashPassword(password);
       
+      // Set verification token expiry (24 hours)
+      const tokenExpiry = verificationToken ? new Date(Date.now() + 24 * 60 * 60 * 1000) : undefined;
+      
       // Create user with default free tier
       const [newUser] = await db.insert(users).values({
         username,
@@ -49,7 +57,10 @@ export const storage = {
         subscriptionTier: SubscriptionTier.Free,
         subscriptionStatus: 'active',
         monthlyUsage: 0,
-        usageResetDate: new Date()
+        usageResetDate: new Date(),
+        emailVerified: false,
+        verificationToken,
+        verificationTokenExpiry: tokenExpiry
       }).returning();
       
       // Get usage limit for free tier
@@ -151,6 +162,74 @@ export const storage = {
     } catch (error) {
       console.error('Get user by Stripe customer ID error:', error);
       return null;
+    }
+  },
+  
+  async getUserByVerificationToken(token: string): Promise<User | null> {
+    try {
+      const user = await db.query.users.findFirst({
+        where: (users) => eq(users.verificationToken, token)
+      });
+      
+      return user || null;
+    } catch (error) {
+      console.error('Get user by verification token error:', error);
+      return null;
+    }
+  },
+  
+  async verifyUserEmail(token: string): Promise<{
+    success: boolean;
+    user?: User;
+    error?: string;
+  }> {
+    try {
+      // Find user by token
+      const user = await this.getUserByVerificationToken(token);
+      
+      if (!user) {
+        return {
+          success: false,
+          error: 'Invalid verification token'
+        };
+      }
+      
+      // Check if token has expired
+      if (user.verificationTokenExpiry && new Date() > new Date(user.verificationTokenExpiry)) {
+        return {
+          success: false,
+          error: 'Verification token has expired'
+        };
+      }
+      
+      // Update user to verified
+      const [updatedUser] = await db.update(users)
+        .set({
+          emailVerified: true,
+          verificationToken: null,
+          verificationTokenExpiry: null,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, user.id))
+        .returning();
+      
+      if (!updatedUser) {
+        return {
+          success: false,
+          error: 'Failed to verify email'
+        };
+      }
+      
+      return {
+        success: true,
+        user: updatedUser
+      };
+    } catch (error) {
+      console.error('Verify email error:', error);
+      return {
+        success: false,
+        error: 'Failed to verify email'
+      };
     }
   },
   

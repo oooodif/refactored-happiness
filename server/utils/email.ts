@@ -39,6 +39,13 @@ export async function testPostmarkConnection(): Promise<{ success: boolean; mess
 /**
  * Sends a verification email to the user
  */
+export async function generateVerificationToken(): Promise<string> {
+  // Generate a random string of 32 characters
+  return Array.from({ length: 32 }, () => 
+    Math.floor(Math.random() * 16).toString(16)
+  ).join('');
+}
+
 export async function sendVerificationEmail(
   email: string, 
   verificationToken: string
@@ -51,8 +58,11 @@ export async function sendVerificationEmail(
   }
 
   try {
-    // Create the verification link - in production this would be your domain
-    const verificationLink = `${process.env.PUBLIC_URL || 'http://localhost:5000'}/verify-email?token=${verificationToken}`;
+    // Determine the base URL based on the environment
+    // For Railway, use the PRIMARY_DOMAIN environment variable
+    // This will ensure the verification link works in both local and production environments
+    const baseUrl = process.env.PRIMARY_DOMAIN || process.env.PUBLIC_URL || 'http://localhost:5000';
+    const verificationLink = `${baseUrl}/verify-email?token=${verificationToken}`;
     
     const response = await client.sendEmail({
       From: FROM_EMAIL,
