@@ -37,16 +37,11 @@ interface LoginModalProps {
   onClose: () => void;
 }
 
-// Form schema
-const loginSchema = z.object({
+// Form schema - combined schema with all possible fields
+const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  rememberMe: z.boolean().default(false),
-});
-
-const registerSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  rememberMe: z.boolean().optional().default(false),
 });
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
@@ -59,26 +54,15 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [, navigate] = useLocation();
   const [showRegister, setShowRegister] = useState(false);
 
-  // We need separate forms for register and login due to type issues
-  const registerForm = useForm<z.infer<typeof registerSchema>>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      email: "",
-      password: ""
-    }
-  });
-  
-  const loginForm = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
+  // Single form with all possible fields
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
       password: "",
       rememberMe: false
     }
   });
-  
-  // Use the appropriate form based on whether we're showing the register form
-  const form = showRegister ? registerForm : loginForm;
 
   // Handles resending verification email
   const handleResendVerification = async () => {
