@@ -1,0 +1,104 @@
+npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+
+npm warn deprecated @oclif/config@1.18.17: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+
+npm warn deprecated @oclif/errors@1.3.5: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+
+npm warn deprecated @oclif/config@1.18.2: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+
+npm warn deprecated @oclif/config@1.18.16: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+
+
+added 974 packages, and audited 975 packages in 16s
+
+114 packages are looking for funding
+  run `npm fund` for details
+
+
+10 vulnerabilities (5 moderate, 5 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+[stage-0 15/19] RUN --mount=type=cache,id=s/8533af8e-5d28-4007-8dd8-f04a73c28bc0-/root/npm,target=/root/.npm npm ci  ✔ 16s
+
+[stage-0 16/19] COPY . /app/.
+
+[stage-0 16/19] COPY . /app/.  ✔ 243ms
+
+[stage-0 17/19] RUN --mount=type=cache,id=s/8533af8e-5d28-4007-8dd8-f04a73c28bc0-node_modules/cache,target=/app/node_modules/.cache npm run build
+
+npm warn config production Use `--omit=dev` instead.
+
+
+> rest-express@1.0.0 build
+> vite build
+
+
+vite v5.4.18 building for production...
+
+transforming...
+
+✓ 1856 modules transformed.
+
+rendering chunks...
+
+computing gzip size...
+
+../dist/public/index.html                   0.63 kB │ gzip:   0.38 kB
+
+../dist/public/assets/index-BEtnFXEL.css   67.88 kB │ gzip:  12.05 kB
+
+../dist/public/assets/index-BC-BRdTN.js   542.37 kB │ gzip: 168.40 kB
+
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+✓ built in 3.97s
+
+[stage-0 17/19] RUN --mount=type=cache,id=s/8533af8e-5d28-4007-8dd8-f04a73c28bc0-node_modules/cache,target=/app/node_modules/.cache npm run build  ✔ 5s
+
+[stage-0 18/19] RUN printf '\nPATH=/app/node_modules/.bin:$PATH' >> /root/.profile
+
+[stage-0 18/19] RUN printf '\nPATH=/app/node_modules/.bin:$PATH' >> /root/.profile  ✔ 144ms
+
+[stage-0 19/19] COPY . /app
+
+[stage-0 19/19] COPY . /app  ✔ 64ms
+
+[auth] sharing credentials for us-west1.registry.rlwy.net
+
+[auth] sharing credentials for us-west1.registry.rlwy.net  ✔ 0ms
+
+=== Successfully Built! ===
+
+Run:
+
+docker run -it us-west1.registry.rlwy.net/8533af8e-5d28-4007-8dd8-f04a73c28bc0:ea60fc88-7977-4c13-a767-4d4827c557c9
+
+Build time: 61.54 seconds
+
+ 
+
+====================
+
+Starting Healthcheck
+
+====================
+
+
+Path: /health
+
+Retry window: 3m0s
+
+ 

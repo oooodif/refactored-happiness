@@ -1,0 +1,127 @@
+
+
+Filter
+
+
+
+
+You reached the start of the range → May 7, 2025 1:31 PM
+
+Starting Container
+
+npm warn config production Use `--omit=dev` instead.
+
+ 
+
+up to date, audited 975 packages in 2s
+
+ 
+
+114 packages are looking for funding
+
+  run `npm fund` for details
+
+ 
+
+10 vulnerabilities (5 moderate, 5 high)
+
+ 
+
+To address issues that do not require attention, run:
+
+  npm audit fix
+
+ 
+
+To address all issues (including breaking changes), run:
+
+  npm audit fix --force
+
+ 
+
+Run `npm audit` for details.
+
+npm warn config production Use `--omit=dev` instead.
+
+ 
+
+> rest-express@1.0.0 build
+
+> vite build
+
+ 
+
+vite v5.4.18 building for production...
+
+transforming...
+
+✓ 1856 modules transformed.
+
+rendering chunks...
+
+computing gzip size...
+
+../dist/public/index.html                   0.63 kB │ gzip:   0.38 kB
+
+../dist/public/assets/index-BEtnFXEL.css   67.88 kB │ gzip:  12.05 kB
+
+../dist/public/assets/index-BC-BRdTN.js   542.37 kB │ gzip: 168.40 kB
+
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+
+- Using dynamic import() to code-split the application
+
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+✓ built in 4.91s
+
+npm warn config production Use `--omit=dev` instead.
+
+npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+
+npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+
+ 
+
+changed 16 packages in 2s
+
+ 
+
+2 packages are looking for funding
+
+  run `npm fund` for details
+
+npm warn config production Use `--omit=dev` instead.
+
+ 
+
+> rest-express@1.0.0 db:push
+
+> drizzle-kit push --force --config=./drizzle.config.ts
+
+ 
+
+Reading config file '/app/drizzle.config.ts'
+
+Using 'pg' driver for database querying
+
+[⣷] Pulling schema from database...
+
+[⣯] Pulling schema from database...
+
+[✓] Pulling schema from database...
+
+[i] No changes detected
+
+Stopping Container
+
+Starting Container
+
+npm warn config production Use `--omit=dev` instead.
+
+8:34:16 PM [express] serving on port 3000
+
+No userId in session
