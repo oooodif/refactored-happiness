@@ -365,6 +365,7 @@ export default function Account() {
                   <Button
                     onClick={() => setIsSubscriptionModalOpen(true)}
                     disabled={isLoading}
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 border-transparent"
                   >
                     Upgrade Plan
                   </Button>
@@ -372,7 +373,7 @@ export default function Account() {
                   <Button
                     onClick={handleManageSubscription}
                     disabled={isLoading}
-                    className="px-8"
+                    className="px-8 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 border-transparent"
                   >
                     Manage Subscription
                   </Button>
