@@ -184,11 +184,10 @@ export default function Home() {
       user: session.user
     });
     
-    // GUEST MODE ENABLED - Allow non-authenticated users to generate content
-    const GUEST_MODE = true;
+    // Guest mode is disabled - non-authenticated users cannot generate content
     
-    // If user is not authenticated and guest mode is disabled, show auth prompt
-    if (!session.isAuthenticated && !GUEST_MODE) {
+    // If user is not authenticated, show auth prompt
+    if (!session.isAuthenticated) {
       // Stop the generating animation if it was started
       setEditorState(prev => ({ ...prev, isGenerating: false }));
       
@@ -221,12 +220,11 @@ export default function Home() {
       return;
     }
     
-    if (!session.isAuthenticated && GUEST_MODE) {
-      console.log("Guest mode enabled - allowing generation without authentication");
-      toast({
-        title: "Guest Mode",
-        description: "You're using guest mode. Create an account to save your documents.",
-      });
+    // Guest mode has been disabled
+    
+    // Only authenticated users can proceed with generation
+    if (!session.isAuthenticated) {
+      return;
     }
     
     console.log("User is authenticated, proceeding with generation");
@@ -312,11 +310,10 @@ export default function Home() {
       return;
     }
     
-    // GUEST MODE ENABLED - Allow non-authenticated users to download PDFs
-    const GUEST_MODE = true;
+    // Guest mode is disabled - non-authenticated users cannot download PDFs
     
-    // If user is not authenticated and guest mode is disabled, show auth prompt
-    if (!session.isAuthenticated && !GUEST_MODE) {
+    // If user is not authenticated, show auth prompt
+    if (!session.isAuthenticated) {
       console.log("User not authenticated, showing auth prompt for PDF download");
       
       try {
@@ -344,13 +341,7 @@ export default function Home() {
       return;
     }
     
-    if (!session.isAuthenticated && GUEST_MODE) {
-      console.log("Guest mode enabled - allowing PDF download without authentication");
-      toast({
-        title: "Guest Mode",
-        description: "You're using guest mode. Create an account to save your documents.",
-      });
-    }
+    // Guest mode has been disabled
 
     try {
       // First try to extract a meaningful title from the LaTeX content
@@ -452,11 +443,10 @@ export default function Home() {
       return;
     }
     
-    // GUEST MODE ENABLED - Allow non-authenticated users to compile PDFs
-    const GUEST_MODE = true;
+    // Guest mode is disabled - non-authenticated users cannot compile PDFs
     
-    // If user is not authenticated and guest mode is disabled, show auth prompt
-    if (!session.isAuthenticated && !GUEST_MODE) {
+    // If user is not authenticated, show auth prompt
+    if (!session.isAuthenticated) {
       console.log("User not authenticated, showing auth prompt for PDF compilation");
       
       try {
@@ -484,13 +474,7 @@ export default function Home() {
       return;
     }
     
-    if (!session.isAuthenticated && GUEST_MODE) {
-      console.log("Guest mode enabled - allowing PDF compilation without authentication");
-      toast({
-        title: "Guest Mode",
-        description: "You're using guest mode. Create an account to save your documents.",
-      });
-    }
+    // Guest mode has been disabled
 
     try {
       // Call the compile endpoint to generate PDF from current LaTeX
