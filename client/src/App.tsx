@@ -91,28 +91,44 @@ function App() {
   const checkAndUpdateSession = useCallback(async () => {
     try {
       console.log("MANUAL SESSION CHECK TRIGGERED");
-      const authData = await checkAuthStatus();
+      // First make a hard call to the server to check the actual session state
+      const res = await fetch('/api/auth/me', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
       
-      if (authData.isAuthenticated && authData.user) {
-        console.log("SESSION CHECK SUCCESS:", authData.user.username);
+      console.log("SESSION CHECK STATUS:", res.status);
+      
+      if (res.ok) {
+        const authData = await res.json();
+        console.log("SESSION CHECK RESPONSE:", authData);
         
-        // Update the session with fresh data
-        setSession({
-          user: authData.user,
-          isAuthenticated: true,
-          isLoading: false,
-          tier: authData.user.subscriptionTier || SubscriptionTier.Free,
-          usage: {
-            current: authData.user.monthlyUsage || 0,
-            limit: authData.usageLimit || 3,
-            resetDate: authData.user.usageResetDate || new Date().toISOString()
-          },
-          refillPackCredits: authData.user.refillPackCredits || 0
-        });
-        return;
+        if (authData.user) {
+          console.log("SESSION CHECK SUCCESS: AUTHENTICATED as", authData.user.username);
+          
+          // Update the session with fresh data
+          setSession({
+            user: authData.user,
+            isAuthenticated: true,
+            isLoading: false,
+            tier: authData.user.subscriptionTier || SubscriptionTier.Free,
+            usage: {
+              current: authData.user.monthlyUsage || 0,
+              limit: authData.usageLimit || 3,
+              resetDate: authData.user.usageResetDate || new Date().toISOString()
+            },
+            refillPackCredits: authData.user.refillPackCredits || 0
+          });
+          return;
+        }
       }
       
-      // Not authenticated
+      // Not authenticated or error
       console.log("SESSION CHECK - NOT AUTHENTICATED");
       setSession({
         user: null,

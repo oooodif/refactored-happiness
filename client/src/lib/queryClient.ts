@@ -10,6 +10,7 @@ async function throwIfResNotOk(res: Response) {
 // Helper to check if user session exists and is valid
 export async function checkAuthStatus(): Promise<any> {
   try {
+    console.log("CHECKING AUTH STATUS...");
     const res = await fetch('/api/auth/me', {
       method: 'GET',
       credentials: 'include',
@@ -20,9 +21,22 @@ export async function checkAuthStatus(): Promise<any> {
       }
     });
     
+    console.log("AUTH STATUS RESPONSE:", res.status);
+    
     if (res.ok) {
-      return await res.json();
+      const data = await res.json();
+      console.log("AUTH STATUS DATA:", data);
+      // Explicitly check for user object in the response
+      if (data && data.user) {
+        return {
+          isAuthenticated: true,
+          user: data.user,
+          usageLimit: data.usageLimit
+        };
+      }
     }
+    
+    console.log("AUTH STATUS: Not authenticated");
     return { isAuthenticated: false };
   } catch (error) {
     console.error('Session check failed:', error);

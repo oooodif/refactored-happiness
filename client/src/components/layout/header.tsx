@@ -93,6 +93,7 @@ export default function Header() {
       // Clear all backup cookies and storage
       document.cookie = "userLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       document.cookie = "latex.sid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie = "connect.sid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       
       localStorage.removeItem('userLoggedIn');
       localStorage.removeItem('userData');
@@ -147,6 +148,18 @@ export default function Header() {
     }
   };
 
+  // Force session sync
+  const forceSessionSync = () => {
+    console.log("FORCING SESSION SYNC");
+    toast({
+      title: "Refreshing Session",
+      description: "Attempting to sync your session state..."
+    });
+    
+    // Force a hard reload to sync session
+    window.location.reload();
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -168,6 +181,15 @@ export default function Header() {
               AITexGen
             </h1>
           </Link>
+          {/* Debug button - only in dev */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="ml-4 text-xs" 
+            onClick={forceSessionSync}
+          >
+            Sync Session
+          </Button>
         </div>
         <div className="flex items-center space-x-4">
           {session.isAuthenticated ? (
