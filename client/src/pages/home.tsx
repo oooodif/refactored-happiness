@@ -158,138 +158,212 @@ export default function Home() {
     }
   }, []);
   
-  // Beautiful keyboard dismissal animation with parallax effects
+  // Ultra-robust keyboard dismissal detection and animation with multiple fallbacks
   useEffect(() => {
-    // Only run on mobile devices in portrait mode
-    const isMobilePortrait = () => {
-      return window.innerWidth < 768 && window.innerHeight > window.innerWidth;
-    };
-    
-    if (!isMobilePortrait()) return;
-    
-    // Variables to track keyboard state
-    let isKeyboardVisible = false;
-    let previousHeight = window.innerHeight;
-    let initialHeight = window.innerHeight;
-    
-    // Function to apply smooth scroll & parallax animations
-    function animateKeyboardDismiss() {
-      // Get elements that should have parallax effects
-      const header = document.querySelector('header');
-      const mainContainer = document.querySelector('main');
-      const floatingRect1 = document.getElementById('FloatingRectInput');
-      const floatingRect2 = document.getElementById('FloatingRectOutput');
+    // This function handles everything in one place - works on iOS Safari
+    const ultraRobustKeyboardManager = () => {
+      // Only apply this on mobile devices in portrait mode
+      if (window.innerWidth >= 768) return;
       
-      // Apply parallax animations to different elements with varying depths
-      if (header) {
-        header.classList.add('header-parallax-animate');
-        header.classList.add('stagger-item-1');
+      console.log("Setting up ultra-robust keyboard detection");
+      
+      // State tracking
+      let isKeyboardOpen = false;
+      let initialHeight = window.innerHeight;
+      let touchStartY = 0;
+      let focusedElement: Element | null = null;
+      
+      // Force scroll to top with different methods for maximum compatibility
+      const forceScrollTop = () => {
+        console.log("📱 Scrolling to top with multiple methods");
         
-        // Remove animation classes after animation completes
+        // Method 1: Standard smooth scroll
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: 'smooth'
+        });
+        
+        // Method 2: Set scroll directly (fallback)
         setTimeout(() => {
-          header.classList.remove('header-parallax-animate');
-          header.classList.remove('stagger-item-1');
-        }, 800);
-      }
-      
-      if (mainContainer) {
-        mainContainer.classList.add('parallax-container');
+          window.scrollTo(0, 0);
+        }, 50);
         
-        // Remove after animation completes
+        // Method 3: Force body to top
         setTimeout(() => {
-          mainContainer.classList.remove('parallax-container');
-        }, 800);
-      }
-      
-      // Apply beautiful scroll reveal animation to the floating UI elements
-      if (floatingRect1) {
-        floatingRect1.classList.add('scroll-reveal-animate');
-        floatingRect1.classList.add('stagger-item-2');
-        floatingRect1.classList.add('parallax-layer-0');
+          if (window.scrollY > 0) {
+            document.body.scrollTop = 0; // For Safari
+            document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+          }
+        }, 100);
         
-        // Add subtle ripple effect
-        floatingRect1.classList.add('ripple-out-animate');
+        // Animate UI elements for visual interest
+        animateUI();
+      };
+      
+      // Apply cool animations to UI elements
+      const animateUI = () => {
+        // Get UI elements
+        const header = document.querySelector('header');
+        const floatingRect1 = document.getElementById('FloatingRectInput');
+        const floatingRect2 = document.getElementById('FloatingRectOutput');
         
-        // Remove animation classes after animation completes
-        setTimeout(() => {
-          floatingRect1.classList.remove('scroll-reveal-animate');
-          floatingRect1.classList.remove('stagger-item-2');
-          floatingRect1.classList.remove('parallax-layer-0');
-          floatingRect1.classList.remove('ripple-out-animate');
-        }, 800);
-      }
-      
-      if (floatingRect2) {
-        floatingRect2.classList.add('scroll-reveal-animate');
-        floatingRect2.classList.add('stagger-item-3');
-        floatingRect2.classList.add('parallax-layer-1');
-        
-        // Remove animation classes after animation completes
-        setTimeout(() => {
-          floatingRect2.classList.remove('scroll-reveal-animate');
-          floatingRect2.classList.remove('stagger-item-3');
-          floatingRect2.classList.remove('parallax-layer-1');
-        }, 800);
-      }
-      
-      // Perform smooth scroll to top with easing
-      window.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: 'smooth'
-      });
-    }
-    
-    // Detect keyboard appearance/disappearance by monitoring window height changes
-    function checkKeyboard() {
-      // Only run checks in portrait mode
-      if (!isMobilePortrait()) return;
-      
-      // If the window height suddenly decreased significantly, keyboard appeared
-      if (window.innerHeight < previousHeight * 0.75) {
-        if (!isKeyboardVisible) {
-          console.log("Keyboard appeared");
-          isKeyboardVisible = true;
+        // Dynamic animation classes based on what exists in the DOM
+        if (header) {
+          header.classList.add('header-parallax-animate');
+          setTimeout(() => header.classList.remove('header-parallax-animate'), 800);
         }
-      } 
-      // If the window height increased back close to original, keyboard disappeared
-      else if (isKeyboardVisible && window.innerHeight > previousHeight * 0.9) {
-        console.log("Keyboard disappeared - triggering animations");
-        isKeyboardVisible = false;
         
-        // Trigger the beautiful parallax animation when keyboard is dismissed
-        animateKeyboardDismiss();
-      }
+        if (floatingRect1) {
+          floatingRect1.classList.add('scroll-reveal-animate', 'ripple-out-animate');
+          setTimeout(() => {
+            floatingRect1.classList.remove('scroll-reveal-animate', 'ripple-out-animate');
+          }, 800);
+        }
+        
+        if (floatingRect2) {
+          floatingRect2.classList.add('scroll-reveal-animate');
+          setTimeout(() => floatingRect2.classList.remove('scroll-reveal-animate'), 800);
+        }
+      };
+
+      // DETECTION METHOD 1: Direct focus/blur tracking on input fields
+      const setupInputListeners = () => {
+        // Focus event - keyboard opening
+        document.addEventListener('focusin', (e) => {
+          if (e.target instanceof HTMLElement) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+              console.log("📱 Input focused - keyboard likely visible");
+              isKeyboardOpen = true;
+              focusedElement = e.target;
+            }
+          }
+        }, true);
+        
+        // Blur event - keyboard dismissal
+        document.addEventListener('focusout', (e) => {
+          if (e.target instanceof HTMLElement) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+              console.log("📱 Input blurred - keyboard likely dismissed");
+              
+              // Wait to ensure keyboard is fully dismissed
+              setTimeout(() => {
+                if (document.activeElement !== e.target) {
+                  isKeyboardOpen = false;
+                  focusedElement = null;
+                  forceScrollTop();
+                }
+              }, 250);
+            }
+          }
+        }, true);
+      };
       
-      previousHeight = window.innerHeight;
-    }
-    
-    // iOS Safari doesn't consistently fire resize events during keyboard show/hide
-    // Use multiple event types for better detection
-    window.addEventListener('resize', checkKeyboard);
-    
-    // Also detect keyboard dismissal via input blur events
-    const inputFields = document.querySelectorAll('input, textarea');
-    inputFields.forEach(input => {
-      input.addEventListener('blur', () => {
-        // When focus leaves any input on mobile, keyboard likely dismissed
-        if (isKeyboardVisible && isMobilePortrait()) {
-          console.log("Input blur detected - keyboard likely dismissed");
-          isKeyboardVisible = false;
+      // DETECTION METHOD 2: Window resize monitoring for keyboard
+      const setupResizeListener = () => {
+        window.addEventListener('resize', () => {
+          // Keyboard opening (window height decreases)
+          if (!isKeyboardOpen && window.innerHeight < initialHeight * 0.8) {
+            console.log("📱 Window height decreased - keyboard detected");
+            isKeyboardOpen = true;
+          }
           
-          // Small delay to ensure keyboard is fully dismissed before animation
-          setTimeout(animateKeyboardDismiss, 100);
+          // Keyboard dismissal (window height increases)
+          if (isKeyboardOpen && window.innerHeight > initialHeight * 0.9) {
+            console.log("📱 Window height increased - keyboard dismissed");
+            isKeyboardOpen = false;
+            forceScrollTop();
+          }
+        });
+      };
+      
+      // DETECTION METHOD 3: Touch events to catch dismissals
+      const setupTouchListeners = () => {
+        // Track touch start position
+        document.addEventListener('touchstart', (e) => {
+          touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        
+        // Detect downward swipes which often dismiss keyboard
+        document.addEventListener('touchend', (e) => {
+          if (isKeyboardOpen && e.changedTouches[0].clientY - touchStartY > 30) {
+            console.log("📱 Downward swipe detected - likely keyboard dismissal");
+            
+            // Short delay to let native keyboard animation complete
+            setTimeout(() => {
+              isKeyboardOpen = false;
+              forceScrollTop();
+            }, 300);
+          }
+        }, { passive: true });
+      };
+      
+      // DETECTION METHOD 4: Visibility change (user switches apps/tabs and returns)
+      const setupVisibilityListener = () => {
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden && isKeyboardOpen) {
+            console.log("📱 Page became visible again - checking keyboard state");
+            
+            // User returned to the page - keyboard likely dismissed
+            setTimeout(() => {
+              if (window.innerHeight > initialHeight * 0.9) {
+                isKeyboardOpen = false;
+                forceScrollTop();
+              }
+            }, 300);
+          }
+        });
+      };
+      
+      // Special button press listener for iOS
+      const setupButtonPress = () => {
+        // iOS "Done" button is typically at the bottom right of keyboard
+        // Clicking anywhere near bottom of screen after typing might indicate Done button
+        document.addEventListener('click', (e) => {
+          if (isKeyboardOpen && e.clientY > window.innerHeight * 0.7) {
+            console.log("📱 Bottom screen click detected - might be keyboard dismissal");
+            
+            setTimeout(() => {
+              if (document.activeElement !== focusedElement) {
+                isKeyboardOpen = false;
+                forceScrollTop();
+              }
+            }, 200);
+          }
+        });
+      };
+      
+      // Initialize all listeners
+      setupInputListeners();
+      setupResizeListener();
+      setupTouchListeners();
+      setupVisibilityListener();
+      setupButtonPress();
+      
+      // Record initial height periodically to handle orientation changes
+      setInterval(() => {
+        if (!isKeyboardOpen) {
+          initialHeight = window.innerHeight;
         }
-      });
-    });
-    
-    // Clean up event listeners
-    return () => {
-      window.removeEventListener('resize', checkKeyboard);
-      inputFields.forEach(input => {
-        input.removeEventListener('blur', () => {});
-      });
+      }, 5000);
+      
+      // Return cleanup function
+      return () => {
+        document.removeEventListener('focusin', () => {});
+        document.removeEventListener('focusout', () => {});
+        document.removeEventListener('touchstart', () => {});
+        document.removeEventListener('touchend', () => {});
+        document.removeEventListener('visibilitychange', () => {});
+        document.removeEventListener('click', () => {});
+        window.removeEventListener('resize', () => {});
+      };
     };
+    
+    // Initialize the manager and store cleanup function
+    const cleanup = ultraRobustKeyboardManager();
+    
+    // Return cleanup function
+    return cleanup;
   }, []);
   
   // Check localStorage for preselected template when coming from template URL

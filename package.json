@@ -72,6 +72,7 @@
     "framer-motion": "^11.13.1",
     "input-otp": "^1.2.4",
     "jsonwebtoken": "^9.0.2",
+    "locomotive-scroll": "^4.1.4",
     "lucide-react": "^0.453.0",
     "openai": "^4.97.0",
     "passport": "^0.7.0",
