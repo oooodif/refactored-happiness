@@ -790,17 +790,38 @@ export default function Home() {
     // Cleanup tracker for event listeners
     let cleanupFunctions: Array<() => void> = [];
     
-    // Function to expand the input when focused
+    // Function to expand the input when focused - only expands downward
     const expandInput = () => {
+      // Only do this on mobile devices
+      if (window.innerWidth >= 768) return;
+      
       setIsInputExpanded(true);
+      
+      // Make sure we remove any existing animation class first
       inputElement.classList.remove('input-collapsed');
+      
+      // Setting position to absolute and manipulating bottom property
+      // This ensures only the bottom edge moves down
+      inputElement.style.position = 'absolute';
+      inputElement.style.top = '1rem'; // Keep top fixed
+      inputElement.style.left = '1rem'; // Keep left fixed 
+      inputElement.style.right = '1rem'; // Keep right fixed
+      
+      // Add the expansion animation class
       inputElement.classList.add('input-expanded');
     };
     
     // Function to collapse the input when blurred or after generation
     const collapseInput = () => {
+      // Only do this on mobile devices
+      if (window.innerWidth >= 768) return;
+      
       setIsInputExpanded(false);
+      
+      // Make sure we remove any existing animation class first
       inputElement.classList.remove('input-expanded');
+      
+      // Add the collapse animation class
       inputElement.classList.add('input-collapsed');
     };
     
