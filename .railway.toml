@@ -7,7 +7,7 @@ packages            = "nodejs_20 nodePackages.typescript tectonic"
 
 [deploy]
 preDeployCommand    = "npm run db:push"
-startCommand        = "NODE_ENV=production NODE_PATH=. tsx server/index.ts"
+startCommand        = "NODE_ENV=production NODE_PATH=. npx tsx server/index.ts"
 
 healthcheckPath     = "/health"
 healthcheckTimeout  = 180

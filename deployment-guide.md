@@ -222,35 +222,36 @@ If you encounter errors like "Error: Docker build failed":
    - Commit and push these changes to your repository
 
 3. **Verify your `.railway.toml` file**:
-   - You already have this file configured properly:
+   - Your file should include Node.js and TypeScript packages:
      ```toml
      [build]
      builder             = "NIXPACKS"
      buildCommand        = "npm run build"
-     packages            = "tectonic"
+     packages            = "nodejs_20 nodePackages.typescript tectonic"
      
      [deploy]
      preDeployCommand    = "npm run db:push"
-     startCommand        = "NODE_ENV=production NODE_PATH=. tsx server/index.ts"
+     startCommand        = "NODE_ENV=production NODE_PATH=. npx tsx server/index.ts"
      
      healthcheckPath     = "/health"
      healthcheckTimeout  = 180
      restartPolicyType   = "ON_FAILURE"
      ```
+   - Important: Use `npx tsx` instead of just `tsx` to ensure the command is found
 
 4. **Verify your railway.json file**:
-   - Your railway.json file looks good:
+   - Your railway.json file should include Node.js and TypeScript packages:
      ```json
      {
        "$schema": "https://railway.app/railway.schema.json",
        "build": {
          "builder": "NIXPACKS",
          "buildCommand": "npm run build",
-         "packages": ["tectonic"]
+         "packages": ["nodejs_20", "nodePackages.typescript", "tectonic"]
        },
        "deploy": {
          "preDeployCommand": "npm run build && npm run db:push",
-         "startCommand": "NODE_ENV=production NODE_PATH=. tsx server/index.ts",
+         "startCommand": "NODE_ENV=production NODE_PATH=. npx tsx server/index.ts",
          "healthcheckPath": "/health",
          "healthcheckTimeout": 180,
          "restartPolicyType": "ON_FAILURE",
@@ -259,6 +260,7 @@ If you encounter errors like "Error: Docker build failed":
      }
      ```
    - Note: The duplicate "npm run build" in both buildCommand and preDeployCommand may be redundant but shouldn't cause issues
+   - Important: Railway requires Node.js to be explicitly specified as a package, it's not automatically detected
 
 5. **Verify the .npmignore file**:
    - An .npmignore file has been created to exclude Docker-related files:
@@ -295,7 +297,36 @@ If you encounter errors like "Error: Docker build failed":
    - This helps prevent Railway from detecting these files during deployment
    - Note: The prepare-railway-deploy.js script will also update this file if needed
 
-6. **Last resort: Start from a fresh project**:
+6. **Troubleshooting Common Deployment Issues**:
+
+   - **Error: Docker build failed**
+     - This likely means Railway is using Docker instead of Nixpacks.
+     - Solution: Use `scripts/prepare-railway-deploy.js` to hide Docker files.
+     - Check the Railway dashboard and explicitly set the builder to "Nixpacks".
+
+   - **Error: undefined variable 'latin-modern-math'**
+     - This error occurs because the package doesn't exist in Nixpkgs.
+     - Solution: Remove 'latin-modern-math' from nixpacks.toml and other config files.
+
+   - **Error: npm: command not found**
+     - Railway is not installing Node.js before running npm commands.
+     - Solution: Add "nodejs_20" and "nodePackages.typescript" to the packages list in all config files.
+
+   - **Error: tsx: command not found**
+     - The tsx command isn't in PATH after Node.js installation.
+     - Solution: Change the start command to use `npx tsx` instead of just `tsx`.
+     
+   - **Missing environment variables**
+     - Make sure to set all required environment variables in Railway dashboard:
+       - DATABASE_URL (set by PostgreSQL plugin)
+       - OPENAI_API_KEY
+       - ANTHROPIC_API_KEY
+       - GROQ_API_KEY
+       - SESSION_SECRET (can be any secure random string)
+       - STRIPE_SECRET_KEY
+       - VITE_STRIPE_PUBLISHABLE_KEY
+
+7. **Last resort: Start from a fresh project**:
    - If you continue to encounter Docker-related failures, consider creating a new Railway project
    - Connect it to your repository
    - Add the PostgreSQL plugin
