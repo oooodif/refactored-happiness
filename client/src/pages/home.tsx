@@ -158,89 +158,129 @@ export default function Home() {
     }
   }, []);
   
-  // Simple keyboard dismissal and auto scroll effect without any complex libraries
+  // "Boop" effect - always pulling page to top on mobile with nice animation
   useEffect(() => {
-    // Only run on mobile
-    if (window.innerWidth >= 768) return;
+    // Only apply on mobile devices in portrait mode
+    const isMobilePortrait = () => window.innerWidth < 768 && window.innerHeight > window.innerWidth;
     
-    console.log("Setting up simple keyboard dismissal detection");
+    if (!isMobilePortrait()) {
+      console.log("Not mobile portrait, skipping boop effect");
+      return;
+    }
     
-    // Variables to track keyboard state
-    let isKeyboardOpen = false;
-    let initialHeight = window.innerHeight;
-    let keyboardDismissed = false;
+    console.log("Setting up boop to top effect for mobile");
     
-    // Simple vanilla scroll to top function
-    const scrollToTop = () => {
-      // Scroll smoothly to the top - simple but effective
+    // Create a stylesheet for our custom animation
+    const styleSheet = document.createElement("style");
+    styleSheet.id = "boop-animation-styles";
+    styleSheet.textContent = `
+      @keyframes boopToTop {
+        0% { transform: translateY(0); }
+        15% { transform: translateY(-5px); }
+        30% { transform: translateY(0); }
+        100% { transform: translateY(0); }
+      }
+      
+      .boop-container {
+        animation: boopToTop 0.65s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+      }
+    `;
+    document.head.appendChild(styleSheet);
+    
+    // Add animation class to main container
+    const mainElement = document.body;
+    if (mainElement) {
+      mainElement.classList.add('boop-container');
+    }
+    
+    // Run immediate scroll to top on page load
+    const immediateScrollToTop = () => {
       window.scrollTo({
         top: 0,
         left: 0,
         behavior: 'smooth'
       });
       
-      // Fallback to ensure we get to the top
+      // Fallback direct scroll
       setTimeout(() => {
         window.scrollTo(0, 0);
         document.body.scrollTop = 0; // For Safari
         document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE
-      }, 200);
+      }, 100);
     };
     
-    // DETECTION METHOD 1: Input focus/blur
-    document.addEventListener('focusin', (e) => {
-      if (e.target instanceof HTMLElement && 
-         (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
-        console.log("Input focused - keyboard likely visible");
-        isKeyboardOpen = true;
-      }
-    }, true);
+    // Call scroll immediately
+    immediateScrollToTop();
     
-    document.addEventListener('focusout', (e) => {
-      if (e.target instanceof HTMLElement && 
-         (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
-        console.log("Input blurred - keyboard likely dismissed");
-        
-        // Wait a moment to ensure keyboard is dismissed
-        setTimeout(() => {
-          if (isKeyboardOpen) {
-            isKeyboardOpen = false;
-            keyboardDismissed = true;
-            scrollToTop();
-          }
-        }, 150);
+    // Set up a continuous gentle pull to top that runs
+    // every few seconds to keep the page at the top
+    const continuousPullInterval = setInterval(() => {
+      if (window.scrollY > 20) { // Only pull if we've scrolled a bit
+        immediateScrollToTop();
       }
-    }, true);
+    }, 750); // Check every 750ms
     
-    // DETECTION METHOD 2: Window resize for keyboard
-    window.addEventListener('resize', () => {
-      // Keyboard appearing
-      if (!isKeyboardOpen && window.innerHeight < initialHeight * 0.8) {
-        console.log("Window height decreased - keyboard detected");
-        isKeyboardOpen = true;
-      }
-      
-      // Keyboard disappearing
-      if (isKeyboardOpen && window.innerHeight > initialHeight * 0.9) {
-        console.log("Window height increased - keyboard dismissed");
-        isKeyboardOpen = false;
-        keyboardDismissed = true;
-        scrollToTop();
-      }
+    // Also scroll to top whenever the user taps on an input field
+    // to make sure content is visible even when keyboard appears
+    const inputFocusHandler = () => {
+      setTimeout(() => {
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: 'smooth'
+        });
+      }, 300); // Short delay to let keyboard appear
+    };
+    
+    // Add input focus listener
+    const allInputs = document.querySelectorAll('input, textarea');
+    allInputs.forEach(input => {
+      input.addEventListener('focus', inputFocusHandler);
     });
     
-    // Keep track of initial height (updated periodically)
-    setInterval(() => {
-      if (!isKeyboardOpen) {
-        initialHeight = window.innerHeight;
+    // Also listen for any scroll that might happen and gently pull back to top
+    const scrollHandler = () => {
+      if (window.scrollY > 20) { // Only if we've scrolled down a bit
+        // Wait a moment to see if scroll is intentional or just bounce
+        setTimeout(() => {
+          // Now check if we're still scrolled
+          if (window.scrollY > 20) {
+            // Smoothly scroll back to top
+            window.scrollTo({
+              top: 0,
+              left: 0,
+              behavior: 'smooth'
+            });
+          }
+        }, 200);
       }
-    }, 2000);
+    };
     
-    // Cleanup
+    // Add scroll listener
+    window.addEventListener('scroll', scrollHandler, { passive: true });
+    
+    // Clean up on component unmount
     return () => {
-      document.removeEventListener('focusin', () => {});
-      document.removeEventListener('focusout', () => {});
-      window.removeEventListener('resize', () => {});
+      // Remove animation styles
+      const styleElement = document.getElementById('boop-animation-styles');
+      if (styleElement) {
+        styleElement.remove();
+      }
+      
+      // Remove animation class
+      if (mainElement) {
+        mainElement.classList.remove('boop-container');
+      }
+      
+      // Clear intervals
+      clearInterval(continuousPullInterval);
+      
+      // Remove listeners
+      allInputs.forEach(input => {
+        input.removeEventListener('focus', inputFocusHandler);
+      });
+      
+      window.removeEventListener('scroll', scrollHandler);
     };
   }, []);
   
