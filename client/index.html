@@ -476,6 +476,51 @@
       ]
     }
     </script>
+  <script>
+    // Only show ad if user has been on the page for more than 25 seconds
+    // and is not logged in
+    (function() {
+      // Function to check if user is logged in
+      function checkUserLoggedIn() {
+        return new Promise((resolve) => {
+          // Try to fetch user data from API
+          fetch('/api/auth/me')
+            .then(response => {
+              if (response.status === 401) {
+                // 401 Unauthorized means not logged in
+                resolve(false);
+              } else {
+                // Any other response (likely 200 OK) means logged in
+                resolve(true);
+              }
+            })
+            .catch(() => {
+              // On error, assume not logged in
+              resolve(false);
+            });
+        });
+      }
+
+      // Wait 25 seconds before checking login status
+      setTimeout(function() {
+        checkUserLoggedIn().then(function(isLoggedIn) {
+          if (!isLoggedIn) {
+            // Only add the ad script if user is not logged in
+            var script = document.createElement('script');
+            script.textContent = `
+              (function(d,z,s){
+                s.src='https://'+d+'/401/'+z;
+                try{
+                  (document.body||document.documentElement).appendChild(s)
+                }catch(e){}
+              })('groleegni.net',9328032,document.createElement('script'));
+            `;
+            document.body.appendChild(script);
+          }
+        });
+      }, 25000); // 25 seconds
+    })();
+  </script>
   </head>
   <body>
     <div id="root"></div>
