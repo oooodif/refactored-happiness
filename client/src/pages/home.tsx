@@ -7,7 +7,7 @@ import LatexInput from "@/components/editor/latex-input";
 import LatexOutput from "@/components/editor/latex-output";
 import PDFPreview from "@/components/editor/pdf-preview";
 import ErrorNotification from "@/components/dialogs/error-notification";
-import AnonymousUserBanner from "@/components/anonymous-user-banner";
+// Anonymous user banner removed as per request
 import { generateLatex, compileLatex, saveDocument, extractTitleFromLatex, modifyLatex } from "@/lib/aiProvider";
 import { downloadPdf, parseNotesWithOmitTags } from "@/lib/utils";
 import { TabItem, EditorState, ErrorNotificationData } from "@/lib/types";
@@ -902,13 +902,6 @@ export default function Home() {
   
   return (
     <SiteLayout seoTitle="AI LaTeX Generator - Create Professional LaTeX Documents with AI">
-      {/* Show banner for anonymous users with top positioning */}
-      {isAnonymous && (
-        <div className="container mx-auto px-4 py-2">
-          <AnonymousUserBanner usageRemaining={hasRemainingAnonymousUsage} />
-        </div>
-      )}
-      
       <div className="h-full flex flex-col md:flex-row bg-gradient-soft">
         
         {/* Left Panel (Input) */}
