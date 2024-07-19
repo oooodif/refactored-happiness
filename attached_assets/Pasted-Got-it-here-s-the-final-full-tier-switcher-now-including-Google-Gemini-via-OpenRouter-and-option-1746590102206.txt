@@ -1,0 +1,65 @@
+Got it — here’s the final full-tier switcher, now including Google Gemini via OpenRouter and (optionally) Google Vertex AI if you want direct access later.
+
+⸻
+
+Final Tiered AI API Switcher (With Gemini, OpenAI, Claude, Hugging Face, etc.)
+
+Included Providers
+
+Tier	Provider	Models (Examples)	Access Route	Notes
+1	Groq	Mixtral, Gemma	Native API	Ultra-fast, cheap
+1	TogetherAI	Mistral, LLaMA, Dolphin, CodeLLaMA	Native API	Budget-tier fallback
+1	Hugging Face	Zephyr, OpenChat, Nous-Hermes	Native Inference API	Free/freemium; slower
+2	FireworksAI	Claude 1/2, MPT, StableLM	OpenAI-compatible API	Fast, Claude access
+2	OpenRouter	Claude 3, Gemini 1.5 Pro, GPT-4, Mixtral	Unified proxy API	Flexible; routes to best available model
+3	OpenAI	GPT-3.5, GPT-4, GPT-4-turbo	Native API	Precision formatting, pricing tiers
+3	Anthropic	Claude 3 Haiku, Sonnet, Opus	Native API (Claude SDK)	Large context, accurate output
+3	Google Gemini	Gemini 1.5 Flash / Pro	via OpenRouter or Vertex	Top quality; long context; Pro is $$
+
+
+
+⸻
+
+Gemini Access Options
+	•	Option A: OpenRouter (Recommended)
+	•	model: google/gemini-pro
+	•	Easy fallback via OpenAI-style API
+	•	Option B: Vertex AI (Advanced)
+	•	Requires GCP billing setup
+	•	Official SDK (google.cloud.aiplatform)
+	•	More configuration, more reliable quota
+
+⸻
+
+Unified Switcher Flow (Node.js Pseudocode)
+
+for (const provider of providerChain) {
+  try {
+    const result = await callAI(provider, userPrompt);
+    if (result) return result;
+  } catch (e) {
+    console.warn(`${provider.name} failed:`, e.message);
+    continue;
+  }
+}
+throw new Error("All providers failed.");
+
+
+
+⸻
+
+Pricing Snapshot (As of May 2025)
+
+Model	Est. Cost / 1K tokens	Context Size	Route
+Mixtral (Groq)	~$0.01	32K	Groq, Together
+Zephyr (HF)	Free–$0.003	4–8K	Hugging Face
+Claude 3 Haiku	~$0.25	200K	Fireworks, OR
+GPT-3.5-turbo	$0.002	16K	OpenAI, OR
+GPT-4-turbo	$0.01–$0.03	128K–1M	OpenAI, OR
+Gemini 1.5 Pro	$0.02–$0.05	1M	OpenRouter, GCP
+
+
+
+⸻
+
+Would you like me to generate a switchAI() function with retry/fallback logic and Hugging Face inference routing included?

@@ -1,0 +1,117 @@
+Here’s a **condensed 48-hour launch plan** 
+
+### **Hour 0–4: Replit Setup + Environment Configuration**
+
+* [ ] Create Replit project using **Node.js** (or Python Flask/FastAPI)
+* [ ] Install required tools:
+
+  * **Tectonic** (via shell script):
+
+    ```bash
+    curl --proto '=https' --tlsv1.2 -sSf https://drop-sh.fullyjustified.net | sh
+    ```
+  * For Node.js: `npm install express axios dotenv`
+* [ ] Set up backend folder:
+
+  * `backend/index.js` or `backend/app.py`
+  * Define `/generate` POST route
+* [ ] Configure `.replit` and `replit.nix` (if needed) to expose your backend properly
+
+---
+
+### **Hour 4–10: Core Backend Functionality**
+
+* [ ] Create `.env` and connect to **OpenAI** (or Claude/HuggingFace):
+
+  ```env
+  OPENAI_API_KEY=your_key_here
+  ```
+
+* [ ] Implement AI → LaTeX flow:
+
+  * Input: user prompt
+  * Output: `.tex` string
+
+* [ ] Pipe `.tex` into **Tectonic** and return compiled `PDF`:
+
+  ```bash
+  echo "$latexCode" | tectonic -o=output.pdf -
+  ```
+
+* [ ] Return `output.pdf` via API route as a downloadable link or base64 blob
+
+---
+
+### **Hour 10–16: Frontend MVP**
+
+* [ ] Create `frontend/index.html`:
+
+  * `textarea` for prompt input
+  * Dropdown for LaTeX type (article, beamer)
+  * Button to trigger generation
+  * PDF viewer (`iframe` or download link)
+* [ ] Connect frontend to backend using `fetch()` POST
+* [ ] Add spinner/loading state
+* [ ] Test full prompt → LaTeX → PDF → Display round trip
+
+---
+
+### **Hour 16–24: Smart Prompt & Document Modes**
+
+* [ ] Integrate **Master Prompt** logic for:
+
+  * Table conversion
+  * Math mode
+  * Slide decks (Beamer)
+  * Technical guides (Manual Mode)
+* [ ] Add `checkboxes` or `dropdown` in frontend to set document intent
+* [ ] Pass intent metadata to backend and alter prompt accordingly
+* [ ] Add basic PDF naming, metadata, and page handling
+
+---
+
+### **Hour 24–32: AI API Switching & Error Handling**
+
+* [ ] Add **AI switcher module**:
+
+  * Rotate between OpenAI, Claude (via proxy), HuggingFace Inference API
+  * Use pricing-based or latency-based fallback
+* [ ] Add LaTeX output validator:
+
+  * Catch unmatched brackets
+  * Scan for TikZ errors
+* [ ] If Tectonic throws an error:
+
+  * Capture error log
+  * Send it back to AI for correction
+  * Retry compilation
+
+---
+
+### **Hour 32–40: Styling, Export, & UI Polish**
+
+* [ ] Improve UI with CSS (or Tailwind via CDN)
+* [ ] Add:
+
+  * “Copy LaTeX” button
+  * “Download PDF” button
+  * Optional dark mode
+* [ ] Add small footer: “Built with Tectonic, OpenAI, and Replit”
+* [ ] Test on mobile browser
+
+---
+
+### **Hour 40–48: Final QA + Launch**
+
+* [ ] Test full flow with multiple document types
+* [ ] Stress test large tables, math, TikZ figures
+* [ ] Add README.md + Usage instructions
+* [ ] Publish Replit as “public”
+* [ ] Share on:
+
+  * Reddit (/r/LaTeX, /r/ChatGPTDev)
+  * Discord (LaTeX, Dev channels)
+  * Product Hunt (if you want broader exposure)
+
+---
+

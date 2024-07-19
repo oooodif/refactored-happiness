@@ -1,0 +1,22 @@
+AI LaTeX Generator is a native iOS application built using SwiftUI that enables users to quickly generate, compile, and preview LaTeX documents using artificial intelligence. Designed for students, professionals, researchers, and technical writers, the app accepts a wide variety of input types — including plaintext, raw LaTeX, structured data like tables or pricing lists, math problems, technical guides, and even instructional content — and intelligently converts them into valid LaTeX code.
+
+The core workflow involves three stages:
+	1.	Input Capture – Users paste or type their content into a clean, minimal input field. The app detects whether it’s prose, code, data, or a LaTeX fragment, and prepares it for processing.
+	2.	AI-Powered LaTeX Generation – The app sends this input to a custom-tuned AI engine (using OpenAI’s API), which returns fully structured LaTeX code, with attention to document class, table formatting, section structure, and even citation or Beamer handling. Prompts are safeguarded with a strict system prompt that enforces proper formatting, error recovery, and compatibility with Tectonic.
+	3.	PDF Compilation & Preview – The AI-generated LaTeX is then compiled using Tectonic, a modern, dependency-free LaTeX compiler embedded in the app or accessed through a backend Node.js/Express server. The resulting PDF is rendered in-app, allowing for download, sharing, or further editing.
+
+Key Features:
+	•	SwiftUI Frontend with modern, intuitive UI design
+	•	Text-to-LaTeX AI engine using OpenAI’s GPT API with custom prompt logic
+	•	Full LaTeX-to-PDF pipeline using Tectonic
+	•	Automatic error handling and correction for malformed LaTeX
+	•	Structured content support, including tables, TikZ figures, technical guides, and Beamer slides
+	•	No truncation or partial output — AI is instructed to return complete compilable documents every time
+	•	Preview and export PDF in-app
+	•	Local caching and history of past documents
+	•	Subscription model with gated features (e.g. export limits, advanced formatting templates)
+	•	Backend server in Express.js (used for AI proxying, usage tracking, and future collaboration features)
+	•	RevenueCat integration for handling subscription logic and entitlements
+	•	App Store-ready architecture, including offline failovers and telemetry
+
+The app is structured for scalability and long-term maintenance. Code is modularized into Views, Models, Services, and Utilities, with Combine-based state management. A prompt correction layer and potential future offline AI model (V2) are planned. Claude and GPT are both used during development for intelligent code generation and edge case coverage.

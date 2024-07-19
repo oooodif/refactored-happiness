@@ -1,0 +1,117 @@
+Here is a full implementation of a low-cost dynamic AI switcher script. This system attempts multiple providers (Groq, TogetherAI, HuggingFace, FireworksAI, OpenRouter, OpenAI, Anthropic) in order of cost or preference, and uses whichever one returns a successful result first.
+
+const providerChain = [
+  {
+    name: 'Groq',
+    url: 'https://api.groq.com/openai/v1/chat/completions',
+    model: 'mixtral',
+    apiKey: process.env.GROQ_KEY,
+    type: 'openai'
+  },
+  {
+    name: 'TogetherAI',
+    url: 'https://api.together.xyz/v1/chat/completions',
+    model: 'mistral-7b-instruct',
+    apiKey: process.env.TOGETHER_KEY,
+    type: 'openai'
+  },
+  {
+    name: 'HuggingFace',
+    url: 'https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta',
+    apiKey: process.env.HF_KEY,
+    type: 'huggingface'
+  },
+  {
+    name: 'FireworksAI',
+    url: 'https://api.fireworks.ai/v1/chat/completions',
+    model: 'accounts/fireworks/models/claude-1-100k',
+    apiKey: process.env.FIREWORKS_KEY,
+    type: 'openai'
+  },
+  {
+    name: 'OpenRouter',
+    url: 'https://openrouter.ai/api/v1/chat/completions',
+    model: 'google/gemini-pro',
+    apiKey: process.env.OPENROUTER_KEY,
+    type: 'openai'
+  },
+  {
+    name: 'OpenAI',
+    url: 'https://api.openai.com/v1/chat/completions',
+    model: 'gpt-4-turbo',
+    apiKey: process.env.OPENAI_KEY,
+    type: 'openai'
+  },
+  {
+    name: 'Anthropic',
+    url: 'https://api.anthropic.com/v1/messages',
+    model: 'claude-3-sonnet-20240229',
+    apiKey: process.env.ANTHROPIC_KEY,
+    type: 'anthropic'
+  }
+];
+
+async function callAI(provider, prompt) {
+  const headers = {
+    'Authorization': `Bearer ${provider.apiKey}`,
+    'Content-Type': 'application/json'
+  };
+
+  let body;
+  if (provider.type === 'openai') {
+    body = {
+      model: provider.model,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7
+    };
+  } else if (provider.type === 'huggingface') {
+    body = { inputs: prompt };
+  } else if (provider.type === 'anthropic') {
+    headers['x-api-key'] = provider.apiKey;
+    headers['anthropic-version'] = '2023-06-01';
+    delete headers['Authorization'];
+    body = {
+      model: provider.model,
+      max_tokens: 1024,
+      messages: [{ role: "user", content: prompt }]
+    };
+  }
+
+  const response = await fetch(provider.url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) throw new Error(await response.text());
+  const data = await response.json();
+
+  if (provider.type === 'openai') {
+    return data.choices[0].message.content;
+  } else if (provider.type === 'huggingface') {
+    return data[0]?.generated_text || 'No output';
+  } else if (provider.type === 'anthropic') {
+    return data.content?.[0]?.text || 'No output';
+  }
+}
+
+async function switchAI(prompt) {
+  for (const provider of providerChain) {
+    try {
+      const result = await callAI(provider, prompt);
+      console.log("Used:", provider.name);
+      return result;
+    } catch (err) {
+      console.warn(`[FAIL] ${provider.name}:`, err.message);
+    }
+  }
+  throw new Error("All AI providers failed.");
+}
+
+This code will:
+	•	Try the cheapest APIs (Groq, TogetherAI, HuggingFace) first
+	•	Only fall back to OpenAI or Anthropic if all else fails
+	•	Works with OpenAI-style and Hugging Face endpoints
+	•	Includes proper headers, models, and request formats per API
+
+Let me know if you want the same logic built in Swift, Python, or with cost-based load balancing.

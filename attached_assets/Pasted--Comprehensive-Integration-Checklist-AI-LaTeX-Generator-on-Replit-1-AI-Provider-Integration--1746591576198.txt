@@ -1,0 +1,967 @@
+# Comprehensive Integration Checklist: AI LaTeX Generator on Replit
+
+## 1. AI Provider Integration
+
+### Dependencies:
+- **API Client Libraries**
+  - `openai` (npm: ^4.0.0)
+  - `@anthropic-ai/sdk` (npm: ^0.9.0) 
+  - `@huggingface/inference` (npm: ^2.6.1)
+- **Utility Packages**
+  - `axios` (npm: ^1.6.2) - For fallback HTTP requests
+  - `p-retry` (npm: ^5.1.2) - For retry logic
+  - `bottleneck` (npm: ^2.19.5) - For rate limiting
+
+### Integration Checklist:
+- [ ] Set up Replit Secrets for API key storage
+  ```bash
+  # Access via process.env.OPENAI_API_KEY
+  ```
+- [ ] Create AI provider adapter with unified interface
+  ```javascript
+  class AIAdapter {
+    async generateLatex(prompt, options = {}) { /* ... */ }
+    async isAvailable() { /* ... */ }
+    getUsageCost(tokenCount) { /* ... */ }
+  }
+  ```
+- [ ] Implement model selection based on:
+  - User's subscription tier
+  - Request complexity
+  - Availability/uptime
+- [ ] Build rate limit detection & exponential backoff
+  ```javascript
+  const limiter = new Bottleneck({
+    maxConcurrent: 5,
+    minTime: 200
+  });
+  ```
+- [ ] Create provider fallback chain:
+  1. Primary: OpenAI
+  2. Secondary: Claude
+  3. Tertiary: Hugging Face
+
+## 2. LaTeX Engine / Compilation
+
+### Dependencies:
+- **Tectonic** - LaTeX engine
+- **LaTeX Packages**:
+  - `geometry`
+  - `amsmath` 
+  - `booktabs`
+  - `longtable`
+  - `array`
+  - `graphicx`
+  - `hyperref`
+- **Node.js Modules**:
+  - `child_process` (built-in)
+  - `fs` (built-in)
+  - `stream` (built-in)
+  - `tmp` (npm: ^0.2.1) - For temp file handling
+  - `archiver` (npm: ^6.0.1) - For PDF packaging
+
+### Integration Checklist:
+- [ ] Install Tectonic on Replit via Nix
+  ```bash
+  # In replit.nix
+  { pkgs }: {
+    deps = [
+      pkgs.tectonic
+    ];
+  }
+  ```
+- [ ] Create LaTeX compilation service
+  ```javascript
+  class TexCompiler {
+    async compile(texSource, options = {}) { /* ... */ }
+    async validateSyntax(texSource) { /* ... */ }
+    parseCompilationErrors(errorLog) { /* ... */ }
+  }
+  ```
+- [ ] Set up working directory with proper permissions
+  ```javascript
+  const tmpDir = await fs.promises.mkdtemp('/tmp/latex-');
+  ```
+- [ ] Implement command execution with proper timeout
+  ```javascript
+  const result = spawnSync('tectonic', [
+    '--outdir', outputDir,
+    '--keep-logs',
+    texFilePath
+  ], { timeout: 30000 });
+  ```
+- [ ] Create PDF delivery endpoints with proper headers
+  ```javascript
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'attachment; filename="document.pdf"');
+  ```
+- [ ] Implement cleanup routine for temporary files
+  ```javascript
+  fs.promises.rm(tmpDir, { recursive: true, force: true });
+  ```
+
+## 3. Authentication & User Accounts
+
+### Dependencies:
+- **Auth Packages**:
+  - `jsonwebtoken` (npm: ^9.0.2)
+  - `bcryptjs` (npm: ^2.4.3)
+  - `cookie-parser` (npm: ^1.4.6)
+  - `express-session` (npm: ^1.17.3)
+  - `passport` (npm: ^0.7.0)
+  - `uuid` (npm: ^9.0.1)
+- **Database** (choose one):
+  - `better-sqlite3` (npm: ^9.1.1)
+  - `@prisma/client` (npm: ^5.5.2)
+  - `@supabase/supabase-js` (npm: ^2.38.4)
+
+### Integration Checklist:
+- [ ] Implement anonymous session creation
+  ```javascript
+  function createAnonymousSession(req, res) {
+    const sessionId = uuid();
+    // Store in cookie or localStorage
+  }
+  ```
+- [ ] Set up JWT token generation and validation
+  ```javascript
+  const token = jwt.sign({ userId, tier }, process.env.JWT_SECRET, {
+    expiresIn: '24h'
+  });
+  ```
+- [ ] Create authentication middleware
+  ```javascript
+  function isAuthenticated(req, res, next) {
+    // Verify JWT or session
+    // Allow anonymous with restrictions
+  }
+  ```
+- [ ] Implement user registration endpoint
+  ```javascript
+  app.post('/auth/register', async (req, res) => {
+    // Create user account
+    // Link to anonymous session if exists
+  });
+  ```
+- [ ] Add OAuth providers (optional: Google, GitHub)
+  ```javascript
+  app.get('/auth/google', passport.authenticate('google'));
+  ```
+- [ ] Create token refresh mechanism
+  ```javascript
+  app.post('/auth/refresh', (req, res) => {
+    // Validate refresh token
+    // Issue new access token
+  });
+  ```
+- [ ] Implement secure cookie settings
+  ```javascript
+  app.use(cookieParser());
+  app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: true, httpOnly: true, sameSite: 'strict' }
+  }));
+  ```
+
+## 4. Subscription & Payment System
+
+### Dependencies:
+- **Payment Providers**:
+  - `stripe` (npm: ^13.7.0)
+  - `@lemonsqueezy/lemonsqueezy.js` (npm: ^1.2.0)
+- **Webhook Processing**:
+  - `stripe-webhook-middleware` (npm: ^4.0.1)
+  - `express-webhook-verifier` (npm: ^1.1.0)
+
+### Integration Checklist:
+- [ ] Set up Stripe account and API keys
+  ```javascript
+  const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  ```
+- [ ] Define subscription plans/products in dashboard
+  - Free Tier: 3 requests/month
+  - Basic Tier: $4.99/mo - 100 requests
+  - Pro Tier: $9.99/mo - 500 requests
+  - Power Tier: $19.99/mo - 2,000 requests
+- [ ] Create checkout session endpoint
+  ```javascript
+  app.post('/create-checkout', async (req, res) => {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price: 'price_1234',
+        quantity: 1,
+      }],
+      mode: 'subscription',
+      success_url: `${process.env.DOMAIN}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.DOMAIN}/cancel`,
+    });
+    res.json({ id: session.id });
+  });
+  ```
+- [ ] Set up webhook URL in Replit
+  ```
+  https://your-replit-app.repl.co/webhook/stripe
+  ```
+- [ ] Implement webhook handling for subscription events
+  ```javascript
+  app.post('/webhook/stripe', 
+    express.raw({type: 'application/json'}),
+    (req, res) => {
+      const sig = req.headers['stripe-signature'];
+      let event;
+      try {
+        event = stripe.webhooks.constructEvent(
+          req.body, 
+          sig, 
+          process.env.STRIPE_WEBHOOK_SECRET
+        );
+      } catch (err) {
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+      }
+      
+      // Handle the event
+      switch (event.type) {
+        case 'customer.subscription.created':
+        case 'customer.subscription.updated':
+        case 'customer.subscription.deleted':
+          // Update user subscription status
+          break;
+        default:
+          console.log(`Unhandled event type ${event.type}`);
+      }
+      
+      res.json({received: true});
+    }
+  );
+  ```
+- [ ] Create subscription status checker middleware
+  ```javascript
+  async function checkSubscription(req, res, next) {
+    const { userId, tier } = req.user;
+    const usage = await getUserMonthlyUsage(userId);
+    
+    if (usage >= TIER_LIMITS[tier]) {
+      return res.status(402).json({
+        error: 'Usage limit reached',
+        upgrade_url: '/upgrade'
+      });
+    }
+    
+    next();
+  }
+  ```
+- [ ] Implement subscription management UI
+  ```javascript
+  app.get('/manage-subscription', isAuthenticated, async (req, res) => {
+    // Create customer portal session
+    // Redirect user to Stripe portal
+  });
+  ```
+
+## 5. API Routing & Backend Logic
+
+### Dependencies:
+- **Server Frameworks**:
+  - `express` (npm: ^4.18.2)
+  - `cors` (npm: ^2.8.5)
+  - `helmet` (npm: ^7.1.0)
+  - `body-parser` (npm: ^1.20.2)
+- **Validation**:
+  - `express-validator` (npm: ^7.0.1)
+  - `zod` (npm: ^3.22.4)
+
+### Integration Checklist:
+- [ ] Create core API routes
+  ```javascript
+  app.post('/api/generate-latex', 
+    isAuthenticated, 
+    checkSubscription,
+    validateRequest,
+    async (req, res) => {
+      // Handle generation
+    }
+  );
+  ```
+- [ ] Implement input validation middleware
+  ```javascript
+  const validateRequest = [
+    body('text').trim().isLength({ min: 1, max: 10000 }),
+    body('options').optional().isObject(),
+    (req, res, next) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+      next();
+    }
+  ];
+  ```
+- [ ] Set up AI prompt construction logic
+  ```javascript
+  function buildPrompt(userInput, options = {}) {
+    return {
+      model: options.model || "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: LATEX_SYSTEM_PROMPT
+        },
+        {
+          role: "user",
+          content: userInput
+        }
+      ]
+    };
+  }
+  ```
+- [ ] Create LaTeX generation pipeline
+  ```javascript
+  async function generateLatex(userInput, options) {
+    // 1. Get AI response
+    const latexCode = await aiAdapter.generateLatex(userInput, options);
+    
+    // 2. Validate syntax
+    const validationResult = await texCompiler.validateSyntax(latexCode);
+    
+    // 3. Fix if needed
+    let finalLatex = latexCode;
+    if (!validationResult.valid) {
+      finalLatex = await aiAdapter.fixLatex(
+        latexCode, 
+        validationResult.errors
+      );
+    }
+    
+    // 4. Compile to PDF
+    const pdf = await texCompiler.compile(finalLatex);
+    
+    return {
+      latex: finalLatex,
+      pdf,
+      validationResult
+    };
+  }
+  ```
+- [ ] Implement error handling middleware
+  ```javascript
+  app.use((err, req, res, next) => {
+    console.error(err);
+    
+    // Classify error types
+    if (err instanceof RateLimitError) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        retry_after: err.retryAfter
+      });
+    }
+    
+    if (err instanceof CompilationError) {
+      return res.status(400).json({
+        error: 'LaTeX compilation failed',
+        details: err.details,
+        fixable: err.fixable
+      });
+    }
+    
+    // Generic error
+    res.status(500).json({
+      error: 'Something went wrong',
+      message: process.env.NODE_ENV === 'production' 
+        ? 'Server error' 
+        : err.message
+    });
+  });
+  ```
+- [ ] Add retry logic for transient failures
+  ```javascript
+  const retry = require('p-retry');
+  
+  async function generateWithRetry(userInput, options) {
+    return retry(
+      async () => {
+        try {
+          return await generateLatex(userInput, options);
+        } catch (error) {
+          if (!isRetryableError(error)) {
+            throw new pRetry.AbortError(error);
+          }
+          throw error;
+        }
+      },
+      { retries: 3 }
+    );
+  }
+  ```
+
+## 6. Frontend Integration
+
+### Dependencies:
+- **UI Frameworks**:
+  - `react` (npm: ^18.2.0)
+  - `react-dom` (npm: ^18.2.0)
+  - `@mantine/core` (npm: ^7.1.0)
+  - `@mantine/hooks` (npm: ^7.1.0)
+- **PDF & LaTeX Rendering**:
+  - `react-pdf` (npm: ^7.5.1)
+  - `react-latex-next` (npm: ^2.2.0)
+  - `codemirror` (npm: ^6.0.1) - For LaTeX editor
+  - `prismjs` (npm: ^1.29.0) - For syntax highlighting
+
+### Integration Checklist:
+- [ ] Create input component with formatting controls
+  ```jsx
+  function InputEditor({ value, onChange }) {
+    return (
+      <div className="editor-container">
+        <div className="toolbar">
+          <button onClick={() => insertTemplate('equation')}>
+            Add Equation
+          </button>
+          <button onClick={() => insertTemplate('table')}>
+            Add Table
+          </button>
+        </div>
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="input-editor"
+          placeholder="Enter text, math, or structured data..."
+        />
+      </div>
+    );
+  }
+  ```
+- [ ] Implement LaTeX preview with syntax highlighting
+  ```jsx
+  function LaTeXPreview({ code }) {
+    useEffect(() => {
+      Prism.highlightAll();
+    }, [code]);
+    
+    return (
+      <div className="latex-preview">
+        <pre>
+          <code className="language-latex">{code}</code>
+        </pre>
+      </div>
+    );
+  }
+  ```
+- [ ] Create PDF viewer component
+  ```jsx
+  function PDFViewer({ pdfData }) {
+    return (
+      <div className="pdf-viewer">
+        <Document
+          file={{ data: pdfData }}
+        >
+          <Page pageNumber={1} width={600} />
+        </Document>
+        <div className="controls">
+          <button onClick={downloadPDF}>Download PDF</button>
+          <button onClick={copyLaTeX}>Copy LaTeX</button>
+        </div>
+      </div>
+    );
+  }
+  ```
+- [ ] Implement main app layout with tabs
+  ```jsx
+  function App() {
+    const [activeTab, setActiveTab] = useState('input');
+    const [input, setInput] = useState('');
+    const [latex, setLatex] = useState('');
+    const [pdf, setPdf] = useState(null);
+    const [isGenerating, setIsGenerating] = useState(false);
+    
+    async function handleGenerate() {
+      setIsGenerating(true);
+      try {
+        const response = await fetch('/api/generate-latex', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: input })
+        });
+        const data = await response.json();
+        setLatex(data.latex);
+        setPdf(data.pdf);
+        setActiveTab('preview');
+      } catch (error) {
+        console.error(error);
+        // Show error notification
+      } finally {
+        setIsGenerating(false);
+      }
+    }
+    
+    return (
+      <div className="app-container">
+        <header>
+          <h1>AI LaTeX Generator</h1>
+          <nav>
+            <button 
+              className={activeTab === 'input' ? 'active' : ''}
+              onClick={() => setActiveTab('input')}
+            >
+              Input
+            </button>
+            <button 
+              className={activeTab === 'preview' ? 'active' : ''}
+              onClick={() => setActiveTab('preview')}
+              disabled={!latex}
+            >
+              Preview
+            </button>
+          </nav>
+        </header>
+        
+        <main>
+          {activeTab === 'input' && (
+            <div className="input-view">
+              <InputEditor value={input} onChange={setInput} />
+              <button 
+                onClick={handleGenerate}
+                disabled={isGenerating || !input.trim()}
+              >
+                {isGenerating ? 'Generating...' : 'Generate LaTeX'}
+              </button>
+            </div>
+          )}
+          
+          {activeTab === 'preview' && (
+            <div className="preview-view">
+              <Tabs>
+                <TabList>
+                  <Tab>LaTeX</Tab>
+                  <Tab>PDF</Tab>
+                </TabList>
+                <TabPanel>
+                  <LaTeXPreview code={latex} />
+                </TabPanel>
+                <TabPanel>
+                  <PDFViewer pdfData={pdf} />
+                </TabPanel>
+              </Tabs>
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  }
+  ```
+- [ ] Add authentication UI components
+  ```jsx
+  function LoginForm() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    
+    async function handleSubmit(e) {
+      e.preventDefault();
+      // Authentication logic
+    }
+    
+    return (
+      <form onSubmit={handleSubmit}>
+        <input 
+          type="email" 
+          value={email} 
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email" 
+          required 
+        />
+        <input 
+          type="password" 
+          value={password} 
+          onChange={(e) => setPassword(e.target.value)} 
+          placeholder="Password" 
+          required 
+        />
+        <button type="submit">Log In</button>
+      </form>
+    );
+  }
+  ```
+- [ ] Implement subscription UI
+  ```jsx
+  function SubscriptionPlans({ currentPlan }) {
+    async function handleUpgrade(planId) {
+      const response = await fetch('/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId })
+      });
+      const { id } = await response.json();
+      
+      // Redirect to checkout
+      const stripe = await loadStripe(process.env.STRIPE_PUBLIC_KEY);
+      stripe.redirectToCheckout({ sessionId: id });
+    }
+    
+    return (
+      <div className="subscription-plans">
+        {PLANS.map(plan => (
+          <div key={plan.id} className="plan-card">
+            <h3>{plan.name}</h3>
+            <p className="price">${plan.price}/month</p>
+            <ul className="features">
+              {plan.features.map(feature => (
+                <li key={feature}>{feature}</li>
+              ))}
+            </ul>
+            <button 
+              onClick={() => handleUpgrade(plan.id)}
+              disabled={plan.id === currentPlan}
+            >
+              {plan.id === currentPlan ? 'Current Plan' : 'Upgrade'}
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  ```
+
+## 7. Storage & History (Optional)
+
+### Dependencies:
+- **Database Options**:
+  - `better-sqlite3` (npm: ^9.1.1)
+  - `@replit/database` (npm: ^2.0.5)
+  - `@supabase/supabase-js` (npm: ^2.38.4)
+- **ORM/Query Builders**:
+  - `prisma` (npm: ^5.5.2)
+  - `knex` (npm: ^3.0.1)
+
+### Integration Checklist:
+- [ ] Set up database schema
+  ```javascript
+  // SQLite schema example
+  const SCHEMA = `
+  CREATE TABLE IF NOT EXISTS documents (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    content TEXT NOT NULL,
+    latex TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+  
+  CREATE INDEX IF NOT EXISTS idx_documents_user_id ON documents(user_id);
+  `;
+  
+  // Initialize database
+  const db = new Database('latex_app.db');
+  db.exec(SCHEMA);
+  ```
+- [ ] Create document save/retrieve functions
+  ```javascript
+  async function saveDocument(userId, content, latex) {
+    const id = uuid();
+    const now = Date.now();
+    
+    await db.run(`
+      INSERT INTO documents (id, user_id, content, latex, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `, [id, userId, content, latex, now, now]);
+    
+    return id;
+  }
+  
+  async function getUserDocuments(userId) {
+    return db.all(`
+      SELECT * FROM documents
+      WHERE user_id = ?
+      ORDER BY updated_at DESC
+    `, [userId]);
+  }
+  ```
+- [ ] Implement document history API routes
+  ```javascript
+  app.get('/api/documents', isAuthenticated, async (req, res) => {
+    const documents = await getUserDocuments(req.user.id);
+    res.json(documents);
+  });
+  
+  app.post('/api/documents', isAuthenticated, async (req, res) => {
+    const { content, latex } = req.body;
+    const id = await saveDocument(req.user.id, content, latex);
+    res.json({ id });
+  });
+  
+  app.get('/api/documents/:id', isAuthenticated, async (req, res) => {
+    const document = await getDocument(req.params.id);
+    
+    if (!document || document.user_id !== req.user.id) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+    
+    res.json(document);
+  });
+  ```
+- [ ] Create history UI component
+  ```jsx
+  function DocumentHistory() {
+    const [documents, setDocuments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    
+    useEffect(() => {
+      async function fetchDocuments() {
+        try {
+          const response = await fetch('/api/documents');
+          const data = await response.json();
+          setDocuments(data);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setLoading(false);
+        }
+      }
+      
+      fetchDocuments();
+    }, []);
+    
+    return (
+      <div className="document-history">
+        <h2>Your Documents</h2>
+        {loading ? (
+          <p>Loading...</p>
+        ) : documents.length === 0 ? (
+          <p>No documents yet</p>
+        ) : (
+          <ul className="document-list">
+            {documents.map(doc => (
+              <li key={doc.id} className="document-item">
+                <div className="document-preview">
+                  {doc.content.substring(0, 100)}...
+                </div>
+                <div className="document-meta">
+                  {new Date(doc.created_at).toLocaleDateString()}
+                </div>
+                <div className="document-actions">
+                  <button onClick={() => loadDocument(doc.id)}>
+                    Open
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
+  ```
+
+## 8. Telemetry & Limits
+
+### Dependencies:
+- **Monitoring**:
+  - `pino` (npm: ^8.16.0)
+  - `express-pino-logger` (npm: ^7.0.0)
+- **Analytics**:
+  - `posthog-node` (npm: ^3.1.2)
+  - `analytics` (npm: ^0.8.9)
+
+### Integration Checklist:
+- [ ] Set up request logging
+  ```javascript
+  const pino = require('pino');
+  const logger = pino();
+  const expressPino = require('express-pino-logger')({
+    logger
+  });
+  
+  app.use(expressPino);
+  ```
+- [ ] Create usage tracking table
+  ```javascript
+  // SQLite schema example
+  const USAGE_SCHEMA = `
+  CREATE TABLE IF NOT EXISTS usage_logs (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    action TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+  
+  CREATE INDEX IF NOT EXISTS idx_usage_logs_user_id ON usage_logs(user_id);
+  CREATE INDEX IF NOT EXISTS idx_usage_logs_timestamp ON usage_logs(timestamp);
+  `;
+  ```
+- [ ] Implement usage tracking function
+  ```javascript
+  async function trackUsage(userId, action) {
+    const id = uuid();
+    const now = Date.now();
+    
+    await db.run(`
+      INSERT INTO usage_logs (id, user_id, action, timestamp)
+      VALUES (?, ?, ?, ?)
+    `, [id, userId, action, now]);
+  }
+  ```
+- [ ] Create usage middleware
+  ```javascript
+  async function trackApiUsage(req, res, next) {
+    const startTime = Date.now();
+    
+    // Once response is finished
+    res.on('finish', async () => {
+      const duration = Date.now() - startTime;
+      const { method, path } = req;
+      const userId = req.user?.id || 'anonymous';
+      
+      try {
+        await trackUsage(userId, {
+          method,
+          path,
+          statusCode: res.statusCode,
+          duration,
+          userAgent: req.headers['user-agent']
+        });
+      } catch (error) {
+        console.error('Failed to track usage:', error);
+      }
+    });
+    
+    next();
+  }
+  
+  app.use(trackApiUsage);
+  ```
+- [ ] Implement quota checker function
+  ```javascript
+  async function getUserMonthlyUsage(userId) {
+    const now = Date.now();
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    
+    const result = await db.get(`
+      SELECT COUNT(*) as count
+      FROM usage_logs
+      WHERE user_id = ?
+        AND action = 'generate-latex'
+        AND timestamp >= ?
+    `, [userId, monthStart.getTime()]);
+    
+    return result.count;
+  }
+  ```
+- [ ] Add usage dashboard UI
+  ```jsx
+  function UsageDashboard() {
+    const [usageStats, setUsageStats] = useState(null);
+    const [loading, setLoading] = useState(true);
+    
+    useEffect(() => {
+      async function fetchUsageStats() {
+        try {
+          const response = await fetch('/api/usage-stats');
+          const data = await response.json();
+          setUsageStats(data);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setLoading(false);
+        }
+      }
+      
+      fetchUsageStats();
+    }, []);
+    
+    if (loading) return <p>Loading...</p>;
+    
+    return (
+      <div className="usage-dashboard">
+        <h2>Your Usage</h2>
+        <div className="usage-card">
+          <div className="usage-metric">
+            <h3>LaTeX Generations</h3>
+            <p className="metric-value">
+              {usageStats.generations} / {usageStats.limit}
+            </p>
+            <div className="progress-bar">
+              <div 
+                className="progress" 
+                style={{ 
+                  width: `${(usageStats.generations / usageStats.limit) * 100}%` 
+                }}
+              />
+            </div>
+          </div>
+          
+          <div className="usage-metric">
+            <h3>Resets In</h3>
+            <p className="metric-value">{usageStats.daysUntilReset} days</p>
+          </div>
+        </div>
+        
+        {usageStats.generations >= usageStats.limit * 0.8 && (
+          <div className="upgrade-prompt">
+            <p>You're approaching your monthly limit!</p>
+            <button onClick={() => navigateToUpgrade()}>
+              Upgrade Plan
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+  ```
+
+## Complete Package.json Dependencies
+
+```json
+{
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.9.0",
+    "@huggingface/inference": "^2.6.1",
+    "@lemonsqueezy/lemonsqueezy.js": "^1.2.0",
+    "@mantine/core": "^7.1.0",
+    "@mantine/hooks": "^7.1.0",
+    "@prisma/client": "^5.5.2",
+    "@replit/database": "^2.0.5",
+    "@supabase/supabase-js": "^2.38.4",
+    "analytics": "^0.8.9",
+    "archiver": "^6.0.1",
+    "axios": "^1.6.2",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^9.1.1",
+    "body-parser": "^1.20.2",
+    "bottleneck": "^2.19.5",
+    "codemirror": "^6.0.1",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-pino-logger": "^7.0.0",
+    "express-session": "^1.17.3",
+    "express-validator": "^7.0.1",
+    "express-webhook-verifier": "^1.1.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "knex": "^3.0.1",
+    "openai": "^4.0.0",
+    "p-retry": "^5.1.2",
+    "passport": "^0.7.0",
+    "pino": "^8.16.0",
+    "posthog-node": "^3.1.2",
+    "prismjs": "^1.29.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-latex-next": "^2.2.0",
+    "react-pdf": "^7.5.1",
+    "stripe": "^13.7.0",
+    "stripe-webhook-middleware": "^4.0.1",
+    "tmp": "^0.2.1",
+    "uuid": "^9.0.1",
+    "zod": "^3.22.4"
+  }
+}
+```
+
+This comprehensive checklist covers all the essential integrations needed for your AI-powered LaTeX generation agent on Replit. You can use this as a step-by-step implementation guide, checking off items as you complete them.
