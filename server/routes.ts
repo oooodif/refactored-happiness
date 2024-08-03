@@ -1,0 +1,601 @@
+import type { Express, Request, Response, NextFunction } from "express";
+import express from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { authenticateUser, requireAuth } from "./middleware/auth";
+import { checkSubscription } from "./middleware/subscription";
+import { validateRequest } from "./utils/validation";
+import { generateLatexSchema } from "@shared/schema";
+import { generateLatex, getAvailableModels } from "./services/aiProvider";
+import { compileLatex, compileAndFixLatex } from "./services/latexService";
+import { createCustomer, createSubscription, cancelSubscription, createPortalSession } from "./services/stripeService";
+import { z } from "zod";
+import Stripe from "stripe";
+
+// Initialize Stripe
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.warn('Missing STRIPE_SECRET_KEY, Stripe functionality will be limited');
+}
+
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2023-10-16",
+    })
+  : undefined;
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Authentication routes
+  app.post("/api/auth/register", async (req: Request, res: Response) => {
+    const { username, email, password } = req.body;
+    
+    try {
+      const result = await storage.createUser(username, email, password);
+      
+      if (result.success) {
+        req.session.userId = result.user.id;
+        return res.status(201).json({
+          user: result.user,
+          usageLimit: result.usageLimit
+        });
+      } else {
+        return res.status(400).json({ message: result.error });
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      return res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+    
+    try {
+      const result = await storage.validateUser(email, password);
+      
+      if (result.success) {
+        req.session.userId = result.user.id;
+        return res.status(200).json({
+          user: result.user,
+          usageLimit: result.usageLimit
+        });
+      } else {
+        return res.status(401).json({ message: result.error });
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      return res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req: Request, res: Response) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      
+      res.clearCookie("connect.sid");
+      return res.status(200).json({ message: "Logged out successfully" });
+    });
+  });
+
+  app.get("/api/auth/me", authenticateUser, async (req: Request, res: Response) => {
+    const userId = req.session.userId;
+    
+    try {
+      const user = await storage.getUserById(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const usageLimit = await storage.getUserUsageLimit(user);
+      
+      return res.status(200).json({
+        user,
+        usageLimit
+      });
+    } catch (error) {
+      console.error("Get user error:", error);
+      return res.status(500).json({ message: "Failed to get user data" });
+    }
+  });
+
+  // LaTeX Generation Routes
+  app.post("/api/latex/generate", 
+    authenticateUser, 
+    checkSubscription,
+    validateRequest(generateLatexSchema),
+    async (req: Request, res: Response) => {
+      const { content, documentType, options } = req.body;
+      const userId = req.session.userId;
+      
+      try {
+        // Generate LaTeX using AI
+        const latexResult = await generateLatex(content, documentType, options);
+        
+        if (!latexResult.success) {
+          return res.status(500).json({ message: latexResult.error });
+        }
+        
+        // Compile the LaTeX
+        const compilationResult = await compileLatex(latexResult.latex);
+        
+        // Increment usage counter for the user
+        await storage.incrementUserUsage(userId);
+        
+        // Save the document
+        const document = await storage.saveDocument({
+          userId,
+          title: getDocumentTitle(content),
+          inputContent: content,
+          latexContent: latexResult.latex,
+          documentType,
+          compilationSuccessful: compilationResult.success,
+          compilationError: compilationResult.error || null
+        });
+        
+        return res.status(200).json({
+          latex: latexResult.latex,
+          compilationResult,
+          documentId: document.id
+        });
+      } catch (error) {
+        console.error("LaTeX generation error:", error);
+        return res.status(500).json({ message: "Failed to generate LaTeX" });
+      }
+    }
+  );
+
+  app.post("/api/latex/compile", 
+    authenticateUser,
+    async (req: Request, res: Response) => {
+      const { latex } = req.body;
+      
+      if (!latex) {
+        return res.status(400).json({ message: "LaTeX content is required" });
+      }
+      
+      try {
+        const compilationResult = await compileLatex(latex);
+        
+        return res.status(200).json({
+          latex,
+          compilationResult
+        });
+      } catch (error) {
+        console.error("LaTeX compilation error:", error);
+        return res.status(500).json({ message: "Failed to compile LaTeX" });
+      }
+    }
+  );
+
+  app.post("/api/latex/compile/fix", 
+    authenticateUser,
+    async (req: Request, res: Response) => {
+      const { latex, errorDetails } = req.body;
+      
+      if (!latex) {
+        return res.status(400).json({ message: "LaTeX content is required" });
+      }
+      
+      try {
+        const result = await compileAndFixLatex(latex, errorDetails);
+        
+        return res.status(200).json({
+          latex: result.fixedLatex,
+          compilationResult: result.compilationResult
+        });
+      } catch (error) {
+        console.error("LaTeX fix error:", error);
+        return res.status(500).json({ message: "Failed to fix LaTeX" });
+      }
+    }
+  );
+
+  // Document routes
+  app.get("/api/documents", 
+    requireAuth,
+    async (req: Request, res: Response) => {
+      const userId = req.session.userId;
+      
+      try {
+        const documents = await storage.getUserDocuments(userId);
+        return res.status(200).json(documents);
+      } catch (error) {
+        console.error("Get documents error:", error);
+        return res.status(500).json({ message: "Failed to get documents" });
+      }
+    }
+  );
+
+  app.get("/api/documents/:id", 
+    requireAuth,
+    async (req: Request, res: Response) => {
+      const documentId = parseInt(req.params.id);
+      const userId = req.session.userId;
+      
+      if (isNaN(documentId)) {
+        return res.status(400).json({ message: "Invalid document ID" });
+      }
+      
+      try {
+        const document = await storage.getDocumentById(documentId);
+        
+        if (!document) {
+          return res.status(404).json({ message: "Document not found" });
+        }
+        
+        if (document.userId !== userId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        
+        return res.status(200).json(document);
+      } catch (error) {
+        console.error("Get document error:", error);
+        return res.status(500).json({ message: "Failed to get document" });
+      }
+    }
+  );
+
+  app.get("/api/documents/:id/pdf", 
+    requireAuth,
+    async (req: Request, res: Response) => {
+      const documentId = parseInt(req.params.id);
+      const userId = req.session.userId;
+      
+      if (isNaN(documentId)) {
+        return res.status(400).json({ message: "Invalid document ID" });
+      }
+      
+      try {
+        const document = await storage.getDocumentById(documentId);
+        
+        if (!document) {
+          return res.status(404).json({ message: "Document not found" });
+        }
+        
+        if (document.userId !== userId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        
+        if (!document.compilationSuccessful) {
+          return res.status(400).json({ message: "Document has not been successfully compiled" });
+        }
+        
+        // Compile the LaTeX to get the PDF
+        const compilationResult = await compileLatex(document.latexContent);
+        
+        if (!compilationResult.success) {
+          return res.status(500).json({ message: "Failed to compile LaTeX" });
+        }
+        
+        return res.status(200).json({
+          pdf: compilationResult.pdf
+        });
+      } catch (error) {
+        console.error("Get document PDF error:", error);
+        return res.status(500).json({ message: "Failed to get document PDF" });
+      }
+    }
+  );
+
+  app.post("/api/documents", 
+    requireAuth,
+    async (req: Request, res: Response) => {
+      const userId = req.session.userId;
+      const { title, inputContent, latexContent, documentType, compilationSuccessful, compilationError } = req.body;
+      
+      try {
+        const document = await storage.saveDocument({
+          userId,
+          title,
+          inputContent,
+          latexContent,
+          documentType,
+          compilationSuccessful,
+          compilationError
+        });
+        
+        return res.status(201).json(document);
+      } catch (error) {
+        console.error("Save document error:", error);
+        return res.status(500).json({ message: "Failed to save document" });
+      }
+    }
+  );
+
+  app.patch("/api/documents/:id", 
+    requireAuth,
+    async (req: Request, res: Response) => {
+      const documentId = parseInt(req.params.id);
+      const userId = req.session.userId;
+      
+      if (isNaN(documentId)) {
+        return res.status(400).json({ message: "Invalid document ID" });
+      }
+      
+      try {
+        const existingDocument = await storage.getDocumentById(documentId);
+        
+        if (!existingDocument) {
+          return res.status(404).json({ message: "Document not found" });
+        }
+        
+        if (existingDocument.userId !== userId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        
+        const { title, inputContent, latexContent, documentType, compilationSuccessful, compilationError } = req.body;
+        
+        const updatedDocument = await storage.updateDocument(documentId, {
+          title,
+          inputContent,
+          latexContent,
+          documentType,
+          compilationSuccessful,
+          compilationError
+        });
+        
+        return res.status(200).json(updatedDocument);
+      } catch (error) {
+        console.error("Update document error:", error);
+        return res.status(500).json({ message: "Failed to update document" });
+      }
+    }
+  );
+
+  app.delete("/api/documents/:id", 
+    requireAuth,
+    async (req: Request, res: Response) => {
+      const documentId = parseInt(req.params.id);
+      const userId = req.session.userId;
+      
+      if (isNaN(documentId)) {
+        return res.status(400).json({ message: "Invalid document ID" });
+      }
+      
+      try {
+        const document = await storage.getDocumentById(documentId);
+        
+        if (!document) {
+          return res.status(404).json({ message: "Document not found" });
+        }
+        
+        if (document.userId !== userId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        
+        await storage.deleteDocument(documentId);
+        
+        return res.status(200).json({ message: "Document deleted successfully" });
+      } catch (error) {
+        console.error("Delete document error:", error);
+        return res.status(500).json({ message: "Failed to delete document" });
+      }
+    }
+  );
+
+  // Subscription routes
+  app.post("/api/subscription/create", 
+    requireAuth,
+    async (req: Request, res: Response) => {
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe is not configured" });
+      }
+      
+      const { tier } = req.body;
+      const userId = req.session.userId;
+      
+      try {
+        const user = await storage.getUserById(userId);
+        
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        // If user already has a subscription, return the portal URL instead
+        if (user.stripeSubscriptionId) {
+          const session = await createPortalSession(user.stripeCustomerId);
+          return res.status(200).json({ url: session.url });
+        }
+        
+        // Create or get a Stripe customer
+        let customerId = user.stripeCustomerId;
+        
+        if (!customerId) {
+          const customer = await createCustomer(user.email, user.username);
+          customerId = customer.id;
+          
+          // Update user with Stripe customer ID
+          await storage.updateUserStripeInfo(userId, {
+            stripeCustomerId: customerId
+          });
+        }
+        
+        // Create subscription
+        const subscription = await createSubscription(customerId, tier);
+        
+        return res.status(200).json({
+          clientSecret: subscription.latestInvoice.payment_intent.client_secret
+        });
+      } catch (error) {
+        console.error("Create subscription error:", error);
+        return res.status(500).json({ message: "Failed to create subscription" });
+      }
+    }
+  );
+
+  app.post("/api/subscription/cancel", 
+    requireAuth,
+    async (req: Request, res: Response) => {
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe is not configured" });
+      }
+      
+      const userId = req.session.userId;
+      
+      try {
+        const user = await storage.getUserById(userId);
+        
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        if (!user.stripeSubscriptionId) {
+          return res.status(400).json({ message: "No active subscription found" });
+        }
+        
+        // Cancel the subscription
+        const cancelResult = await cancelSubscription(user.stripeSubscriptionId);
+        
+        return res.status(200).json({
+          success: true,
+          message: "Your subscription has been cancelled and will end at the end of the billing period."
+        });
+      } catch (error) {
+        console.error("Cancel subscription error:", error);
+        return res.status(500).json({ message: "Failed to cancel subscription" });
+      }
+    }
+  );
+
+  app.post("/api/subscription/portal", 
+    requireAuth,
+    async (req: Request, res: Response) => {
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe is not configured" });
+      }
+      
+      const userId = req.session.userId;
+      
+      try {
+        const user = await storage.getUserById(userId);
+        
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        if (!user.stripeCustomerId) {
+          return res.status(400).json({ message: "No Stripe customer found" });
+        }
+        
+        // Create a billing portal session
+        const session = await createPortalSession(user.stripeCustomerId);
+        
+        return res.status(200).json({ url: session.url });
+      } catch (error) {
+        console.error("Create portal session error:", error);
+        return res.status(500).json({ message: "Failed to create portal session" });
+      }
+    }
+  );
+
+  // Stripe webhook
+  app.post("/webhook/stripe", 
+    express.raw({ type: 'application/json' }),
+    async (req: Request, res: Response) => {
+      if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
+        return res.status(500).json({ message: "Stripe is not fully configured" });
+      }
+      
+      const sig = req.headers['stripe-signature'] as string;
+      
+      try {
+        const event = stripe.webhooks.constructEvent(
+          req.body,
+          sig,
+          process.env.STRIPE_WEBHOOK_SECRET
+        );
+        
+        // Handle the event
+        switch (event.type) {
+          case 'customer.subscription.created':
+          case 'customer.subscription.updated': {
+            const subscription = event.data.object as Stripe.Subscription;
+            const customerId = subscription.customer as string;
+            const subscriptionId = subscription.id;
+            const status = subscription.status;
+            const priceId = subscription.items.data[0].price.id;
+            
+            // Get tier from price ID
+            const tierMapping: Record<string, string> = {
+              [process.env.STRIPE_PRICE_BASIC_ID || 'price_basic']: 'basic',
+              [process.env.STRIPE_PRICE_PRO_ID || 'price_pro']: 'pro',
+              [process.env.STRIPE_PRICE_POWER_ID || 'price_power']: 'power'
+            };
+            
+            const tier = tierMapping[priceId] || 'basic';
+            
+            // Update user subscription info
+            await storage.updateUserSubscription(customerId, {
+              stripeSubscriptionId: subscriptionId,
+              subscriptionTier: tier,
+              subscriptionStatus: status
+            });
+            
+            break;
+          }
+          case 'customer.subscription.deleted': {
+            const subscription = event.data.object as Stripe.Subscription;
+            const customerId = subscription.customer as string;
+            
+            // Downgrade user to free tier
+            await storage.updateUserSubscription(customerId, {
+              stripeSubscriptionId: null,
+              subscriptionTier: 'free',
+              subscriptionStatus: 'inactive'
+            });
+            
+            break;
+          }
+          // Add more event types as needed
+        }
+        
+        res.json({ received: true });
+      } catch (err) {
+        console.error('Webhook error:', err);
+        return res.status(400).send(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      }
+    }
+  );
+
+  // API route for available AI models
+  app.get("/api/models", 
+    authenticateUser,
+    async (req: Request, res: Response) => {
+      try {
+        const userId = req.session.userId;
+        const user = await storage.getUserById(userId);
+        
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        const models = await getAvailableModels(user.subscriptionTier);
+        
+        return res.status(200).json(models);
+      } catch (error) {
+        console.error("Get models error:", error);
+        return res.status(500).json({ message: "Failed to get available models" });
+      }
+    }
+  );
+  
+  const httpServer = createServer(app);
+  return httpServer;
+}
+
+// Helper function to extract a title from content
+function getDocumentTitle(content: string): string {
+  // Try to find a heading or title in the content
+  const titleMatch = content.match(/^#\s+(.+)$/m) || 
+                    content.match(/^Title:\s*(.+)$/mi) ||
+                    content.match(/^(.{1,50})/);
+  
+  if (titleMatch && titleMatch[1].trim()) {
+    return titleMatch[1].trim();
+  }
+  
+  return "Untitled Document";
+}

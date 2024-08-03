@@ -1,0 +1,376 @@
+import { db } from "@db";
+import { 
+  users, 
+  documents, 
+  User, 
+  Document, 
+  insertUserSchema, 
+  insertDocumentSchema,
+  SubscriptionTier,
+  tierLimits
+} from "@shared/schema";
+import { hashPassword, comparePassword } from "./services/authService";
+import { eq, and, desc } from "drizzle-orm";
+
+/**
+ * Storage interface for database operations
+ */
+export const storage = {
+  // User operations
+  async createUser(username: string, email: string, password: string): Promise<{
+    success: boolean;
+    user?: User;
+    error?: string;
+    usageLimit?: number;
+  }> {
+    try {
+      // Check if user already exists
+      const existingUser = await db.query.users.findFirst({
+        where: (users) => 
+          eq(users.username, username) || eq(users.email, email)
+      });
+      
+      if (existingUser) {
+        return {
+          success: false,
+          error: 'Username or email already in use'
+        };
+      }
+      
+      // Hash password
+      const hashedPassword = await hashPassword(password);
+      
+      // Create user with default free tier
+      const [newUser] = await db.insert(users).values({
+        username,
+        email,
+        password: hashedPassword,
+        role: 'user',
+        subscriptionTier: SubscriptionTier.Free,
+        subscriptionStatus: 'active',
+        monthlyUsage: 0,
+        usageResetDate: new Date()
+      }).returning();
+      
+      // Get usage limit for free tier
+      const usageLimit = tierLimits[SubscriptionTier.Free];
+      
+      return {
+        success: true,
+        user: newUser,
+        usageLimit
+      };
+    } catch (error) {
+      console.error('Create user error:', error);
+      return {
+        success: false,
+        error: 'Failed to create user'
+      };
+    }
+  },
+  
+  async validateUser(email: string, password: string): Promise<{
+    success: boolean;
+    user?: User;
+    error?: string;
+    usageLimit?: number;
+  }> {
+    try {
+      // Find user by email
+      const user = await db.query.users.findFirst({
+        where: (users) => eq(users.email, email)
+      });
+      
+      if (!user) {
+        return {
+          success: false,
+          error: 'Invalid email or password'
+        };
+      }
+      
+      // Verify password
+      const passwordValid = await comparePassword(password, user.password);
+      
+      if (!passwordValid) {
+        return {
+          success: false,
+          error: 'Invalid email or password'
+        };
+      }
+      
+      // Get usage limit for the user's tier
+      const usageLimit = tierLimits[user.subscriptionTier as SubscriptionTier] || tierLimits[SubscriptionTier.Free];
+      
+      return {
+        success: true,
+        user,
+        usageLimit
+      };
+    } catch (error) {
+      console.error('Validate user error:', error);
+      return {
+        success: false,
+        error: 'Login failed'
+      };
+    }
+  },
+  
+  async getUserById(userId: number): Promise<User | null> {
+    try {
+      const user = await db.query.users.findFirst({
+        where: (users) => eq(users.id, userId)
+      });
+      
+      return user || null;
+    } catch (error) {
+      console.error('Get user error:', error);
+      return null;
+    }
+  },
+  
+  async getUserByEmail(email: string): Promise<User | null> {
+    try {
+      const user = await db.query.users.findFirst({
+        where: (users) => eq(users.email, email)
+      });
+      
+      return user || null;
+    } catch (error) {
+      console.error('Get user by email error:', error);
+      return null;
+    }
+  },
+  
+  async getUserByStripeCustomerId(customerId: string): Promise<User | null> {
+    try {
+      const user = await db.query.users.findFirst({
+        where: (users) => eq(users.stripeCustomerId, customerId)
+      });
+      
+      return user || null;
+    } catch (error) {
+      console.error('Get user by Stripe customer ID error:', error);
+      return null;
+    }
+  },
+  
+  async updateUserStripeInfo(userId: number, stripeInfo: {
+    stripeCustomerId?: string;
+    stripeSubscriptionId?: string | null;
+  }): Promise<User | null> {
+    try {
+      const [updatedUser] = await db.update(users)
+        .set(stripeInfo)
+        .where(eq(users.id, userId))
+        .returning();
+      
+      return updatedUser || null;
+    } catch (error) {
+      console.error('Update user Stripe info error:', error);
+      return null;
+    }
+  },
+  
+  async updateUserSubscription(customerId: string, subscription: {
+    stripeSubscriptionId?: string | null;
+    subscriptionTier?: string;
+    subscriptionStatus?: string;
+  }): Promise<User | null> {
+    try {
+      const [updatedUser] = await db.update(users)
+        .set({
+          ...subscription,
+          updatedAt: new Date()
+        })
+        .where(eq(users.stripeCustomerId, customerId))
+        .returning();
+      
+      return updatedUser || null;
+    } catch (error) {
+      console.error('Update user subscription error:', error);
+      return null;
+    }
+  },
+  
+  async incrementUserUsage(userId: number): Promise<User | null> {
+    try {
+      const user = await this.getUserById(userId);
+      
+      if (!user) {
+        return null;
+      }
+      
+      // Check if it's time to reset the usage (new month)
+      const now = new Date();
+      const resetDate = new Date(user.usageResetDate);
+      
+      // If it's a new month, reset the usage
+      if (now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear()) {
+        const [updatedUser] = await db.update(users)
+          .set({
+            monthlyUsage: 1, // Start with 1 for the current request
+            usageResetDate: now,
+            updatedAt: now
+          })
+          .where(eq(users.id, userId))
+          .returning();
+        
+        return updatedUser || null;
+      }
+      
+      // Otherwise, increment the usage
+      const [updatedUser] = await db.update(users)
+        .set({
+          monthlyUsage: user.monthlyUsage + 1,
+          updatedAt: now
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      return updatedUser || null;
+    } catch (error) {
+      console.error('Increment user usage error:', error);
+      return null;
+    }
+  },
+  
+  async getUserUsageLimit(user: User): Promise<number> {
+    return tierLimits[user.subscriptionTier as SubscriptionTier] || tierLimits[SubscriptionTier.Free];
+  },
+  
+  async resetAllUsersMonthlyUsage(): Promise<void> {
+    try {
+      await db.update(users)
+        .set({
+          monthlyUsage: 0,
+          usageResetDate: new Date(),
+          updatedAt: new Date()
+        });
+      
+      console.log('Reset all users monthly usage');
+    } catch (error) {
+      console.error('Reset all users monthly usage error:', error);
+      throw error;
+    }
+  },
+  
+  // Document operations
+  async saveDocument(documentData: {
+    userId: number;
+    title: string;
+    inputContent: string;
+    latexContent: string;
+    documentType: string;
+    compilationSuccessful: boolean;
+    compilationError?: string | null;
+  }): Promise<Document> {
+    try {
+      const [document] = await db.insert(documents).values({
+        ...documentData,
+        metadata: {}
+      }).returning();
+      
+      return document;
+    } catch (error) {
+      console.error('Save document error:', error);
+      throw error;
+    }
+  },
+  
+  async getDocumentById(documentId: number): Promise<Document | null> {
+    try {
+      const document = await db.query.documents.findFirst({
+        where: (documents) => eq(documents.id, documentId)
+      });
+      
+      return document || null;
+    } catch (error) {
+      console.error('Get document error:', error);
+      return null;
+    }
+  },
+  
+  async getUserDocuments(userId: number): Promise<Document[]> {
+    try {
+      const userDocuments = await db.query.documents.findMany({
+        where: (documents) => eq(documents.userId, userId),
+        orderBy: [desc(documents.updatedAt)]
+      });
+      
+      return userDocuments;
+    } catch (error) {
+      console.error('Get user documents error:', error);
+      return [];
+    }
+  },
+  
+  async updateDocument(documentId: number, documentData: {
+    title?: string;
+    inputContent?: string;
+    latexContent?: string;
+    documentType?: string;
+    compilationSuccessful?: boolean;
+    compilationError?: string | null;
+  }): Promise<Document | null> {
+    try {
+      const [updatedDocument] = await db.update(documents)
+        .set({
+          ...documentData,
+          updatedAt: new Date()
+        })
+        .where(eq(documents.id, documentId))
+        .returning();
+      
+      return updatedDocument || null;
+    } catch (error) {
+      console.error('Update document error:', error);
+      return null;
+    }
+  },
+  
+  async deleteDocument(documentId: number): Promise<void> {
+    try {
+      await db.delete(documents)
+        .where(eq(documents.id, documentId));
+    } catch (error) {
+      console.error('Delete document error:', error);
+      throw error;
+    }
+  },
+  
+  // AI model info
+  async getModelInfo(modelName: string): Promise<{ tier: SubscriptionTier } | null> {
+    // Map model names to their tiers
+    const modelTierMap: Record<string, SubscriptionTier> = {
+      // OpenAI models
+      'gpt-4o': SubscriptionTier.Power,
+      'gpt-3.5-turbo': SubscriptionTier.Basic,
+      
+      // Anthropic models
+      'claude-3-7-sonnet-20250219': SubscriptionTier.Pro,
+      'claude-3-haiku-20240307': SubscriptionTier.Basic,
+      
+      // Groq models
+      'mixtral-8x7b': SubscriptionTier.Free,
+      
+      // TogetherAI models
+      'mistral-7b-instruct': SubscriptionTier.Free,
+      
+      // HuggingFace models
+      'HuggingFaceH4/zephyr-7b-beta': SubscriptionTier.Free,
+      
+      // OpenRouter models
+      'google/gemini-pro': SubscriptionTier.Basic,
+      'anthropic/claude-3-sonnet': SubscriptionTier.Pro,
+      'openai/gpt-4': SubscriptionTier.Power
+    };
+    
+    const tier = modelTierMap[modelName];
+    
+    if (!tier) {
+      return null;
+    }
+    
+    return { tier };
+  }
+};
