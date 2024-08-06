@@ -4,7 +4,7 @@ import { SubscriptionTier } from '@shared/schema';
 // Initialize Stripe client
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2023-10-16',
+      apiVersion: '2025-04-30.basil' as any, // Using latest API version
     })
   : null;
 
@@ -50,7 +50,15 @@ export async function createSubscription(
     customer: customerId,
     items: [{ price: priceId }],
     payment_behavior: 'default_incomplete',
-    payment_settings: { save_default_payment_method: 'on_subscription' },
+    payment_settings: { 
+      save_default_payment_method: 'on_subscription',
+      payment_method_options: {
+        card: {
+          setup_future_usage: 'off_session',
+        },
+      },
+      payment_method_types: ['link', 'card'],
+    },
     expand: ['latest_invoice.payment_intent'],
   });
 }
@@ -131,7 +139,7 @@ export async function createCheckoutSession(
     throw new Error(`No price ID found for tier: ${tier}`);
   }
   
-  // Create a checkout session
+  // Create a checkout session with Link enabled
   return stripe.checkout.sessions.create({
     customer: customerId,
     payment_method_types: ['card'],
@@ -144,5 +152,18 @@ export async function createCheckoutSession(
     mode: 'subscription',
     success_url: process.env.DOMAIN ? `${process.env.DOMAIN}/account?success=true` : 'http://localhost:5000/account?success=true',
     cancel_url: process.env.DOMAIN ? `${process.env.DOMAIN}/account?canceled=true` : 'http://localhost:5000/account?canceled=true',
+    // Enable Stripe Link for faster checkout
+    payment_method_options: {
+      card: {
+        setup_future_usage: 'off_session',
+      }
+    },
+    // Always show the Link UI option
+    payment_method_configuration: process.env.STRIPE_LINK_CONFIG_ID,
+    // Store payment details for future use
+    customer_update: {
+      address: 'auto',
+      name: 'auto',
+    },
   });
 }

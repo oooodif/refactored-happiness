@@ -4,13 +4,35 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { authenticateUser, requireAuth } from "./middleware/auth";
 import { checkSubscription } from "./middleware/subscription";
-import { validateRequest } from "./utils/validation";
+
+// Import validation middleware
+import { z } from "zod";
+// Define validateRequest middleware function here
+const validateRequest = (schema: z.ZodType<any, any>) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = schema.parse(req.body);
+      req.body = result;
+      next();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: 'Validation failed',
+          errors: error.errors
+        });
+      }
+      return res.status(500).json({ message: 'Internal server error during validation' });
+    }
+  };
+};
 import { generateLatexSchema } from "@shared/schema";
 import { generateLatex, getAvailableModels } from "./services/aiProvider";
 import { compileLatex, compileAndFixLatex } from "./services/latexService";
 import { createCustomer, createSubscription, cancelSubscription, createPortalSession } from "./services/stripeService";
-import { z } from "zod";
 import Stripe from "stripe";
+import session from "express-session";
+import pgSession from "connect-pg-simple";
+import { pool } from "../db";
 
 // Initialize Stripe
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -19,11 +41,34 @@ if (!process.env.STRIPE_SECRET_KEY) {
 
 const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-10-16",
+      apiVersion: "2025-04-30.basil" as any, // Using latest API version
     })
   : undefined;
 
+// Add custom request type definition to handle session.userId
+declare module 'express-session' {
+  interface SessionData {
+    userId: number;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup session middleware
+  const PostgresStore = pgSession(session);
+  app.use(session({
+    store: new PostgresStore({
+      pool: pool,
+      tableName: 'user_sessions'
+    }),
+    secret: process.env.SESSION_SECRET || 'latex-generator-session-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+    }
+  }));
   // Authentication routes
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     const { username, email, password } = req.body;

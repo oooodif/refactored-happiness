@@ -11,10 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-// Make sure the stripe promise is created correctly
-if (!stripePromise) {
-  throw new Error('Stripe is not initialized. Make sure VITE_STRIPE_PUBLIC_KEY is set.');
-}
+// Check if Stripe is properly initialized
+const isStripeAvailable = !!import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 
 // Payment form component
 const SubscribeForm = () => {
@@ -88,6 +86,13 @@ export default function Subscribe() {
       return;
     }
     
+    // Check if Stripe is available
+    if (!isStripeAvailable) {
+      setError("Payment system is not configured. Please contact the administrator.");
+      setIsLoading(false);
+      return;
+    }
+    
     // Create the subscription
     const setupSubscription = async () => {
       try {
@@ -102,7 +107,7 @@ export default function Subscribe() {
     };
     
     setupSubscription();
-  }, [session.isAuthenticated, navigate, tier]);
+  }, [session.isAuthenticated, navigate, tier, isStripeAvailable]);
   
   if (!session.isAuthenticated) {
     return null;

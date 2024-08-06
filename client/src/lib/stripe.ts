@@ -3,15 +3,15 @@ import { API_ROUTES } from "./constants";
 import { apiRequest } from "./queryClient";
 import { SubscriptionTier } from "@shared/schema";
 
-// Make sure to call `loadStripe` outside of a component's render to avoid
-// recreating the `Stripe` object on every render.
+// Check for Stripe key but don't throw an error
 if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  console.error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
+  console.warn('No Stripe key found (VITE_STRIPE_PUBLIC_KEY). Payment features will be limited.');
 }
 
+// Create a dummy promise for development if no key is available
 export const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
   ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
-  : null;
+  : Promise.resolve(null);
 
 export async function createSubscription(tier: SubscriptionTier): Promise<{ clientSecret: string }> {
   try {
