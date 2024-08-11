@@ -122,9 +122,9 @@ export default function LatexInput({
             variant="outline"
             size="sm"
             className="text-xs bg-white hover:bg-gray-100 text-gray-700 rounded border border-gray-300 px-2 py-1 mb-2"
-            onClick={() => insertTemplate("ref")}
+            onClick={() => insertTemplate("list")}
           >
-            <span className="font-mono">⊔</span> Ref/Cite
+            <span className="font-mono">•</span> List
           </Button>
         </div>
       </div>
@@ -132,7 +132,7 @@ export default function LatexInput({
         <textarea
           ref={textareaRef}
           className="w-full h-full p-3 rounded-md border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-none"
-          placeholder="Enter your text, math equations, or data here. The AI will convert it to LaTeX automatically."
+          placeholder="Enter your content here. Use the buttons above to insert templates, or use tags like <MATHEQ>E = mc^2</MATHEQ> for math equations. No LaTeX knowledge required!"
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />

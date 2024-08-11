@@ -9,30 +9,26 @@ export const DOCUMENT_TYPES = [
 ];
 
 export const LATEX_TEMPLATES = {
-  math: `\\begin{align}
-  E = mc^2
-\\end{align}`,
-  table: `\\begin{table}[htbp]
-  \\centering
-  \\begin{tabular}{lcc}
-    \\toprule
-    Item & Value & Unit \\\\
-    \\midrule
-    Example & 1.0 & kg \\\\
-    \\bottomrule
-  \\end{tabular}
-  \\caption{Sample table}
-  \\label{tab:sample}
-\\end{table}`,
-  figure: `\\begin{figure}[htbp]
-  \\centering
-  \\includegraphics[width=0.7\\linewidth]{figure}
-  \\caption{A sample figure}
-  \\label{fig:sample}
-\\end{figure}`,
-  section: `\\section{New Section}
-This is content for the new section.`,
-  ref: `\\cite{reference} or refer to Figure~\\ref{fig:sample}`
+  math: `<MATHEQ>
+E = mc^2
+</MATHEQ>`,
+  table: `<TABLE>
+headers: Item, Value, Unit
+row: Example, 1.0, kg
+</TABLE>`,
+  figure: `<FIGURE>
+description: A sample figure
+caption: Sample Figure
+</FIGURE>`,
+  section: `<SECTION>
+title: New Section
+content: This is content for the new section.
+</SECTION>`,
+  list: `<LIST>
+item 1;
+item 2;
+item 3
+</LIST>`
 };
 
 export const AI_MODELS = [
