@@ -28,7 +28,11 @@ content: This is content for the new section.
 item 1;
 item 2;
 item 3
-</LIST>`
+</LIST>`,
+  slide: `<SLIDE>
+title: Slide Title
+content: Slide content goes here.
+</SLIDE>`
 };
 
 export const AI_MODELS = [

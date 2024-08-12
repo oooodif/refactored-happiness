@@ -70,7 +70,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
           {/* Free Tier */}
           <SubscriptionPlanCard
             tier={SubscriptionTier.Free}
@@ -88,7 +88,6 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             price={4.99}
             features={SUBSCRIPTION_FEATURES[SubscriptionTier.Basic]}
             isCurrentPlan={session.tier === SubscriptionTier.Basic}
-            isPopular={true}
             onSelect={handleSelectPlan}
           />
 
@@ -99,6 +98,17 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             price={9.99}
             features={SUBSCRIPTION_FEATURES[SubscriptionTier.Pro]}
             isCurrentPlan={session.tier === SubscriptionTier.Pro}
+            onSelect={handleSelectPlan}
+          />
+          
+          {/* Power Tier */}
+          <SubscriptionPlanCard
+            tier={SubscriptionTier.Power}
+            name="Power"
+            price={19.99}
+            features={SUBSCRIPTION_FEATURES[SubscriptionTier.Power]}
+            isCurrentPlan={session.tier === SubscriptionTier.Power}
+            isPopular={true}
             onSelect={handleSelectPlan}
           />
         </div>
