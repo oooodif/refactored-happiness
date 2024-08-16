@@ -46,28 +46,23 @@ export const AI_MODELS = [
 export const SUBSCRIPTION_FEATURES = {
   [SubscriptionTier.Free]: [
     "3 LaTeX generations/month",
-    "View generated LaTeX",
-    "View compiled preview (low-res)",
-    "Watermarked PDFs"
+    "Full access to all features",
+    "No credit card required"
   ],
   [SubscriptionTier.Basic]: [
     "50 LaTeX generations/month",
-    "High-resolution PDF export",
-    "Saved document history",
-    "No watermarks"
+    "Full access to all features",
+    "Priority support"
   ],
   [SubscriptionTier.Pro]: [
     "250 LaTeX generations/month",
-    "Everything in Basic",
-    "Table splitting & advanced layouts",
-    "Beamer presentations & TikZ preview"
+    "Full access to all features",
+    "Priority support"
   ],
   [SubscriptionTier.Power]: [
-    "1,000+ LaTeX generations/month",
-    "Everything in Pro",
-    "Priority AI queue",
-    "Advanced templates",
-    "Live math editing"
+    "1,000 LaTeX generations/month",
+    "Full access to all features",
+    "Priority support"
   ]
 };
 

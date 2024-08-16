@@ -126,13 +126,25 @@ export default function LatexInput({
           >
             <span className="font-mono">•</span> List
           </Button>
+          {documentType === 'beamer' && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs bg-white hover:bg-gray-100 text-gray-700 rounded border border-gray-300 px-2 py-1 mb-2"
+              onClick={() => insertTemplate("slide")}
+            >
+              <span className="font-mono">▦</span> New Slide
+            </Button>
+          )}
         </div>
       </div>
       <div className="flex-1 overflow-auto p-4 bg-gray-50">
         <textarea
           ref={textareaRef}
           className="w-full h-full p-3 rounded-md border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-none"
-          placeholder="Enter your content here. Use the buttons above to insert templates, or use tags like <MATHEQ>E = mc^2</MATHEQ> for math equations. No LaTeX knowledge required!"
+          placeholder={documentType === 'beamer' 
+            ? "Describe your slide show here, paste report or paper here, or design your slides using the buttons above. Use the 'New Slide' button to add slides."
+            : "Enter your content here. Use the buttons above to insert templates, or use tags like <MATHEQ>E = mc^2</MATHEQ> for math equations. No LaTeX knowledge required!"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
