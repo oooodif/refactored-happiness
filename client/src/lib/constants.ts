@@ -45,24 +45,16 @@ export const AI_MODELS = [
 
 export const SUBSCRIPTION_FEATURES = {
   [SubscriptionTier.Free]: [
-    "3 LaTeX generations/month",
-    "Full access to all features",
-    "No credit card required"
+    "3 LaTeX generations/month"
   ],
   [SubscriptionTier.Basic]: [
-    "50 LaTeX generations/month",
-    "Full access to all features",
-    "Priority support"
+    "50 LaTeX generations/month"
   ],
   [SubscriptionTier.Pro]: [
-    "250 LaTeX generations/month",
-    "Full access to all features",
-    "Priority support"
+    "250 LaTeX generations/month"
   ],
   [SubscriptionTier.Power]: [
-    "1,000 LaTeX generations/month",
-    "Full access to all features",
-    "Priority support"
+    "1,000 LaTeX generations/month"
   ]
 };
 
