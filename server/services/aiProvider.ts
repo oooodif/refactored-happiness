@@ -83,29 +83,56 @@ const providers = {
     models: {
       'mixtral-8x7b': { tier: SubscriptionTier.Free }
     },
+    // Track token usage for Groq
+    totalTokensUsed: 0,
+    MAX_TOKENS: 1_000_000, // About $50 worth of tokens
+    
     async generateLatex(prompt: string, model: string = 'mixtral-8x7b'): Promise<string> {
       if (!groqApiKey) throw new Error('Groq API not configured');
+      
+      // Estimate tokens in the request (very rough estimate: ~1.3 tokens per word)
+      const systemPromptTokens = Math.ceil(LATEX_SYSTEM_PROMPT.split(/\s+/).length * 1.3);
+      const promptTokens = Math.ceil(prompt.split(/\s+/).length * 1.3);
+      const estimatedRequestTokens = systemPromptTokens + promptTokens + 4000; // Include max response tokens
+      
+      // Check if we'll exceed our budget
+      if (this.totalTokensUsed + estimatedRequestTokens > this.MAX_TOKENS) {
+        throw new Error('Groq spending limit exceeded. Using fallback providers.');
+      }
 
-      const response = await axios.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        {
-          model: model,
-          messages: [
-            { role: 'system', content: LATEX_SYSTEM_PROMPT },
-            { role: 'user', content: prompt }
-          ],
-          temperature: 0.2,
-          max_tokens: 4000
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${groqApiKey}`,
-            'Content-Type': 'application/json'
+      try {
+        const response = await axios.post(
+          'https://api.groq.com/openai/v1/chat/completions',
+          {
+            model: model,
+            messages: [
+              { role: 'system', content: LATEX_SYSTEM_PROMPT },
+              { role: 'user', content: prompt }
+            ],
+            temperature: 0.2,
+            max_tokens: 4000
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${groqApiKey}`,
+              'Content-Type': 'application/json'
+            }
           }
-        }
-      );
+        );
 
-      return extractLatexFromResponse(response.data.choices[0].message.content || '');
+        // Update token usage (use actual tokens if available, otherwise use estimates)
+        const tokensUsed = response.data.usage?.total_tokens || estimatedRequestTokens;
+        this.totalTokensUsed += tokensUsed;
+        console.log(`Groq token usage: ${this.totalTokensUsed}/${this.MAX_TOKENS}`);
+        
+        return extractLatexFromResponse(response.data.choices[0].message.content || '');
+      } catch (error) {
+        // If we get a 429 (rate limit) error, might be approaching limits, so track it
+        if (error.response?.status === 429) {
+          this.totalTokensUsed = this.MAX_TOKENS; // Mark as at limit
+        }
+        throw error;
+      }
     }
   },
   
