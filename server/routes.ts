@@ -148,12 +148,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // LaTeX Generation Routes
   app.post("/api/latex/generate", 
-    authenticateUser, 
+    authenticateUser, // Allow anonymous users
     checkSubscription,
     validateRequest(generateLatexSchema),
     async (req: Request, res: Response) => {
       const { content, documentType, options } = req.body;
-      const userId = req.session.userId;
+      const userId = req.session.userId; // May be undefined for guest users
+      const isAuthenticated = !!userId; // Check if user is authenticated
       
       try {
         // Generate LaTeX using AI
@@ -166,24 +167,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Compile the LaTeX
         const compilationResult = await compileLatex(latexResult.latex);
         
-        // Increment usage counter for the user
-        await storage.incrementUserUsage(userId);
+        // Only track usage and save document if user is authenticated
+        let documentId;
         
-        // Save the document
-        const document = await storage.saveDocument({
-          userId,
-          title: getDocumentTitle(content),
-          inputContent: content,
-          latexContent: latexResult.latex,
-          documentType,
-          compilationSuccessful: compilationResult.success,
-          compilationError: compilationResult.error || null
-        });
+        if (isAuthenticated) {
+          // Increment usage counter for the user
+          await storage.incrementUserUsage(userId);
+          
+          // Save the document
+          const document = await storage.saveDocument({
+            userId,
+            title: getDocumentTitle(content),
+            inputContent: content,
+            latexContent: latexResult.latex,
+            documentType,
+            compilationSuccessful: compilationResult.success,
+            compilationError: compilationResult.error || null
+          });
+          
+          documentId = document.id;
+        }
         
         return res.status(200).json({
           latex: latexResult.latex,
           compilationResult,
-          documentId: document.id
+          documentId
         });
       } catch (error) {
         console.error("LaTeX generation error:", error);
