@@ -4,8 +4,13 @@ import { SubscriptionTier, tierLimits } from '@shared/schema';
 
 /**
  * Middleware to check if user has exceeded their subscription limits
+ * NOTE: Usage limits have been temporarily disabled for testing purposes
  */
 export async function checkSubscription(req: Request, res: Response, next: NextFunction) {
+  // TEMPORARY: Skip all usage limit checks and allow unlimited generations
+  return next();
+  
+  /* Original implementation (currently disabled)
   // Allow anonymous users a limited number of requests
   if (!req.session.userId) {
     // Anonymous users get the free tier limit
@@ -58,6 +63,7 @@ export async function checkSubscription(req: Request, res: Response, next: NextF
     console.error('Subscription check error:', error);
     return res.status(500).json({ message: 'Server error checking subscription' });
   }
+  */
 }
 
 /**
@@ -95,8 +101,13 @@ export async function resetMonthlyUsage(): Promise<void> {
 
 /**
  * Middleware to check if requested model is available for user's tier
+ * NOTE: Model tier restrictions have been temporarily disabled for testing purposes
  */
 export async function checkModelAccess(req: Request, res: Response, next: NextFunction) {
+  // TEMPORARY: Skip all model access checks
+  return next();
+  
+  /* Original implementation (currently disabled)
   const { model } = req.body.options || {};
   
   // If no specific model is requested, continue
@@ -143,4 +154,5 @@ export async function checkModelAccess(req: Request, res: Response, next: NextFu
     console.error('Model access check error:', error);
     next(); // Continue anyway to use default model
   }
+  */
 }

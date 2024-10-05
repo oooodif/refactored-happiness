@@ -351,7 +351,8 @@ export const storage = {
       'claude-3-haiku-20240307': SubscriptionTier.Basic,
       
       // Groq models
-      'mixtral-8x7b': SubscriptionTier.Free,
+      'llama3-8b-8192': SubscriptionTier.Free,
+      'mixtral-8x7b-32768': SubscriptionTier.Free,
       
       // TogetherAI models
       'mistral-7b-instruct': SubscriptionTier.Free,

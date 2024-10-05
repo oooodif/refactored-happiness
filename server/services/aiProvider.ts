@@ -81,13 +81,14 @@ const providers = {
   groq: {
     name: 'Groq',
     models: {
-      'mixtral-8x7b': { tier: SubscriptionTier.Free }
+      'llama3-8b-8192': { tier: SubscriptionTier.Free },
+      'mixtral-8x7b-32768': { tier: SubscriptionTier.Free }
     },
     // Track token usage for Groq
     totalTokensUsed: 0,
     MAX_TOKENS: 1_000_000, // About $50 worth of tokens
     
-    async generateLatex(prompt: string, model: string = 'mixtral-8x7b'): Promise<string> {
+    async generateLatex(prompt: string, model: string = 'llama3-8b-8192'): Promise<string> {
       if (!groqApiKey) throw new Error('Groq API not configured');
       
       // Estimate tokens in the request (very rough estimate: ~1.3 tokens per word)
