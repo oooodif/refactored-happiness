@@ -40,7 +40,8 @@ export const AI_MODELS = [
   { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo (OpenAI)", tier: SubscriptionTier.Basic },
   { id: "claude-3-7-sonnet-20250219", name: "Claude 3 Sonnet (Anthropic)", tier: SubscriptionTier.Pro },
   { id: "claude-3-haiku-20240307", name: "Claude 3 Haiku (Anthropic)", tier: SubscriptionTier.Basic },
-  { id: "mixtral-8x7b", name: "Mixtral 8x7B (Groq)", tier: SubscriptionTier.Free }
+  { id: "llama3-8b-8192", name: "Llama3 8B (Groq)", tier: SubscriptionTier.Free },
+  { id: "mixtral-8x7b-32768", name: "Mixtral 8x7B (Groq)", tier: SubscriptionTier.Free }
 ];
 
 export const SUBSCRIPTION_FEATURES = {
