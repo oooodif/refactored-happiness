@@ -27,7 +27,22 @@ export function getReadableFilename(title: string): string {
 }
 
 export function base64ToBlob(base64: string, mimeType: string): Blob {
-  const byteString = atob(base64.split(",")[1]);
+  // Check if the string contains a data URL prefix (e.g., "data:application/pdf;base64,")
+  let byteString: string;
+  if (base64.includes(',')) {
+    // Handle data URL format
+    byteString = atob(base64.split(',')[1]);
+  } else {
+    // Handle raw base64 string
+    try {
+      byteString = atob(base64);
+    } catch (error) {
+      console.error('Invalid base64 string:', error);
+      // Fallback to empty PDF if decoding fails
+      byteString = '';
+    }
+  }
+  
   const ab = new ArrayBuffer(byteString.length);
   const ia = new Uint8Array(ab);
   
