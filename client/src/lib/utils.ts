@@ -65,8 +65,18 @@ export function downloadBlob(blob: Blob, filename: string): void {
 }
 
 export function downloadPdf(base64Pdf: string, filename: string): void {
-  const blob = base64ToBlob(base64Pdf, "application/pdf");
-  downloadBlob(blob, `${getReadableFilename(filename)}.pdf`);
+  try {
+    // Create the blob from the base64 data
+    const blob = base64ToBlob(base64Pdf, "application/pdf");
+    
+    // Download the blob
+    downloadBlob(blob, `${getReadableFilename(filename)}.pdf`);
+    
+    console.log("PDF download initiated successfully");
+  } catch (error) {
+    console.error("Error downloading PDF:", error);
+    throw new Error("Failed to download PDF");
+  }
 }
 
 export function copyToClipboard(text: string): Promise<boolean> {

@@ -81,7 +81,7 @@ export default function PDFPreview({ pdfData, title }: PDFPreviewProps) {
             </div>
             <div className="relative bg-gray-800 flex justify-center p-2">
               <Document
-                file={`data:application/pdf;base64,${pdfData}`}
+                file={pdfData.includes("data:application/pdf;base64,") ? pdfData : `data:application/pdf;base64,${pdfData}`}
                 onLoadSuccess={onDocumentLoadSuccess}
                 className="pdf-document"
                 error={
