@@ -178,6 +178,55 @@ export default function Home() {
     }
   };
 
+  // Handle manual PDF compilation (compile existing LaTeX)
+  const handleCompilePdf = async () => {
+    if (!editorState.latexContent) {
+      toast({
+        title: "No LaTeX Content",
+        description: "Please generate LaTeX content first before compiling to PDF.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Call the compile endpoint to generate PDF from current LaTeX
+      const result = await compileLatex(editorState.latexContent);
+      
+      // Update the editor state with the compilation result
+      setEditorState(prev => ({
+        ...prev,
+        compilationResult: result.compilationResult
+      }));
+
+      if (result.compilationResult.success) {
+        toast({
+          title: "PDF Generated",
+          description: "Your LaTeX has been successfully compiled to PDF.",
+        });
+      } else {
+        setErrorNotification({
+          title: "PDF Compilation Error",
+          message: result.compilationResult.error || "Failed to compile LaTeX to PDF.",
+          actions: [
+            {
+              label: "View Details",
+              action: () => console.log(result.compilationResult.errorDetails),
+            },
+          ],
+        });
+      }
+    } catch (error) {
+      console.error("Error compiling LaTeX to PDF:", error);
+      
+      toast({
+        title: "Compilation Failed",
+        description: error instanceof Error ? error.message : "Failed to compile LaTeX to PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Define the tabs for the output panel
   const tabs: TabItem[] = [
     {
@@ -199,6 +248,7 @@ export default function Home() {
         <PDFPreview
           pdfData={editorState.compilationResult?.pdf || null}
           title={editorState.title}
+          onCompilePdf={handleCompilePdf}
         />
       ),
     },
