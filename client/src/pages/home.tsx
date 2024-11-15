@@ -68,40 +68,28 @@ export default function Home() {
     setEditorState(prev => ({ ...prev, isGenerating: true }));
 
     try {
-      // Generate LaTeX
+      // Generate LaTeX without compiling to PDF
       const result = await generateLatex(
         editorState.inputContent,
-        editorState.documentType
+        editorState.documentType,
+        undefined,  // default options
+        false       // explicitly set compile=false
       );
 
       // Set the results
       setEditorState(prev => ({
         ...prev,
         latexContent: result.latex,
-        compilationResult: result.compilationResult,
+        compilationResult: result.compilationResult, // This will be empty with success=false
         isGenerating: false,
         documentId: result.documentId,
       }));
 
       // Show success message
-      if (result.compilationResult.success) {
-        toast({
-          title: "LaTeX Generated",
-          description: "Your content has been successfully converted to LaTeX.",
-        });
-      } else {
-        // Show error notification
-        setErrorNotification({
-          title: "LaTeX Compilation Error",
-          message: result.compilationResult.error || "Failed to compile LaTeX.",
-          actions: [
-            {
-              label: "View Details",
-              action: () => console.log(result.compilationResult.errorDetails),
-            },
-          ],
-        });
-      }
+      toast({
+        title: "LaTeX Generated",
+        description: "Your content has been successfully converted to LaTeX. Click 'Generate PDF' in the PDF Preview tab to compile it.",
+      });
     } catch (error) {
       console.error("Error generating LaTeX:", error);
       setEditorState(prev => ({ ...prev, isGenerating: false }));

@@ -155,6 +155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { content, documentType, options } = req.body;
       const userId = req.session.userId; // May be undefined for guest users
       const isAuthenticated = !!userId; // Check if user is authenticated
+      const shouldCompile = req.body.compile === true; // Optional flag to compile or not
       
       try {
         // Generate LaTeX using AI
@@ -164,8 +165,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(500).json({ message: latexResult.error });
         }
         
-        // Compile the LaTeX
-        const compilationResult = await compileLatex(latexResult.latex);
+        // Default empty compilation result
+        let compilationResult = {
+          success: false,
+          pdf: null,
+          error: null,
+          errorDetails: null
+        };
+        
+        // Only compile if explicitly requested
+        if (shouldCompile) {
+          compilationResult = await compileLatex(latexResult.latex);
+        }
         
         // Only track usage and save document if user is authenticated
         let documentId;
@@ -181,8 +192,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             inputContent: content,
             latexContent: latexResult.latex,
             documentType,
-            compilationSuccessful: compilationResult.success,
-            compilationError: compilationResult.error || null
+            compilationSuccessful: shouldCompile ? compilationResult.success : false,
+            compilationError: shouldCompile ? (compilationResult.error || null) : null
           });
           
           documentId = document.id;

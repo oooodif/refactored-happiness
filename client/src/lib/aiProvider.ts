@@ -5,16 +5,19 @@ import { GenerateLatexResponse, LatexGenerationOptions } from "./types";
 export async function generateLatex(
   content: string,
   documentType: string,
-  options?: LatexGenerationOptions
+  options?: LatexGenerationOptions,
+  compile: boolean = false // Default to not compiling
 ): Promise<GenerateLatexResponse> {
   try {
+    console.log("Generating LaTeX with compile flag:", compile);
     const response = await apiRequest(
       "POST",
       API_ROUTES.latex.generate,
       {
         content,
         documentType,
-        options: options || {}
+        options: options || {},
+        compile // Pass compilation flag to server
       }
     );
     

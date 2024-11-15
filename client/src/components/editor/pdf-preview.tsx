@@ -71,10 +71,20 @@ export default function PDFPreview({ pdfData, title, onCompilePdf }: PDFPreviewP
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
             />
           </svg>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No PDF to display</h3>
-          <p className="text-gray-600 mb-6">
-            Click the button below to generate a PDF from your LaTeX content.
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No PDF Generated Yet</h3>
+          <p className="text-gray-600 mb-2">
+            LaTeX generation and PDF compilation are now separate steps:
           </p>
+          <ol className="text-left text-gray-600 text-sm mb-6 space-y-2">
+            <li className="flex items-start">
+              <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-blue-100 text-blue-600 text-xs mr-2 mt-0.5">1</span>
+              <span><strong>First,</strong> generate LaTeX code from your input content</span>
+            </li>
+            <li className="flex items-start">
+              <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-blue-100 text-blue-600 text-xs mr-2 mt-0.5">2</span>
+              <span><strong>Then,</strong> click the button below to compile the LaTeX into a PDF</span>
+            </li>
+          </ol>
           
           <Button 
             onClick={handleGeneratePdf}
@@ -87,14 +97,14 @@ export default function PDFPreview({ pdfData, title, onCompilePdf }: PDFPreviewP
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Generating PDF...
+                Compiling PDF...
               </>
             ) : (
               <>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z" clipRule="evenodd" />
                 </svg>
-                Generate PDF
+                Generate PDF from LaTeX
               </>
             )}
           </Button>

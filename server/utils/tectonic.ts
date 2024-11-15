@@ -14,43 +14,72 @@ export async function compileTex(latexContent: string): Promise<{
   error?: string;
   errorDetails?: { line: number; message: string }[];
 }> {
+  console.log('[LATEX DEBUG] Starting PDF compilation process');
+  
   // Create temporary directory
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'latex-'));
   const inputFile = path.join(tempDir, 'input.tex');
   const outputDir = path.join(tempDir, 'output');
   
+  console.log(`[LATEX DEBUG] Created temporary directories:
+   - Input file: ${inputFile}
+   - Output directory: ${outputDir}`);
+  
   try {
     // Create output directory
     await fs.mkdir(outputDir, { recursive: true });
+    console.log('[LATEX DEBUG] Created output directory');
     
     // Write LaTeX content to file
     await fs.writeFile(inputFile, latexContent);
+    console.log('[LATEX DEBUG] Wrote LaTeX content to file');
+    
+    // Log a preview of the LaTeX content (first 100 chars)
+    const previewContent = latexContent.length > 100 
+      ? latexContent.substring(0, 100) + '...' 
+      : latexContent;
+    console.log(`[LATEX DEBUG] LaTeX content preview: ${previewContent}`);
     
     // Run Tectonic
+    console.log('[LATEX DEBUG] Starting Tectonic compilation...');
     const compilationResult = await runTectonic(inputFile, outputDir);
     
     if (!compilationResult.success) {
+      console.log('[LATEX DEBUG] Tectonic compilation failed with error:', compilationResult.error);
+      const errorDetails = parseErrorLog(compilationResult.error || '');
+      console.log('[LATEX DEBUG] Parsed error details:', errorDetails);
+      
       return {
         success: false,
         error: compilationResult.error,
-        errorDetails: parseErrorLog(compilationResult.error || '')
+        errorDetails: errorDetails
       };
     }
     
+    console.log('[LATEX DEBUG] Tectonic compilation succeeded');
+    
     // Read the compiled PDF
     const pdfPath = path.join(outputDir, 'input.pdf');
+    console.log(`[LATEX DEBUG] Looking for PDF at path: ${pdfPath}`);
+    
     const pdfExists = await fileExists(pdfPath);
     
     if (!pdfExists) {
+      console.log('[LATEX DEBUG] PDF file was not found after successful compilation');
       return {
         success: false,
         error: 'Compilation completed but PDF file was not created'
       };
     }
     
+    console.log('[LATEX DEBUG] PDF file found, reading contents');
+    
     // Read PDF and convert to base64
     const pdfData = await fs.readFile(pdfPath);
+    console.log(`[LATEX DEBUG] PDF file size: ${pdfData.length} bytes`);
+    
     const base64Pdf = pdfData.toString('base64');
+    console.log(`[LATEX DEBUG] PDF converted to base64 (length: ${base64Pdf.length})`);
     
     return {
       success: true,
@@ -80,28 +109,44 @@ function runTectonic(inputFile: string, outputDir: string): Promise<{
   error?: string;
 }> {
   return new Promise((resolve) => {
-    const tectonic = spawn('tectonic', [
+    // Build command arguments
+    const args = [
       '--outdir', outputDir,
       '--keep-logs',
       '--chatter', 'minimal',
       inputFile
-    ]);
+    ];
+    
+    console.log(`[LATEX DEBUG] Running Tectonic command: tectonic ${args.join(' ')}`);
+    
+    const tectonic = spawn('tectonic', args);
     
     let stdout = '';
     let stderr = '';
     
     tectonic.stdout.on('data', (data) => {
-      stdout += data.toString();
+      const chunk = data.toString();
+      stdout += chunk;
+      console.log(`[LATEX DEBUG] Tectonic stdout: ${chunk}`);
     });
     
     tectonic.stderr.on('data', (data) => {
-      stderr += data.toString();
+      const chunk = data.toString();
+      stderr += chunk;
+      console.log(`[LATEX DEBUG] Tectonic stderr: ${chunk}`);
     });
     
     tectonic.on('close', (code) => {
+      console.log(`[LATEX DEBUG] Tectonic process exited with code: ${code}`);
+      
       if (code === 0) {
+        console.log('[LATEX DEBUG] Tectonic compilation successful');
         resolve({ success: true });
       } else {
+        console.log('[LATEX DEBUG] Tectonic compilation failed');
+        console.log(`[LATEX DEBUG] Full stdout: ${stdout}`);
+        console.log(`[LATEX DEBUG] Full stderr: ${stderr}`);
+        
         resolve({
           success: false,
           error: stderr || stdout || `Tectonic exited with code ${code}`
@@ -110,6 +155,7 @@ function runTectonic(inputFile: string, outputDir: string): Promise<{
     });
     
     tectonic.on('error', (err) => {
+      console.log(`[LATEX DEBUG] Failed to start Tectonic: ${err.message}`);
       resolve({
         success: false,
         error: `Failed to start Tectonic: ${err.message}`
@@ -118,6 +164,7 @@ function runTectonic(inputFile: string, outputDir: string): Promise<{
     
     // Set a timeout for compilation (2 minutes)
     const timeout = setTimeout(() => {
+      console.log('[LATEX DEBUG] Tectonic compilation timed out after 2 minutes');
       tectonic.kill();
       resolve({
         success: false,
