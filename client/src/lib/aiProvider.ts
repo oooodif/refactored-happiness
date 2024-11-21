@@ -30,13 +30,23 @@ export async function generateLatex(
 
 export async function compileLatex(latexContent: string): Promise<GenerateLatexResponse> {
   try {
+    console.log("Sending LaTeX to compile:", latexContent.substring(0, 100) + "...");
+    
     const response = await apiRequest(
       "POST",
       API_ROUTES.latex.compile,
       { latex: latexContent }
     );
     
-    return await response.json();
+    const result = await response.json();
+    console.log("Compile result:", {
+      success: result.compilationResult.success,
+      hasPdf: !!result.compilationResult.pdf,
+      pdfLength: result.compilationResult.pdf ? result.compilationResult.pdf.length : 0,
+      error: result.compilationResult.error || null
+    });
+    
+    return result;
   } catch (error) {
     console.error("Error compiling LaTeX:", error);
     throw new Error(error instanceof Error ? error.message : "Failed to compile LaTeX");
