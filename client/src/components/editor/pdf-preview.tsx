@@ -13,6 +13,19 @@ interface PDFPreviewProps {
   onCompilePdf?: () => void;
 }
 
+// Helper function to safely format PDF data
+function formatPdfData(pdfData: string | null): string | null {
+  if (!pdfData) return null;
+  
+  // Check if already has the data URL prefix
+  if (pdfData.startsWith('data:application/pdf;base64,')) {
+    return pdfData;
+  }
+  
+  // Add the prefix
+  return `data:application/pdf;base64,${pdfData}`;
+}
+
 export default function PDFPreview({ pdfData, title, onCompilePdf }: PDFPreviewProps) {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
@@ -126,7 +139,7 @@ export default function PDFPreview({ pdfData, title, onCompilePdf }: PDFPreviewP
             </div>
             <div className="relative bg-gray-800 flex justify-center p-2">
               <Document
-                file={pdfData && pdfData.startsWith("data:application/pdf;base64,") ? pdfData : `data:application/pdf;base64,${pdfData}`}
+                file={formatPdfData(pdfData)}
                 onLoadSuccess={onDocumentLoadSuccess}
                 className="pdf-document"
                 error={
