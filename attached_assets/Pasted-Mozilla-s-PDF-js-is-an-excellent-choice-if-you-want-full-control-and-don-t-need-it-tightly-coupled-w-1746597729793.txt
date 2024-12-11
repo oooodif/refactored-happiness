@@ -1,0 +1,104 @@
+Mozilla’s PDF.js is an excellent choice if you want full control and don’t need it tightly coupled with React. It’s the underlying engine behind most React wrappers like react-pdf, but using it directly gives you:
+	•	Fewer headaches with workers.
+	•	A complete standalone viewer (already built).
+	•	A browser-native feel without extra React abstraction.
+
+⸻
+
+✅ 2 Ways to Use PDF.js by Mozilla
+
+⸻
+
+🔹 Option 1: Use Mozilla’s Prebuilt Viewer (Recommended)
+
+This is the easiest and most stable way.
+
+Steps:
+	1.	Download the viewer:
+	•	Clone the repo or download from GitHub:
+
+git clone https://github.com/mozilla/pdf.js.git
+cd pdf.js
+npm install
+npm run bundle
+
+
+	2.	Copy web/viewer.html and the build folder into your project’s public/ directory.
+	3.	Embed it:
+
+<iframe
+  src="/pdfjs/web/viewer.html?file=/your-pdf-path/sample.pdf"
+  width="100%"
+  height="700px"
+  style="border: none;"
+></iframe>
+
+This uses Mozilla’s full-featured viewer — search, thumbnails, zoom, download, print — out of the box.
+
+Pros:
+	•	No React integration or worker issues.
+	•	Full PDF functionality.
+	•	Customizable via HTML/CSS.
+
+⸻
+
+🔹 Option 2: Use PDF.js Programmatically (Custom Integration)
+
+For more control over rendering, but more setup.
+
+Steps:
+	1.	Install PDF.js:
+
+npm install pdfjs-dist
+
+	2.	Basic usage (in a React useEffect):
+
+import * as pdfjsLib from 'pdfjs-dist';
+import 'pdfjs-dist/web/pdf_viewer.css';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+useEffect(() => {
+  const container = document.getElementById('pdf-container');
+
+  const loadPDF = async () => {
+    const loadingTask = pdfjsLib.getDocument('/your-pdf.pdf');
+    const pdf = await loadingTask.promise;
+    const page = await pdf.getPage(1);
+
+    const viewport = page.getViewport({ scale: 1.5 });
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    container.appendChild(canvas);
+
+    await page.render({
+      canvasContext: context,
+      viewport: viewport,
+    }).promise;
+  };
+
+  loadPDF();
+}, []);
+
+	3.	Add this in your JSX:
+
+<div id="pdf-container"></div>
+
+
+
+⸻
+
+🟢 Summary
+
+Use Case	Method	Effort	Features	Best For
+Full viewer, zero setup	viewer.html in iframe	Low	Full	Standalone PDFs, all features
+Full control, custom display	pdfjs-dist programmatic API	Medium	Custom	Render inside custom UI or logic
+
+
+
+⸻
+
+Would you like a zip file or boilerplate with viewer.html already set up for deployment?

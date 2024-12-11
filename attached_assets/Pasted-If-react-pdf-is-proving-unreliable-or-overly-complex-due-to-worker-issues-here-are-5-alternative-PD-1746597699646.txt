@@ -1,0 +1,81 @@
+If react-pdf is proving unreliable or overly complex due to worker issues, here are 5 alternative PDF viewer solutions—sorted by ease of use and feature set—that might work better depending on your project:
+
+⸻
+
+1. PDF.js (Vanilla JS) – No React Dependency
+	•	What: The core library behind react-pdf, but you use it directly.
+	•	Why it might be better: You avoid worker integration headaches by using Mozilla’s official viewer page or embedding the viewer as an iframe.
+	•	Use case: Quick, standalone PDF rendering with minimal setup.
+	•	Example:
+
+<iframe src="/pdfjs/web/viewer.html?file=/example.pdf" width="100%" height="600px"></iframe>
+
+
+	•	Link: https://github.com/mozilla/pdf.js
+
+⸻
+
+2. ViewerJS
+	•	What: Combines PDF.js and OpenDocument viewing in a clean, embeddable format.
+	•	Why: Very simple. No workers to configure.
+	•	Use case: Drop-in viewer for static PDFs.
+	•	Usage:
+
+<iframe src="/ViewerJS/#../docs/sample.pdf" width="100%" height="600px" allowfullscreen></iframe>
+
+
+	•	Link: https://viewerjs.org
+
+⸻
+
+3. PDFObject
+	•	What: Lightweight JavaScript utility to embed PDFs using the native browser viewer.
+	•	Why: Zero dependency—uses <embed> or <iframe>.
+	•	Use case: When browser support is sufficient (i.e., you don’t need custom rendering).
+	•	Code:
+
+<div id="pdf-viewer"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfobject/2.2.7/pdfobject.min.js"></script>
+<script>PDFObject.embed("/example.pdf", "#pdf-viewer");</script>
+
+
+	•	Link: https://pdfobject.com
+
+⸻
+
+4. react-pdf-viewer
+	•	What: A fully featured alternative to react-pdf.
+	•	Why: Includes built-in toolbar, search, zoom, thumbnails, and works well with custom workers.
+	•	Install:
+
+npm install @react-pdf-viewer/core @react-pdf-viewer/default-layout
+
+
+	•	Use:
+
+import { Viewer, Worker } from '@react-pdf-viewer/core';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+
+<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+  <Viewer fileUrl="/example.pdf" />
+</Worker>
+
+
+	•	Link: https://react-pdf-viewer.dev
+
+⸻
+
+5. Syncfusion PDF Viewer (Free License for Individuals)
+	•	What: Rich PDF component for React, Angular, etc.
+	•	Why: Enterprise-level viewer with annotations, form filling, search, etc.
+	•	Cons: Requires free license.
+	•	Link: https://www.syncfusion.com/javascript-ui-controls/react/pdfviewer
+
+⸻
+
+Recommendation
+	•	For simplicity, go with PDFObject or ViewerJS.
+	•	For full-featured React support, use react-pdf-viewer—it solves most of react-pdf’s issues.
+
+Would you like a full code snippet for one of these options embedded into a React or HTML page?

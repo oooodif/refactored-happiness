@@ -1,0 +1,70 @@
+If you’re using react-pdf and ran:
+
+grep -r "pdfjs" client/
+
+you’re likely looking to verify whether the PDF.js worker is being correctly imported or configured. Here’s a direct and thorough checklist to follow after running that grep:
+
+⸻
+
+✅ If You Do See pdfjs.GlobalWorkerOptions.workerSrc in the Output:
+
+That means you are manually setting the worker — great! Now check:
+	1.	Confirm the Worker Path is Correct
+Make sure it looks like this (for example):
+
+import { pdfjs } from 'react-pdf';
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+
+Or, if using a local file:
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url,
+).toString();
+
+
+	2.	Ensure It’s Not Being Set Multiple Times
+Multiple definitions of workerSrc in the app can cause conflicts.
+	3.	Check That You’re Not Using a Broken CDN
+If you’re using a CDN version, test if that URL works in your browser.
+
+⸻
+
+❌ If You Don’t See pdfjs.GlobalWorkerOptions.workerSrc Anywhere:
+
+You need to set it explicitly. Add this at the top of the component where you use <Document /> from react-pdf:
+
+import { pdfjs } from 'react-pdf';
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+
+Or, for modern module bundlers (like Vite, Webpack 5+ with type: "module"), use:
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url,
+).toString();
+
+You may also need to install the worker file package directly:
+
+npm install pdfjs-dist
+
+
+
+⸻
+
+⚙️ Browser Compatibility & Build Config
+	•	Vite: If you’re using Vite, make sure your config supports loading .worker.js files or is ESM-compatible.
+	•	Webpack: Make sure pdf.worker.entry.js isn’t excluded by any rule.
+	•	Next.js: Use dynamic imports and SSR-safe guards, like:
+
+if (typeof window !== 'undefined') {
+  pdfjs.GlobalWorkerOptions.workerSrc = ...
+}
+
+
+
+⸻
+
+Would you like help diagnosing a build error or import issue specifically?
