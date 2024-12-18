@@ -62,7 +62,11 @@ export default function LatexOutput({
               compilationSuccess ? (
                 <span className="text-emerald-600">● Compilation Successful</span>
               ) : (
-                <span className="text-red-600">● Compilation Failed</span>
+                errorMessage ? (
+                  <span className="text-red-600">● Compilation Failed</span>
+                ) : (
+                  <span className="text-amber-500">● Awaiting Compilation</span>
+                )
               )
             ) : (
               <span className="text-gray-400">● Waiting for content</span>

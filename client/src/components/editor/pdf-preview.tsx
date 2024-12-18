@@ -28,6 +28,11 @@ export default function PDFPreview({ pdfData, title, onCompilePdf }: PDFPreviewP
 
   // Reset and embed PDF when data changes
   useEffect(() => {
+    // First, clear the container to prevent DOM manipulation errors
+    if (pdfContainerRef.current) {
+      pdfContainerRef.current.innerHTML = '';
+    }
+    
     if (pdfData && pdfContainerRef.current) {
       setIsGenerating(false);
       setErrorMessage(null);
@@ -35,21 +40,34 @@ export default function PDFPreview({ pdfData, title, onCompilePdf }: PDFPreviewP
       try {
         const formattedPdfData = formatPdfData(pdfData);
         
-        // Use PDFObject to embed the PDF
-        const success = PDFObject.embed(formattedPdfData, pdfContainerRef.current, {
-          height: "600px",
-          fallbackLink: "<p>This browser does not support inline PDFs. Please <a href='[url]'>click here to download the PDF</a>.</p>"
-        });
-        
-        if (!success) {
-          setErrorMessage("Your browser cannot display this PDF. You may need to download it instead.");
-          console.error("PDFObject failed to embed PDF");
-        }
+        // Slight delay to ensure DOM is ready
+        setTimeout(() => {
+          if (pdfContainerRef.current) {
+            // Use PDFObject to embed the PDF
+            const success = PDFObject.embed(formattedPdfData, pdfContainerRef.current, {
+              height: "600px",
+              fallbackLink: "<p>This browser does not support inline PDFs. Please <a href='[url]'>click here to download the PDF</a>.</p>"
+            });
+            
+            if (!success) {
+              setErrorMessage("Your browser cannot display this PDF. You may need to download it instead.");
+              console.error("PDFObject failed to embed PDF");
+            }
+          }
+        }, 50);
       } catch (error) {
         console.error("Error embedding PDF:", error);
         setErrorMessage("Failed to load PDF. Please try regenerating.");
       }
     }
+    
+    // Cleanup function that runs when component unmounts or before re-running the effect
+    return () => {
+      if (pdfContainerRef.current) {
+        // Clear container contents
+        pdfContainerRef.current.innerHTML = '';
+      }
+    };
   }, [pdfData]);
 
   const handleGeneratePdf = () => {
