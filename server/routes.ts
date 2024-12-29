@@ -645,6 +645,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   );
+
+  // Extract title from LaTeX content using AI
+  app.post("/api/latex/extract-title", 
+    authenticateUser,
+    async (req: Request, res: Response) => {
+      try {
+        const { latex } = req.body;
+        
+        if (!latex) {
+          return res.status(400).json({ message: "LaTeX content is required" });
+        }
+        
+        // Try to extract title from LaTeX content using heuristics first
+        let title = extractTitleFromLatex(latex);
+        
+        // If we couldn't find a title using heuristics, use AI to extract a meaningful one
+        if (title === "Untitled Document") {
+          // Determine which AI provider to use
+          const userId = req.session.userId;
+          let provider = "groq"; // Default to Groq since you mentioned it works well
+          
+          if (userId) {
+            const user = await storage.getUserById(userId);
+            if (user) {
+              // Use a provider based on user's subscription tier
+              // For now just use Groq
+              provider = "groq";
+            }
+          }
+          
+          // Generate a meaningful title based on the LaTeX content
+          try {
+            const prompt = `Extract a concise, descriptive title (3-7 words) from this LaTeX document. Focus on the main topic and purpose. Return ONLY the title with no quotation marks or formatting:
+
+${latex.substring(0, 5000)}`;  // Limit content to avoid token overflow
+            
+            // Use our existing AI provider interface
+            const generatedTitle = await callProviderWithModel(`${provider}/llama3-8b-8192`, prompt);
+            
+            // Clean up the title (remove quotes, line breaks, etc.)
+            title = generatedTitle
+              .replace(/["'`]/g, '')  // Remove quotes
+              .replace(/\\n|\\r/g, '') // Remove line breaks
+              .replace(/^Title:\s*/i, '')  // Remove "Title:" prefix
+              .replace(/^\s+|\s+$/g, '')  // Trim whitespace
+              .substring(0, 100);  // Limit length
+            
+            // Use default if we got an empty title
+            if (!title) {
+              title = "Generated Document";
+            }
+          } catch (error) {
+            console.error("Error generating title with AI:", error);
+            title = "Generated Document";  // Fallback
+          }
+        }
+        
+        return res.status(200).json({ title });
+      } catch (error) {
+        console.error("Title extraction error:", error);
+        return res.status(500).json({ 
+          message: "Failed to extract title", 
+          title: "Generated Document"  // Provide fallback
+        });
+      }
+    }
+  );
+  
+  // Helper function to extract title from LaTeX content using heuristics
+  function extractTitleFromLatex(latex: string): string {
+    // Try various patterns to find the title in the LaTeX code
+    const patterns = [
+      /\\title\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/,      // \title{...} command
+      /\\begin\{document\}[\s\S]*?\\section\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/, // First section after begin{document}
+      /\\begin\{document\}[\s\S]*?\\chapter\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/, // First chapter after begin{document}
+      /\\maketitle[\s\S]*?\\section\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/,         // First section after maketitle
+    ];
+    
+    for (const pattern of patterns) {
+      const match = latex.match(pattern);
+      if (match && match[1] && match[1].trim()) {
+        let title = match[1].trim();
+        
+        // Remove LaTeX commands from the title
+        title = title.replace(/\\[a-zA-Z]+(\{[^{}]*\}|\[[^[\]]*\])?/g, '');
+        title = title.replace(/[\\\{\}]/g, '');
+        
+        return title.trim() || "Untitled Document";
+      }
+    }
+    
+    return "Untitled Document";
+  }
   
   const httpServer = createServer(app);
   return httpServer;
