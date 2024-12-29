@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import PDFObject from "pdfobject";
 
 interface PDFPreviewProps {
   pdfData: string | null;
@@ -24,52 +23,18 @@ function formatPdfData(pdfData: string | null): string | null {
 export default function PDFPreview({ pdfData, title, onCompilePdf }: PDFPreviewProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const pdfContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Format PDF data for iframe
+  const formattedPdfData = pdfData ? formatPdfData(pdfData) : null;
 
-  // Reset and embed PDF when data changes
+  // Reset generating state when PDF data changes
   useEffect(() => {
-    // First, clear the container to prevent DOM manipulation errors
-    if (pdfContainerRef.current) {
-      pdfContainerRef.current.innerHTML = '';
-    }
-    
-    if (pdfData && pdfContainerRef.current) {
+    if (pdfData) {
       setIsGenerating(false);
-      setErrorMessage(null);
-      
-      try {
-        const formattedPdfData = formatPdfData(pdfData);
-        
-        // Slight delay to ensure DOM is ready
-        setTimeout(() => {
-          if (pdfContainerRef.current) {
-            // Use PDFObject to embed the PDF
-            const success = PDFObject.embed(formattedPdfData, pdfContainerRef.current, {
-              height: "600px",
-              fallbackLink: "<p>This browser does not support inline PDFs. Please <a href='[url]'>click here to download the PDF</a>.</p>"
-            });
-            
-            if (!success) {
-              setErrorMessage("Your browser cannot display this PDF. You may need to download it instead.");
-              console.error("PDFObject failed to embed PDF");
-            }
-          }
-        }, 50);
-      } catch (error) {
-        console.error("Error embedding PDF:", error);
-        setErrorMessage("Failed to load PDF. Please try regenerating.");
-      }
     }
-    
-    // Cleanup function that runs when component unmounts or before re-running the effect
-    return () => {
-      if (pdfContainerRef.current) {
-        // Clear container contents
-        pdfContainerRef.current.innerHTML = '';
-      }
-    };
   }, [pdfData]);
 
+  // Handle PDF generation button click
   const handleGeneratePdf = () => {
     if (onCompilePdf) {
       setIsGenerating(true);
@@ -139,6 +104,7 @@ export default function PDFPreview({ pdfData, title, onCompilePdf }: PDFPreviewP
     );
   }
 
+  // When we have PDF data
   return (
     <div className="h-full flex flex-col bg-gray-100">
       <div className="flex-1 overflow-auto p-4">
@@ -162,6 +128,7 @@ export default function PDFPreview({ pdfData, title, onCompilePdf }: PDFPreviewP
               )}
             </div>
             
+            {/* Different content based on state */}
             {errorMessage ? (
               <div className="p-8 text-center">
                 <svg 
@@ -203,19 +170,20 @@ export default function PDFPreview({ pdfData, title, onCompilePdf }: PDFPreviewP
                   )}
                 </Button>
               </div>
+            ) : isGenerating ? (
+              <div className="flex items-center justify-center h-[650px] bg-gray-100">
+                <div className="text-center">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600 mb-2"></div>
+                  <p className="text-gray-500">Loading PDF...</p>
+                </div>
+              </div>
             ) : (
-              <div 
-                ref={pdfContainerRef} 
-                className="pdf-container w-full h-[650px] bg-gray-100"
-              >
-                {isGenerating && (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600 mb-2"></div>
-                      <p className="text-gray-500">Loading PDF...</p>
-                    </div>
-                  </div>
-                )}
+              <div className="pdf-container w-full h-[650px] bg-gray-100">
+                <iframe 
+                  src={formattedPdfData || "about:blank"}
+                  className="w-full h-full border-0"
+                  title="PDF Viewer"
+                />
               </div>
             )}
           </div>
