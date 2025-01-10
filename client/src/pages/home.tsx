@@ -103,7 +103,7 @@ export default function Home() {
   };
 
   // Handle PDF download
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     if (!editorState.compilationResult?.success || !editorState.compilationResult.pdf) {
       toast({
         title: "No PDF available",
@@ -113,10 +113,40 @@ export default function Home() {
       return;
     }
 
-    downloadPdf(
-      editorState.compilationResult.pdf,
-      editorState.title || "latex-document"
-    );
+    try {
+      // First try to extract a meaningful title from the LaTeX content
+      const extractedTitle = await extractTitleFromLatex(editorState.latexContent);
+      
+      // Use the extracted title if available, otherwise fall back to the current title or a default
+      const titleToUse = extractedTitle || editorState.title || "latex-document";
+      
+      downloadPdf(
+        editorState.compilationResult.pdf,
+        titleToUse
+      );
+      
+      // If we got a good title and it's different from the current one, update the editor state
+      if (extractedTitle && extractedTitle !== "Generated Document" && extractedTitle !== editorState.title) {
+        setEditorState(prev => ({
+          ...prev,
+          title: extractedTitle
+        }));
+        
+        // Show a toast about the AI-generated title
+        toast({
+          title: "Title Extracted",
+          description: `AI detected document title: "${extractedTitle}"`,
+        });
+      }
+    } catch (error) {
+      console.error("Error in download process:", error);
+      
+      // Fallback to basic download if title extraction fails
+      downloadPdf(
+        editorState.compilationResult.pdf, 
+        editorState.title || "latex-document"
+      );
+    }
   };
 
   // Save the document

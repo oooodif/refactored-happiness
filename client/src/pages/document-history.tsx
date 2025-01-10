@@ -101,7 +101,32 @@ export default function DocumentHistory() {
       
       if (data.pdf) {
         const document = documents?.find((doc: Document) => doc.id === documentId);
-        downloadPdf(data.pdf, document?.title || "document");
+        
+        if (document) {
+          try {
+            // Try to extract a meaningful title from the LaTeX content 
+            const extractedTitle = await extractTitleFromLatex(document.latexContent);
+            
+            // Use the extracted title or fall back to the document title
+            const titleToUse = extractedTitle || document.title || "document";
+            
+            downloadPdf(data.pdf, titleToUse);
+            
+            // If we got a title that's different from the original, show a toast
+            if (extractedTitle && extractedTitle !== "Generated Document" && extractedTitle !== document.title) {
+              toast({
+                title: "Title Extracted",
+                description: `AI detected document title: "${extractedTitle}"`,
+              });
+            }
+          } catch (titleError) {
+            // If title extraction fails, just use the existing title
+            downloadPdf(data.pdf, document.title || "document");
+          }
+        } else {
+          // If we can't find the document, just use a default name
+          downloadPdf(data.pdf, "document");
+        }
       } else {
         throw new Error("No PDF available");
       }

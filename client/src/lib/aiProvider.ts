@@ -126,3 +126,25 @@ export async function getDocument(documentId: number): Promise<Document> {
     throw new Error(error instanceof Error ? error.message : "Failed to fetch document");
   }
 }
+
+/**
+ * Extract a meaningful title from LaTeX content using AI
+ * @param latexContent The LaTeX code to extract title from
+ * @returns An object with the extracted title
+ */
+export async function extractTitleFromLatex(latexContent: string): Promise<string> {
+  try {
+    const response = await apiRequest(
+      "POST",
+      API_ROUTES.latex.extractTitle,
+      { latex: latexContent }
+    );
+    
+    const data = await response.json();
+    return data.title || "Generated Document";
+  } catch (error) {
+    console.error("Error extracting title:", error);
+    // Return a default title if extraction fails
+    return "Generated Document";
+  }
+}
