@@ -7,7 +7,7 @@ import LatexInput from "@/components/editor/latex-input";
 import LatexOutput from "@/components/editor/latex-output";
 import PDFPreview from "@/components/editor/pdf-preview";
 import ErrorNotification from "@/components/dialogs/error-notification";
-import { generateLatex, compileLatex, saveDocument } from "@/lib/aiProvider";
+import { generateLatex, compileLatex, saveDocument, extractTitleFromLatex } from "@/lib/aiProvider";
 import { downloadPdf } from "@/lib/utils";
 import { TabItem, EditorState, ErrorNotificationData } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";

@@ -7,6 +7,7 @@ import { API_ROUTES } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 import { Document } from "@shared/schema";
 import { downloadPdf } from "@/lib/utils";
+import { extractTitleFromLatex } from "@/lib/aiProvider";
 import { useToast } from "@/hooks/use-toast";
 
 import {
