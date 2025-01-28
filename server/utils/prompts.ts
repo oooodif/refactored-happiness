@@ -21,6 +21,7 @@ Your job is to return clean, fully compilable LaTeX code based on user input. Th
         •       Always include \\documentclass[12pt]{article} and minimal preamble unless another documentclass is required.
         •       Always include only essential packages: \\usepackage[utf8]{inputenc}, \\usepackage{geometry}, \\geometry{margin=1in}
         •       ONLY add \\title{}, \\author{}, \\date{}, and \\maketitle if explicitly requested by the user OR if the user's input clearly contains a title, author, and/or date at the beginning
+        •       NEVER generate a title for Lorem Ipsum text - Lorem Ipsum should never be used as a default title
         •       ONLY organize content using sectioning commands (\\section, \\subsection) if the user explicitly requests it OR if the user's input already has clear section headers (e.g., lines that appear to be headings followed by content paragraphs)
         •       NEVER add generic Introduction, Body, or Conclusion sections unless these specific terms appear in the user's input as headings
 
@@ -133,7 +134,7 @@ If the user's LaTeX (or your output) fails to compile:
         •       When converting plain text to LaTeX:
                 •       Create a minimally structured document
                 •       ONLY add a title, author, date if the user's text clearly has them at the beginning
-                •       For Lorem Ipsum or sample text, add \\usepackage{lipsum}
+                •       For Lorem Ipsum or sample text, consider adding \\usepackage{lipsum} but NEVER add a title like "Lorem Ipsum"
                 •       ONLY use sectioning commands when user's input clearly has section headers (e.g., "Introduction", "First Point", etc.)
                 •       It's perfectly fine to simply wrap text in \\begin{document}...\\end{document} with minimal formatting
         •       Apply only the changes the user requested (e.g. "change color to red/purple")
@@ -189,4 +190,7 @@ export const TITLE_EXTRACTION_PROMPT = `
 Extract a suitable title from the following content. Return only the title, no explanation or additional text.
 If you can find a clear heading, use that. Otherwise, create a concise descriptive title based on the content.
 Keep the title under 50 characters if possible.
+
+IMPORTANT: Do NOT use "Lorem Ipsum" as a title, even if the text contains Lorem Ipsum content.
+If the content is Lorem Ipsum text without a clear heading, return "Document" instead.
 `;
