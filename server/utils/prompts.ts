@@ -184,13 +184,21 @@ Fix all errors while making minimal changes to preserve the original document st
 `;
 
 /**
- * Prompt for extracting title
+ * Prompt for extracting title - USED ONLY FOR UI DISPLAY AND FILENAME
+ * This is separate from LaTeX generation - this title is NOT added to the LaTeX code
+ * It's only used for UI display and when naming downloaded PDF files
  */
 export const TITLE_EXTRACTION_PROMPT = `
 Extract a suitable title from the following content. Return only the title, no explanation or additional text.
-If you can find a clear heading, use that. Otherwise, create a concise descriptive title based on the content.
+If you can find a clear heading, use that as the title.
+If not, create a concise descriptive title based on the content's main topic.
 Keep the title under 50 characters if possible.
 
-IMPORTANT: Do NOT use "Lorem Ipsum" as a title, even if the text contains Lorem Ipsum content.
-If the content is Lorem Ipsum text without a clear heading, return "Document" instead.
+Guidelines:
+1. If there's a clear title/heading at the beginning of the content, use it
+2. If the content is about a specific topic, use that as the title
+3. If the content seems to be placeholder text like Lorem Ipsum, but has clear section headings, use the first heading
+4. If the content is purely Lorem Ipsum text without meaningful structure, return "Document" instead
+
+Never use "Lorem Ipsum" itself as a title.
 `;
