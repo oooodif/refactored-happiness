@@ -195,10 +195,14 @@ If not, create a concise descriptive title based on the content's main topic.
 Keep the title under 50 characters if possible.
 
 Guidelines:
-1. If there's a clear title/heading at the beginning of the content, use it
+1. If there's a clear title/heading at the beginning of the content (that isn't Lorem Ipsum), use it
 2. If the content is about a specific topic, use that as the title
 3. If the content seems to be placeholder text like Lorem Ipsum, but has clear section headings, use the first heading
-4. If the content is purely Lorem Ipsum text without meaningful structure, return "Document" instead
+4. If the content begins with "Lorem ipsum" or other Latin placeholder text, return "Document" instead
+5. If the content is purely Lorem Ipsum text without meaningful structure, return "Document" instead
 
-Never use "Lorem Ipsum" itself as a title.
+IMPORTANT: 
+- Never use "Lorem Ipsum" or any variant as a title
+- If the text begins with "Lorem ipsum dolor sit amet" or similar placeholder Latin text, DO NOT use it as a title even if it appears at the beginning
+- Check specifically for text starting with "Lorem ipsum" and avoid using it as a title
 `;
