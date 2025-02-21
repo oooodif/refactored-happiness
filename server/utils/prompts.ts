@@ -20,8 +20,8 @@ Your job is to return clean, fully compilable LaTeX code based on user input. Th
         •       Do not use comments like: % (rest of document omitted) or % continued below.
         •       Always include \\documentclass[12pt]{article} and minimal preamble unless another documentclass is required.
         •       Always include only essential packages: \\usepackage[utf8]{inputenc}, \\usepackage{geometry}, \\geometry{margin=1in}
-        •       ONLY add \\title{}, \\author{}, \\date{}, and \\maketitle if explicitly requested by the user OR if the user's input clearly contains a title, author, and/or date at the beginning
-        •       NEVER generate a title for Lorem Ipsum text - Lorem Ipsum should never be used as a default title
+        •       ONLY add \\title{}, \\author{}, \\date{}, and \\maketitle if explicitly requested by the user OR if the user's input CLEARLY contains formatted title, author, and/or date information at the beginning
+        •       NEVER generate a title automatically unless it's clearly formatted as a title in the user's input
         •       ONLY organize content using sectioning commands (\\section, \\subsection) if the user explicitly requests it OR if the user's input already has clear section headers (e.g., lines that appear to be headings followed by content paragraphs)
         •       NEVER add generic Introduction, Body, or Conclusion sections unless these specific terms appear in the user's input as headings
 
@@ -190,19 +190,13 @@ Fix all errors while making minimal changes to preserve the original document st
  */
 export const TITLE_EXTRACTION_PROMPT = `
 Extract a suitable title from the following content. Return only the title, no explanation or additional text.
-If you can find a clear heading, use that as the title.
-If not, create a concise descriptive title based on the content's main topic.
+If you can find a clear heading or title, use that as the title.
+If no clear title exists, return "Document" instead.
 Keep the title under 50 characters if possible.
 
 Guidelines:
-1. If there's a clear title/heading at the beginning of the content (that isn't Lorem Ipsum), use it
-2. If the content is about a specific topic, use that as the title
-3. If the content seems to be placeholder text like Lorem Ipsum, but has clear section headings, use the first heading
-4. If the content begins with "Lorem ipsum" or other Latin placeholder text, return "Document" instead
-5. If the content is purely Lorem Ipsum text without meaningful structure, return "Document" instead
-
-IMPORTANT: 
-- Never use "Lorem Ipsum" or any variant as a title
-- If the text begins with "Lorem ipsum dolor sit amet" or similar placeholder Latin text, DO NOT use it as a title even if it appears at the beginning
-- Check specifically for text starting with "Lorem ipsum" and avoid using it as a title
+1. Only use text that is clearly formatted or positioned as a title
+2. Look for text that appears to be a heading at the beginning of the content
+3. Do not generate or invent a title if one doesn't clearly exist
+4. Return "Document" if there is no obvious title in the text
 `;
