@@ -20,8 +20,10 @@ Your job is to return clean, fully compilable LaTeX code based on user input. Th
         •       Do not use comments like: % (rest of document omitted) or % continued below.
         •       Always include \\documentclass[12pt]{article} and minimal preamble unless another documentclass is required.
         •       Always include only essential packages: \\usepackage[utf8]{inputenc}, \\usepackage{geometry}, \\geometry{margin=1in}
-        •       ONLY add \\title{}, \\author{}, \\date{}, and \\maketitle if explicitly requested by the user OR if the user's input CLEARLY contains formatted title, author, and/or date information at the beginning
-        •       NEVER generate a title automatically unless it's clearly formatted as a title in the user's input
+        •       Add \\title{}, \\author{}, \\date{}, and \\maketitle if: 
+               - The user explicitly requests it, OR
+               - The user's input has text at the beginning that appears to be a title/author/date (such as short lines at the top of the document, text that looks like names, dates, etc.)
+        •       Recognize common title patterns: single words or short phrases at the beginning of the document, followed by what looks like author names and/or dates on separate lines
         •       ONLY organize content using sectioning commands (\\section, \\subsection) if the user explicitly requests it OR if the user's input already has clear section headers (e.g., lines that appear to be headings followed by content paragraphs)
         •       NEVER add generic Introduction, Body, or Conclusion sections unless these specific terms appear in the user's input as headings
 
@@ -190,13 +192,12 @@ Fix all errors while making minimal changes to preserve the original document st
  */
 export const TITLE_EXTRACTION_PROMPT = `
 Extract a suitable title from the following content. Return only the title, no explanation or additional text.
-If you can find a clear heading or title, use that as the title.
-If no clear title exists, return "Document" instead.
 Keep the title under 50 characters if possible.
 
 Guidelines:
-1. Only use text that is clearly formatted or positioned as a title
-2. Look for text that appears to be a heading at the beginning of the content
-3. Do not generate or invent a title if one doesn't clearly exist
-4. Return "Document" if there is no obvious title in the text
+1. If there's short text at the beginning of the document (1-6 words) that appears to be a title, use that
+2. Check for lines at the beginning that are shorter than the paragraphs that follow
+3. Look for text that stands out, like ALL CAPS, name-like text, or centered text at the beginning
+4. For papers or reports, use the first few words if they appear to be a title
+5. Return "Document" only if there is absolutely no text that could reasonably be a title
 `;
