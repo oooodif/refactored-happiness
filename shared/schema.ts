@@ -25,7 +25,7 @@ export const documents = pgTable("documents", {
   title: text("title").default("Untitled Document"),
   inputContent: text("input_content").notNull(),
   latexContent: text("latex_content").notNull(),
-  documentType: text("document_type").default("article").notNull(),
+  documentType: text("document_type").default("basic").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   compilationSuccessful: boolean("compilation_successful"),
@@ -60,7 +60,7 @@ export const loginSchema = z.object({
 
 export const generateLatexSchema = z.object({
   content: z.string().min(1, "Content is required"),
-  documentType: z.string().default("article"),
+  documentType: z.string().default("basic"),
   options: z.object({
     splitTables: z.boolean().default(false),
     useMath: z.boolean().default(true),

@@ -1,11 +1,12 @@
 import { SubscriptionTier } from "@shared/schema";
 
 export const DOCUMENT_TYPES = [
-  { id: "article", name: "Article" },
-  { id: "beamer", name: "Beamer (Slides)" },
-  { id: "report", name: "Report" },
-  { id: "letter", name: "Letter" },
-  { id: "book", name: "Book" },
+  { id: "basic", name: "Basic", description: "Minimal formatting without title or sections" },
+  { id: "article", name: "Article", description: "Academic article with title and sections" },
+  { id: "presentation", name: "Slide Presentation", description: "Slide deck presentation" },
+  { id: "report", name: "Report", description: "Formal report with title page and chapters" },
+  { id: "letter", name: "Letter", description: "Formal letter with sender and recipient" },
+  { id: "book", name: "Book", description: "Multi-chapter book with chapters and sections" },
 ];
 
 export const LATEX_TEMPLATES = {

@@ -20,7 +20,7 @@ export default function Home() {
   const [editorState, setEditorState] = useState<EditorState>({
     inputContent: "",
     latexContent: "",
-    documentType: "article",
+    documentType: "basic",
     compilationResult: null,
     isGenerating: false,
     title: "Untitled Document",
