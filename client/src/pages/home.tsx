@@ -12,6 +12,61 @@ import { downloadPdf } from "@/lib/utils";
 import { TabItem, EditorState, ErrorNotificationData } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * Extract a title from the user's input content
+ * This uses simple heuristics to find a potential title without calling AI
+ * @param inputContent The user's input content
+ * @returns An extracted title or "Untitled Document" if no title found
+ */
+function extractTitleFromInput(inputContent: string): string {
+  if (!inputContent?.trim()) {
+    return "Untitled Document";
+  }
+  
+  // Try to find a heading or title in the content
+  // Look for patterns like:
+  // 1. A short first line (1-6 words)
+  // 2. A line starting with # (markdown heading)
+  // 3. A line with "Title:" prefix
+  // 4. ALL CAPS text at the beginning that looks like a title
+  
+  const lines = inputContent.trim().split('\n');
+  
+  // Check if the first line is short (potentially a title)
+  if (lines.length > 0) {
+    const firstLine = lines[0].trim();
+    const words = firstLine.split(/\s+/);
+    
+    // If first line is 1-6 words and reasonably short, it might be a title
+    if (words.length >= 1 && words.length <= 6 && firstLine.length <= 60) {
+      return firstLine;
+    }
+    
+    // Check for markdown-style heading
+    if (firstLine.startsWith('#')) {
+      return firstLine.replace(/^#+\s*/, '');
+    }
+    
+    // Check for explicit "Title:" prefix
+    if (/^title:\s*(.+)$/i.test(firstLine)) {
+      return firstLine.replace(/^title:\s*/i, '');
+    }
+    
+    // Check if it's ALL CAPS and reasonably short (looks like a title)
+    if (firstLine === firstLine.toUpperCase() && firstLine.length <= 50) {
+      return firstLine;
+    }
+  }
+  
+  // If we can't find a good title, return first 40 chars if not too short
+  if (inputContent.trim().length > 15) {
+    const firstFewChars = inputContent.trim().substring(0, 40).replace(/\n.*$/, '');
+    return firstFewChars + (firstFewChars.length === 40 ? '...' : '');
+  }
+  
+  return "Untitled Document";
+}
+
 export default function Home() {
   const { session } = useContext(UserContext);
   const [, navigate] = useLocation();
@@ -76,14 +131,31 @@ export default function Home() {
         false       // explicitly set compile=false
       );
 
-      // Set the results
-      setEditorState(prev => ({
-        ...prev,
-        latexContent: result.latex,
-        compilationResult: result.compilationResult, // This will be empty with success=false
-        isGenerating: false,
-        documentId: result.documentId,
-      }));
+      // Extract a title from the input content
+      try {
+        // Try to extract a title from the input content
+        const inputContentTitle = extractTitleFromInput(editorState.inputContent);
+        
+        // Set the results with the extracted title
+        setEditorState(prev => ({
+          ...prev,
+          latexContent: result.latex,
+          compilationResult: result.compilationResult, // This will be empty with success=false
+          isGenerating: false,
+          documentId: result.documentId,
+          title: inputContentTitle !== "Untitled Document" ? inputContentTitle : prev.title
+        }));
+      } catch (error) {
+        // If title extraction fails, just update without changing the title
+        console.error("Error extracting title from input:", error);
+        setEditorState(prev => ({
+          ...prev,
+          latexContent: result.latex,
+          compilationResult: result.compilationResult,
+          isGenerating: false,
+          documentId: result.documentId,
+        }));
+      }
 
       // Show success message
       toast({
