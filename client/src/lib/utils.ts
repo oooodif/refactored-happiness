@@ -18,12 +18,28 @@ export function truncateText(text: string, maxLength: number): string {
   return text.substring(0, maxLength) + "...";
 }
 
+/**
+ * Convert a display title to a proper filename for downloads
+ * For example: "The Paradox of Pleasure and Pain" -> "TheParadoxOfPleasureAndPain.pdf"
+ */
 export function getReadableFilename(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^\w\s]/g, "")
-    .replace(/\s+/g, "-")
-    .substring(0, 50);
+  // If title is empty or just whitespace, return a default
+  if (!title || !title.trim()) {
+    return "GeneratedDocument";
+  }
+  
+  // 1. Convert to PascalCase (removing spaces and capitalizing words)
+  // First convert special chars to spaces, then remove extra spaces, and capitalize each word
+  const pascalCaseTitle = title
+    .replace(/[^\w\s]/g, " ")  // Replace special chars with spaces
+    .replace(/\s+/g, " ")      // Replace multiple spaces with a single space
+    .trim()                    // Remove leading/trailing spaces
+    .split(" ")                // Split by space
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize first letter of each word
+    .join("");                 // Join without spaces
+    
+  // 2. Ensure the filename doesn't exceed reasonable length
+  return pascalCaseTitle.substring(0, 100);
 }
 
 export function base64ToBlob(base64: string, mimeType: string): Blob {

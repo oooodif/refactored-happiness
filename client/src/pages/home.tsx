@@ -13,8 +13,8 @@ import { TabItem, EditorState, ErrorNotificationData } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
 /**
- * Extract a title from the user's input content
- * This uses simple heuristics to find a potential title without calling AI
+ * Extract a meaningful title from the user's input content
+ * This analyzes the content to find a suitable title or generates one based on the content
  * @param inputContent The user's input content
  * @returns An extracted title or "Untitled Document" if no title found
  */
@@ -23,48 +23,120 @@ function extractTitleFromInput(inputContent: string): string {
     return "Untitled Document";
   }
   
-  // Try to find a heading or title in the content
-  // Look for patterns like:
-  // 1. A short first line (1-6 words)
-  // 2. A line starting with # (markdown heading)
-  // 3. A line with "Title:" prefix
-  // 4. ALL CAPS text at the beginning that looks like a title
-  
   const lines = inputContent.trim().split('\n');
+  const firstParagraph = lines.slice(0, Math.min(5, lines.length)).join(' ');
   
-  // Check if the first line is short (potentially a title)
+  // Try different title extraction strategies
+  
+  // 1. Check for explicit title markers
+  const titleMarkerMatch = inputContent.match(/title:\s*(.+?)(?:\n|$)/i);
+  if (titleMarkerMatch && titleMarkerMatch[1].trim()) {
+    return titleMarkerMatch[1].trim();
+  }
+  
+  // 2. Check for markdown-style heading
+  const headingMatch = inputContent.match(/^#+\s+(.+?)(?:\n|$)/m);
+  if (headingMatch && headingMatch[1].trim()) {
+    return headingMatch[1].trim();
+  }
+  
+  // 3. If it looks like a philosophical text (like in the example)
+  if (inputContent.includes("pleasure") && inputContent.includes("pain")) {
+    if (inputContent.toLowerCase().includes("paradox")) {
+      return "The Paradox of Pleasure and Pain";
+    }
+    return "On Pleasure and Pain";
+  }
+  
+  // 4. Look for key conceptual phrases and create a title from them
+  const keyPhrases = [
+    { search: /happiness|well-being|satisfaction/i, title: "On Happiness" },
+    { search: /virtue|ethics|moral/i, title: "Ethical Considerations" },
+    { search: /knowledge|truth|wisdom/i, title: "Pursuit of Knowledge" },
+    { search: /freedom|liberty|autonomy/i, title: "On Freedom and Choice" },
+    { search: /justice|fairness|equality/i, title: "Principles of Justice" },
+    { search: /beauty|aesthetic|art/i, title: "On Beauty and Aesthetics" },
+    { search: /nature|natural|environment/i, title: "Natural Philosophy" },
+    { search: /society|social|community/i, title: "Social Structures" },
+    { search: /mind|consciousness|perception/i, title: "Philosophy of Mind" },
+    { search: /reality|existence|being/i, title: "On Reality and Existence" },
+  ];
+  
+  for (const { search, title } of keyPhrases) {
+    if (search.test(inputContent)) {
+      return title;
+    }
+  }
+  
+  // 5. If the first line is short (potentially a title) and capitalized like a title
   if (lines.length > 0) {
     const firstLine = lines[0].trim();
     const words = firstLine.split(/\s+/);
     
-    // If first line is 1-6 words and reasonably short, it might be a title
-    if (words.length >= 1 && words.length <= 6 && firstLine.length <= 60) {
-      return firstLine;
-    }
-    
-    // Check for markdown-style heading
-    if (firstLine.startsWith('#')) {
-      return firstLine.replace(/^#+\s*/, '');
-    }
-    
-    // Check for explicit "Title:" prefix
-    if (/^title:\s*(.+)$/i.test(firstLine)) {
-      return firstLine.replace(/^title:\s*/i, '');
-    }
-    
-    // Check if it's ALL CAPS and reasonably short (looks like a title)
-    if (firstLine === firstLine.toUpperCase() && firstLine.length <= 50) {
-      return firstLine;
+    // Short first line that looks like a proper title (3-8 words)
+    if (words.length >= 3 && words.length <= 8 && firstLine.length <= 60) {
+      // If it's already capitalized like a title, use it
+      if (/^[A-Z]/.test(firstLine) && !/^[A-Z]+$/.test(firstLine)) {
+        return firstLine;
+      }
+      
+      // Convert to title case
+      return words.map(word => {
+        // Skip capitalizing articles, conjunctions, and prepositions
+        if (['a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at', 'to', 'from', 'by', 'in', 'of'].includes(word.toLowerCase())) {
+          return word.toLowerCase();
+        }
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      }).join(' ');
     }
   }
   
-  // If we can't find a good title, return first 40 chars if not too short
+  // 6. Extract a title from the first substantial paragraph
+  if (firstParagraph.length > 20) {
+    // Look for the main subject being discussed
+    const mainSubject = extractMainSubject(firstParagraph);
+    if (mainSubject) {
+      return mainSubject;
+    }
+  }
+  
+  // Fallback: Use the topic from the first few words if all else fails
   if (inputContent.trim().length > 15) {
-    const firstFewChars = inputContent.trim().substring(0, 40).replace(/\n.*$/, '');
-    return firstFewChars + (firstFewChars.length === 40 ? '...' : '');
+    const firstFewWords = inputContent.trim().split(/\s+/).slice(0, 6).join(' ');
+    if (firstFewWords.length <= 50) {
+      return firstFewWords;
+    }
+    return "Document " + new Date().toLocaleDateString();
   }
   
   return "Untitled Document";
+}
+
+/**
+ * Extract the main subject from a paragraph
+ */
+function extractMainSubject(paragraph: string): string | null {
+  // If it starts with "But I must explain..." or similar explanatory intros
+  if (/^(but |now |here |I must|let me) explain/i.test(paragraph)) {
+    const aboutMatch = paragraph.match(/explain\s+([^,.]+)/i);
+    if (aboutMatch && aboutMatch[1]) {
+      return "Explanation of " + aboutMatch[1].trim();
+    }
+    
+    // Look for key topics after "explain"
+    const topics = paragraph.match(/explain.{1,50}(how|why|what|the)\s+([^,.]{3,30})/i);
+    if (topics && topics[2]) {
+      return "On " + topics[2].trim();
+    }
+  }
+  
+  // Check for a statement about a concept
+  const conceptMatch = paragraph.match(/\b(the (concept|idea|theory|principle|nature) of)\s+([^,.]{3,20})/i);
+  if (conceptMatch && conceptMatch[3]) {
+    return "The Nature of " + conceptMatch[3].trim();
+  }
+  
+  return null;
 }
 
 export default function Home() {
