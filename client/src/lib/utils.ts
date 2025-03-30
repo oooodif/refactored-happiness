@@ -74,21 +74,48 @@ export function downloadBlob(blob: Blob, filename: string): void {
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  
+  // Force a meaningful filename that appears in the browser's save dialog
+  // Some browsers may ignore this, but most modern browsers respect it
+  a.setAttribute("download", filename);
+  
+  // For older or problematic browsers, we can try to set Content-Disposition
+  // Note: This may not work in all browsers due to security restrictions
+  if (navigator.userAgent.indexOf("Safari") > -1 && navigator.userAgent.indexOf("Chrome") === -1) {
+    // Special handling for Safari which may ignore download attribute
+    // We create a temporary link and simulate a user interaction
+    document.body.appendChild(a);
+    a.dispatchEvent(new MouseEvent('click', { 
+      bubbles: true, 
+      cancelable: true, 
+      view: window 
+    }));
+    document.body.removeChild(a);
+  } else {
+    // Standard approach for most browsers
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+  
+  setTimeout(() => {
+    // Clean up the URL object after download has started
+    URL.revokeObjectURL(url);
+  }, 100);
 }
 
 export function downloadPdf(base64Pdf: string, filename: string): void {
   try {
+    // Create a properly formatted filename from the title
+    const properFilename = getReadableFilename(filename);
+    
     // Create the blob from the base64 data
     const blob = base64ToBlob(base64Pdf, "application/pdf");
     
-    // Download the blob
-    downloadBlob(blob, `${getReadableFilename(filename)}.pdf`);
+    // Download the blob with the formatted filename
+    downloadBlob(blob, `${properFilename}.pdf`);
     
-    console.log("PDF download initiated successfully");
+    console.log(`PDF download initiated with filename: ${properFilename}.pdf`);
   } catch (error) {
     console.error("Error downloading PDF:", error);
     throw new Error("Failed to download PDF");
