@@ -11,12 +11,21 @@ export const users = pgTable("users", {
   role: text("role").default("user").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  
+  // Stripe integration
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  
+  // Subscription management
   subscriptionTier: text("subscription_tier").default("free").notNull(),
   subscriptionStatus: text("subscription_status").default("active").notNull(),
+  
+  // Usage tracking
   monthlyUsage: integer("monthly_usage").default(0).notNull(),
   usageResetDate: timestamp("usage_reset_date").defaultNow().notNull(),
+  
+  // Refill pack credits (don't expire monthly)
+  refillPackCredits: integer("refill_pack_credits").default(0).notNull(),
 });
 
 export const documents = pgTable("documents", {
@@ -79,21 +88,44 @@ export type GenerateLatexRequest = z.infer<typeof generateLatexSchema>;
 // Subscription tiers
 export enum SubscriptionTier {
   Free = "free",
-  Basic = "basic",
-  Pro = "pro",
-  Power = "power"
+  Tier1 = "tier1",
+  Tier2 = "tier2",
+  Tier3 = "tier3",
+  Tier4 = "tier4",
+  Tier5 = "tier5"
 }
 
+/**
+ * Monthly subscription credit limits for each tier
+ * All tiers are monthly subscriptions that renew and reset credits each month
+ */
 export const tierLimits = {
-  [SubscriptionTier.Free]: 3,
-  [SubscriptionTier.Basic]: 50,
-  [SubscriptionTier.Pro]: 250,
-  [SubscriptionTier.Power]: 1000
+  [SubscriptionTier.Free]: 3,       // 3 generations per month (free users)
+  [SubscriptionTier.Tier1]: 100,    // 100 requests per month ($0.99/month)
+  [SubscriptionTier.Tier2]: 500,    // 500 requests per month ($2.99/month)
+  [SubscriptionTier.Tier3]: 1200,   // 1,200 requests per month ($6.99/month)
+  [SubscriptionTier.Tier4]: 2500,   // 2,500 requests per month ($11.99/month)
+  [SubscriptionTier.Tier5]: 5000    // 5,000 requests per month ($19.99/month)
 };
 
+/**
+ * Monthly subscription prices
+ * All tiers are recurring monthly subscriptions
+ */
 export const tierPrices = {
-  [SubscriptionTier.Free]: 0,
-  [SubscriptionTier.Basic]: 4.99,
-  [SubscriptionTier.Pro]: 9.99,
-  [SubscriptionTier.Power]: 19.99
+  [SubscriptionTier.Free]: 0,       // Free tier
+  [SubscriptionTier.Tier1]: 0.99,   // $0.99/month for 100 requests/month
+  [SubscriptionTier.Tier2]: 2.99,   // $2.99/month for 500 requests/month
+  [SubscriptionTier.Tier3]: 6.99,   // $6.99/month for 1,200 requests/month
+  [SubscriptionTier.Tier4]: 11.99,  // $11.99/month for 2,500 requests/month
+  [SubscriptionTier.Tier5]: 19.99   // $19.99/month for 5,000 requests/month
 };
+
+/** 
+ * On-Demand Refill Pack Pricing (One-Time Purchase)
+ * - These are one-time purchases that add credits to your account
+ * - Refill pack credits do not expire monthly
+ * - Used after subscription monthly credits are exhausted
+ */
+export const REFILL_PACK_CREDITS = 100;  // Each refill pack adds 100 requests
+export const REFILL_PACK_PRICE = 0.99;   // Each refill pack costs $0.99 (one-time purchase)
