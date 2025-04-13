@@ -192,6 +192,13 @@ export const storage = {
     }
   },
   
+  /**
+   * Increment user usage and handle credit consumption with the new pricing model:
+   * 1. Monthly subscription credits are used first
+   * 2. Refill pack credits are used after monthly subscription credits are exhausted
+   * 3. Monthly credits reset at the beginning of each month
+   * 4. Refill pack credits never expire
+   */
   async incrementUserUsage(userId: number): Promise<User | null> {
     try {
       const user = await this.getUserById(userId);
@@ -200,12 +207,15 @@ export const storage = {
         return null;
       }
       
-      // Check if it's time to reset the usage (new month)
       const now = new Date();
       const resetDate = new Date(user.usageResetDate);
       
-      // If it's a new month, reset the usage
-      if (now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear()) {
+      // Check if it's time to reset monthly usage (new month)
+      const isNewMonth = now.getMonth() !== resetDate.getMonth() || 
+                        now.getFullYear() !== resetDate.getFullYear();
+      
+      if (isNewMonth) {
+        // If it's a new month, reset the monthly usage but keep refill pack credits
         const [updatedUser] = await db.update(users)
           .set({
             monthlyUsage: 1, // Start with 1 for the current request
@@ -218,16 +228,49 @@ export const storage = {
         return updatedUser || null;
       }
       
-      // Otherwise, increment the usage
-      const [updatedUser] = await db.update(users)
-        .set({
-          monthlyUsage: user.monthlyUsage + 1,
-          updatedAt: now
-        })
-        .where(eq(users.id, userId))
-        .returning();
+      // Get the monthly limit based on subscription tier
+      const monthlyLimit = tierLimits[user.subscriptionTier as SubscriptionTier] || 
+                           tierLimits[SubscriptionTier.Free];
       
-      return updatedUser || null;
+      // Check if monthly credits are available
+      if (user.monthlyUsage < monthlyLimit) {
+        // Use monthly subscription credits
+        const [updatedUser] = await db.update(users)
+          .set({
+            monthlyUsage: user.monthlyUsage + 1,
+            updatedAt: now
+          })
+          .where(eq(users.id, userId))
+          .returning();
+        
+        return updatedUser || null;
+      } else if (user.refillPackCredits > 0) {
+        // Monthly credits exhausted, use refill pack credits
+        const [updatedUser] = await db.update(users)
+          .set({
+            // Monthly usage still increments for tracking purposes
+            monthlyUsage: user.monthlyUsage + 1,
+            // Decrement refill pack credits
+            refillPackCredits: user.refillPackCredits - 1,
+            updatedAt: now
+          })
+          .where(eq(users.id, userId))
+          .returning();
+        
+        return updatedUser || null;
+      } else {
+        // No credits available (monthly or refill), still track the request
+        // but return user as-is (frontend will show "out of credits" message)
+        const [updatedUser] = await db.update(users)
+          .set({
+            monthlyUsage: user.monthlyUsage + 1,
+            updatedAt: now
+          })
+          .where(eq(users.id, userId))
+          .returning();
+        
+        return updatedUser || null;
+      }
     } catch (error) {
       console.error('Increment user usage error:', error);
       return null;
