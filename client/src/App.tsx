@@ -17,6 +17,7 @@ import NotFound from "@/pages/not-found";
 import { UserSession } from "./lib/types";
 import { SubscriptionTier } from "@shared/schema";
 import { API_ROUTES } from "./lib/constants";
+import ProtectedRoute from "./lib/protected-route";
 
 // Create a context to share user session data
 import { createContext } from "react";
@@ -27,12 +28,14 @@ export const UserContext = createContext<{
   session: {
     user: null,
     isAuthenticated: false,
+    isLoading: true,
     tier: SubscriptionTier.Free,
     usage: {
       current: 0,
       limit: 3,
       resetDate: new Date().toISOString(),
     },
+    refillPackCredits: 0,
   },
   setSession: () => {},
 });
@@ -40,12 +43,17 @@ export const UserContext = createContext<{
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      {/* Public routes */}
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
-      <Route path="/account" component={Account} />
-      <Route path="/subscribe" component={Subscribe} />
-      <Route path="/history" component={DocumentHistory} />
+      
+      {/* Protected routes - require authentication */}
+      <ProtectedRoute path="/" component={Home} />
+      <ProtectedRoute path="/account" component={Account} />
+      <ProtectedRoute path="/subscribe" component={Subscribe} />
+      <ProtectedRoute path="/history" component={DocumentHistory} />
+      
+      {/* 404 page */}
       <Route component={NotFound} />
     </Switch>
   );
@@ -55,12 +63,14 @@ function App() {
   const [session, setSession] = useState<UserSession>({
     user: null,
     isAuthenticated: false,
+    isLoading: true,
     tier: SubscriptionTier.Free,
     usage: {
       current: 0,
       limit: 3,
       resetDate: new Date().toISOString(),
     },
+    refillPackCredits: 0,
   });
 
   useEffect(() => {
@@ -74,16 +84,22 @@ function App() {
         setSession({
           user: data.user,
           isAuthenticated: true,
+          isLoading: false,
           tier: data.user.subscriptionTier,
           usage: {
             current: data.user.monthlyUsage,
             limit: data.usageLimit,
             resetDate: data.user.usageResetDate,
           },
+          refillPackCredits: data.user.refillPackCredits || 0,
         });
       })
       .catch((err) => {
         console.log("Not logged in:", err.message);
+        setSession(prev => ({
+          ...prev,
+          isLoading: false
+        }));
       });
   }, []);
 

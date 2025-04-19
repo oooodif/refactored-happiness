@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "wouter";
+import { Loader2 } from "lucide-react";
 
 // Form schema
 const registerSchema = z.object({
@@ -37,8 +38,16 @@ const registerSchema = z.object({
 export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { setSession } = useContext(UserContext);
+  const { session, setSession } = useContext(UserContext);
   const [, navigate] = useLocation();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    // Only redirect after auth check is complete and user is authenticated
+    if (!session.isLoading && session.isAuthenticated) {
+      navigate("/");
+    }
+  }, [session.isLoading, session.isAuthenticated, navigate]);
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -64,12 +73,14 @@ export default function Register() {
       setSession({
         user: data.user,
         isAuthenticated: true,
+        isLoading: false,
         tier: data.user.subscriptionTier,
         usage: {
           current: data.user.monthlyUsage,
           limit: data.usageLimit,
           resetDate: data.user.usageResetDate,
         },
+        refillPackCredits: data.user.refillPackCredits || 0,
       });
       
       toast({

@@ -19,12 +19,14 @@ export interface GenerateLatexResponse {
 export interface UserSession {
   user: User | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   tier: SubscriptionTier;
   usage: {
     current: number;
     limit: number;
     resetDate: string;
   };
+  refillPackCredits: number;
 }
 
 export interface AuthResponse {
