@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { Route, Redirect } from "wouter";
+import { Route, Redirect, RouteComponentProps } from "wouter";
 import { UserContext } from "@/App";
 import { Loader2 } from "lucide-react";
 
@@ -15,9 +15,11 @@ export default function ProtectedRoute({ path, component: Component }: Protected
   if (!session.user && session.isLoading) {
     return (
       <Route path={path}>
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
+        {() => (
+          <div className="flex items-center justify-center min-h-screen">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
       </Route>
     );
   }
@@ -26,11 +28,15 @@ export default function ProtectedRoute({ path, component: Component }: Protected
   if (!session.user && !session.isLoading) {
     return (
       <Route path={path}>
-        <Redirect to="/login" />
+        {() => <Redirect to="/login" />}
       </Route>
     );
   }
   
   // User is authenticated, render the protected component
-  return <Route path={path} component={Component} />;
+  return (
+    <Route path={path}>
+      {(params) => <Component {...params} />}
+    </Route>
+  );
 }

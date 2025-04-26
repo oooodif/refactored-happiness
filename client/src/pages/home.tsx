@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect } from "react";
 import { useLocation } from "wouter";
-import { UserContext } from "@/App";
+import { UserContext, AuthRequiredContext } from "@/App";
 import SiteLayout from "@/components/layout/site-layout";
 import TabsWithContent from "@/components/ui/tabs-with-content";
 import LatexInput from "@/components/editor/latex-input";
@@ -141,6 +141,7 @@ function extractMainSubject(paragraph: string): string | null {
 
 export default function Home() {
   const { session } = useContext(UserContext);
+  const { setShowAuthPrompt } = useContext(AuthRequiredContext);
   const [, navigate] = useLocation();
   const { toast } = useToast();
   

@@ -13,11 +13,13 @@ import Subscribe from "@/pages/subscribe";
 import DocumentHistory from "@/pages/document-history";
 import NotFound from "@/pages/not-found";
 
+// Components
+import AuthRequiredDialog from "@/components/dialogs/auth-required-dialog";
+
 // User context
 import { UserSession } from "./lib/types";
 import { SubscriptionTier } from "@shared/schema";
 import { API_ROUTES } from "./lib/constants";
-import ProtectedRoute from "./lib/protected-route";
 
 // Create a context to share user session data
 import { createContext } from "react";
@@ -40,20 +42,24 @@ export const UserContext = createContext<{
   setSession: () => {},
 });
 
+// Create an Auth Required context to control the signup/login prompt
+export const AuthRequiredContext = createContext<{
+  showAuthPrompt: boolean;
+  setShowAuthPrompt: React.Dispatch<React.SetStateAction<boolean>>;
+}>({
+  showAuthPrompt: false,
+  setShowAuthPrompt: () => {},
+});
+
 function Router() {
   return (
     <Switch>
-      {/* Public routes */}
+      <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
-      
-      {/* Protected routes - require authentication */}
-      <ProtectedRoute path="/" component={Home} />
-      <ProtectedRoute path="/account" component={Account} />
-      <ProtectedRoute path="/subscribe" component={Subscribe} />
-      <ProtectedRoute path="/history" component={DocumentHistory} />
-      
-      {/* 404 page */}
+      <Route path="/account" component={Account} />
+      <Route path="/subscribe" component={Subscribe} />
+      <Route path="/history" component={DocumentHistory} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -72,6 +78,9 @@ function App() {
     },
     refillPackCredits: 0,
   });
+  
+  // State for auth prompt modal
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -106,8 +115,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <UserContext.Provider value={{ session, setSession }}>
-        <Router />
-        <Toaster />
+        <AuthRequiredContext.Provider value={{ showAuthPrompt, setShowAuthPrompt }}>
+          <Router />
+          <AuthRequiredDialog />
+          <Toaster />
+        </AuthRequiredContext.Provider>
       </UserContext.Provider>
     </QueryClientProvider>
   );
