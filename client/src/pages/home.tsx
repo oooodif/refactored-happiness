@@ -176,6 +176,16 @@ export default function Home() {
       });
       return;
     }
+    
+    // If user is not authenticated, show auth prompt
+    if (!session.isAuthenticated) {
+      // Stop the generating animation if it was started
+      setEditorState(prev => ({ ...prev, isGenerating: false }));
+      
+      // Show auth required dialog
+      setShowAuthPrompt(true);
+      return;
+    }
 
     // Check if user has reached limit
     if (session.isAuthenticated && session.usage.current >= session.usage.limit) {
@@ -255,6 +265,12 @@ export default function Home() {
         description: "Please generate and compile LaTeX content first.",
         variant: "destructive",
       });
+      return;
+    }
+    
+    // If user is not authenticated, show auth prompt
+    if (!session.isAuthenticated) {
+      setShowAuthPrompt(true);
       return;
     }
 
@@ -349,6 +365,12 @@ export default function Home() {
         description: "Please generate LaTeX content first before compiling to PDF.",
         variant: "destructive",
       });
+      return;
+    }
+    
+    // If user is not authenticated, show auth prompt
+    if (!session.isAuthenticated) {
+      setShowAuthPrompt(true);
       return;
     }
 
