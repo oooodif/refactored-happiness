@@ -182,10 +182,15 @@ export default function Home() {
       // Stop the generating animation if it was started
       setEditorState(prev => ({ ...prev, isGenerating: false }));
       
+      // Debug
+      console.log("User not authenticated, showing auth prompt");
+      
       // Show auth required dialog
       setShowAuthPrompt(true);
       return;
     }
+    
+    console.log("User is authenticated, proceeding with generation");
 
     // Check if user has reached limit
     if (session.isAuthenticated && session.usage.current >= session.usage.limit) {
