@@ -79,8 +79,10 @@ function App() {
     refillPackCredits: 0,
   });
   
-  // State for auth prompt modal
-  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  // State for auth prompt modal - set to true initially to test
+  const [showAuthPrompt, setShowAuthPrompt] = useState(true);
+  
+  console.log("Auth prompt state:", showAuthPrompt);
 
   useEffect(() => {
     // Check if user is logged in
