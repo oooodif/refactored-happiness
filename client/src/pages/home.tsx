@@ -11,6 +11,7 @@ import { generateLatex, compileLatex, saveDocument, extractTitleFromLatex } from
 import { downloadPdf } from "@/lib/utils";
 import { TabItem, EditorState, ErrorNotificationData } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 /**
  * Extract a meaningful title from the user's input content
@@ -177,16 +178,43 @@ export default function Home() {
       return;
     }
     
+    // DEBUGGING
+    console.log("Generate button clicked, auth status:", {
+      isAuthenticated: session.isAuthenticated,
+      user: session.user
+    });
+    
     // If user is not authenticated, show auth prompt
     if (!session.isAuthenticated) {
       // Stop the generating animation if it was started
       setEditorState(prev => ({ ...prev, isGenerating: false }));
       
-      // Debug
       console.log("User not authenticated, showing auth prompt");
       
-      // Show auth required dialog
-      setShowAuthPrompt(true);
+      // Try directly setting the auth prompt to true
+      try {
+        // Show auth required dialog
+        setShowAuthPrompt(true);
+        console.log("Set showAuthPrompt to true:", showAuthPrompt);
+        
+        // Force a dialog to appear (fallback)
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in or create an account to generate LaTeX.",
+          action: (
+            <div className="flex gap-2 mt-2">
+              <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
+                Login
+              </Button>
+              <Button size="sm" onClick={() => navigate("/register")}>
+                Create Account
+              </Button>
+            </div>
+          ),
+        });
+      } catch (err) {
+        console.error("Error showing auth prompt:", err);
+      }
       return;
     }
     
@@ -275,7 +303,30 @@ export default function Home() {
     
     // If user is not authenticated, show auth prompt
     if (!session.isAuthenticated) {
-      setShowAuthPrompt(true);
+      console.log("User not authenticated, showing auth prompt for PDF download");
+      
+      try {
+        // Show auth required dialog
+        setShowAuthPrompt(true);
+        
+        // Force a dialog to appear (fallback)
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in or create an account to download PDFs.",
+          action: (
+            <div className="flex gap-2 mt-2">
+              <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
+                Login
+              </Button>
+              <Button size="sm" onClick={() => navigate("/register")}>
+                Create Account
+              </Button>
+            </div>
+          ),
+        });
+      } catch (err) {
+        console.error("Error showing auth prompt:", err);
+      }
       return;
     }
 

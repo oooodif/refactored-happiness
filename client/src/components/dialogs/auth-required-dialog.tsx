@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { AuthRequiredContext } from '@/App';
 import {
@@ -13,24 +13,39 @@ import { Button } from '@/components/ui/button';
 
 export default function AuthRequiredDialog() {
   const { showAuthPrompt, setShowAuthPrompt } = useContext(AuthRequiredContext);
+  const [open, setOpen] = useState(false);
   const [, navigate] = useLocation();
 
+  // Sync the local state with the context state
+  useEffect(() => {
+    setOpen(showAuthPrompt);
+  }, [showAuthPrompt]);
+
+  // When local state changes, update the context
+  useEffect(() => {
+    if (open !== showAuthPrompt) {
+      setShowAuthPrompt(open);
+    }
+  }, [open, setShowAuthPrompt, showAuthPrompt]);
+
   const handleSignUp = () => {
-    setShowAuthPrompt(false);
+    setOpen(false);
     navigate('/register');
   };
 
   const handleLogin = () => {
-    setShowAuthPrompt(false);
+    setOpen(false);
     navigate('/login');
   };
 
   const handleClose = () => {
-    setShowAuthPrompt(false);
+    setOpen(false);
   };
 
+  console.log("Auth dialog state:", { contextState: showAuthPrompt, localState: open });
+
   return (
-    <Dialog open={showAuthPrompt} onOpenChange={setShowAuthPrompt}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Account Required</DialogTitle>
