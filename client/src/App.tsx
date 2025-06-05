@@ -79,8 +79,8 @@ function App() {
     refillPackCredits: 0,
   });
   
-  // State for auth prompt modal - set to true initially to test
-  const [showAuthPrompt, setShowAuthPrompt] = useState(true);
+  // State for auth prompt modal
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   
   console.log("Auth prompt state:", showAuthPrompt);
 

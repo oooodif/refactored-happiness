@@ -18,31 +18,41 @@ export default function AuthRequiredDialog() {
 
   // Sync the local state with the context state
   useEffect(() => {
+    console.log("Auth dialog context state changed:", showAuthPrompt);
     setOpen(showAuthPrompt);
   }, [showAuthPrompt]);
 
   // When local state changes, update the context
   useEffect(() => {
     if (open !== showAuthPrompt) {
+      console.log("Updating context state from local:", open);
       setShowAuthPrompt(open);
     }
   }, [open, setShowAuthPrompt, showAuthPrompt]);
 
+  // Debug effect to monitor dialog visibility
+  useEffect(() => {
+    console.log(`Auth dialog is now ${open ? 'OPEN' : 'CLOSED'}`);
+  }, [open]);
+
   const handleSignUp = () => {
+    console.log("Sign up clicked");
     setOpen(false);
     navigate('/register');
   };
 
   const handleLogin = () => {
+    console.log("Login clicked");
     setOpen(false);
     navigate('/login');
   };
 
   const handleClose = () => {
+    console.log("Dialog closed");
     setOpen(false);
   };
 
-  console.log("Auth dialog state:", { contextState: showAuthPrompt, localState: open });
+  console.log("Auth dialog render:", { contextState: showAuthPrompt, localState: open });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

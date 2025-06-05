@@ -195,7 +195,7 @@ export default function Home() {
       try {
         // Show auth required dialog
         setShowAuthPrompt(true);
-        console.log("Set showAuthPrompt to true:", showAuthPrompt);
+        console.log("Set showAuthPrompt to true");
         
         // Force a dialog to appear (fallback)
         toast({
@@ -426,7 +426,30 @@ export default function Home() {
     
     // If user is not authenticated, show auth prompt
     if (!session.isAuthenticated) {
-      setShowAuthPrompt(true);
+      console.log("User not authenticated, showing auth prompt for PDF compilation");
+      
+      try {
+        // Show auth required dialog
+        setShowAuthPrompt(true);
+        
+        // Force a dialog to appear (fallback)
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in or create an account to compile to PDF.",
+          action: (
+            <div className="flex gap-2 mt-2">
+              <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
+                Login
+              </Button>
+              <Button size="sm" onClick={() => navigate("/register")}>
+                Create Account
+              </Button>
+            </div>
+          ),
+        });
+      } catch (err) {
+        console.error("Error showing auth prompt:", err);
+      }
       return;
     }
 
