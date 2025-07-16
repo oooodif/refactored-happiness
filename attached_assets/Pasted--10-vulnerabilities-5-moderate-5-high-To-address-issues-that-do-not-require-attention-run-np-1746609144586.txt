@@ -1,0 +1,111 @@
+
+10 vulnerabilities (5 moderate, 5 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+[stage-0 11/15] RUN --mount=type=cache,id=s/8533af8e-5d28-4007-8dd8-f04a73c28bc0-/root/npm,target=/root/.npm npm ci  ✔ 13s
+
+[stage-0 12/15] COPY . /app/.
+
+[stage-0 12/15] COPY . /app/.  ✔ 229ms
+
+[stage-0 13/15] RUN --mount=type=cache,id=s/8533af8e-5d28-4007-8dd8-f04a73c28bc0-node_modules/cache,target=/app/node_modules/.cache npm run build
+
+npm warn config production Use `--omit=dev` instead.
+
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+
+vite v5.4.18 building for production...
+
+transforming...
+
+✓ 1856 modules transformed.
+
+rendering chunks...
+
+computing gzip size...
+
+../dist/public/index.html                   0.63 kB │ gzip:   0.38 kB
+
+../dist/public/assets/index-B4mB8DMX.css   67.12 kB │ gzip:  11.87 kB
+
+../dist/public/assets/index-Ch7aVTjN.js   537.01 kB │ gzip: 166.85 kB
+
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+✓ built in 4.02s
+
+
+  dist/index.js  72.2kb
+
+⚡ Done in 7ms
+
+[stage-0 13/15] RUN --mount=type=cache,id=s/8533af8e-5d28-4007-8dd8-f04a73c28bc0-node_modules/cache,target=/app/node_modules/.cache npm run build  ✔ 4s
+
+[stage-0 14/15] RUN printf '\nPATH=/app/node_modules/.bin:$PATH' >> /root/.profile
+
+[stage-0 14/15] RUN printf '\nPATH=/app/node_modules/.bin:$PATH' >> /root/.profile  ✔ 157ms
+
+[stage-0 15/15] COPY . /app
+
+[stage-0 15/15] COPY . /app  ✔ 32ms
+
+[auth] sharing credentials for us-west1.registry.rlwy.net
+
+[auth] sharing credentials for us-west1.registry.rlwy.net  ✔ 0ms
+
+=== Successfully Built! ===
+
+Run:
+
+docker run -it us-west1.registry.rlwy.net/8533af8e-5d28-4007-8dd8-f04a73c28bc0:c06156f4-379f-46a3-a673-ba6a09479bed
+
+Build time: 27.81 seconds
+
+ 
+
+====================
+
+Starting Healthcheck
+
+====================
+
+
+Path: /
+
+Retry window: 1m40s
+
+ 
+
+Attempt #1 failed with service unavailable. Continuing to retry for 1m38s
+
+Attempt #2 failed with service unavailable. Continuing to retry for 1m36s
+
+Attempt #3 failed with service unavailable. Continuing to retry for 1m24s
+
+Attempt #4 failed with service unavailable. Continuing to retry for 1m10s
+
+Attempt #5 failed with service unavailable. Continuing to retry for 1m2s
+
+Attempt #6 failed with service unavailable. Continuing to retry for 46s
+
+Attempt #7 failed with service unavailable. Continuing to retry for 16s
+
+ 
+
+1/1 replicas never became healthy!
+
+Healthcheck failed!

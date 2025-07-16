@@ -1,0 +1,135 @@
+Source
+
+Source Repo
+brookcs3/AILatexGenerator
+
+
+Disconnect
+Add Root Directory (used for build and deploy steps. Docs↗)
+Branch connected to production
+Changes made to this GitHub branch will be automatically pushed to this environment.
+Branch
+
+
+Disconnect
+Wait for CI
+Trigger deployments after all GitHub actions have completed successfully.
+
+Networking
+
+Public Networking
+Access your application over HTTP with the following domains
+web-production-f835.up.railway.app
+· 
+Metal Edge
+
+
+
+
+Domain
+
+.up.railway.app
+Edit Port
+Domain Available!
+
+Cancel
+
+Update
+
+Custom Domain
+
+TCP Proxy
+Private Networking
+Communicate with this service from within the Railway network.
+web.railway.internal
+IPv6
+
+
+This private URL will be functional after the next deployment of this service.
+DNS
+
+.railway.internal
+Endpoint name available!
+
+Cancel
+
+Update
+Build
+
+Builder
+This comes from $.build.builder in railway.json
+
+Nixpacks
+Default
+Nix-based builder developed by Railway Docs↗
+Providers
+Language providers that will be used to build the service
+
+Node
+
+
+Custom Build Command
+Override the default build command that is run when building your app. Docs↗
+This comes from $.build.buildCommand in railway.json
+Build command
+
+Watch Paths
+Gitignore-style rules to trigger a new deployment based on what file paths have changed. Docs↗
+
+Watch Paths
+Deploy
+
+Custom Start Command
+Command that will be run to start new deployments. Docs↗
+This comes from $.deploy.startCommand in railway.json
+Start command
+
+Add pre-deploy step (Docs↗)
+Regions
+Configure how many instances of this service are deployed in each region.
+US West (California, USA)
+METAL (NEW)
+
+Replicas
+Instance
+Multi-region replicas are only available on the Pro plan.
+Learn More↗
+Resource Limits
+Max amount of vCPU and Memory to allocate to each replica for this service.
+CPU: 8 vCPU
+Plan limit: 8 vCPU
+Memory: 8 GB
+Plan limit: 8 GB
+Increase your resources
+Cron Schedule
+Run the service according to the specified cron schedule.
+
+Cron Schedule
+Healthcheck Path
+Endpoint to be called before a deploy completes to ensure the new deployment is live. Docs↗
+This comes from $.deploy.healthcheckPath in railway.json
+Healthcheck Path
+
+Healthcheck Timeout
+Number of seconds we will wait for the healthcheck to complete. Docs↗
+This comes from $.deploy.healthcheckTimeout in railway.json
+Healthcheck Timeout
+
+Serverless
+Containers will scale down to zero and then scale up based on traffic. Requests while the container is sleeping will be queued and served when the container wakes up. Docs↗
+
+Restart Policy
+Configure what to do when the process exits.
+This comes from $.deploy.restartPolicyType in railway.json
+On Failure
+Restart the container if it exits with a non-zero exit code. Docs↗
+
+Number of times to try and restart the service if it stopped due to an error.
+This comes from $.deploy.restartPolicyMaxRetries in railway.json
+Max restart retries
+
+Config-as-code
+
+Railway Config File
+Manage your build and deployment settings through a config file. Docs↗
+
