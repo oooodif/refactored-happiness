@@ -53,6 +53,11 @@ declare module 'express-session' {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Simple health check endpoint for deployment
+  app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok', message: 'Server is running' });
+  });
+
   // Setup session middleware
   const PostgresStore = pgSession(session);
   app.use(session({
