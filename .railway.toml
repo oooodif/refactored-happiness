@@ -1,9 +1,10 @@
 [build]
 builder = "NIXPACKS"
 buildCommand = "npm run build"
+prebuildCommand = "cp -r server/package.json dist/"
 
 [deploy]
-startCommand = "npm start"
+startCommand = "NODE_PATH=. npm start"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 180
 restartPolicyType = "ON_FAILURE"
