@@ -10,9 +10,12 @@ const stripe = process.env.STRIPE_SECRET_KEY
 
 // Get price IDs from environment variables or use defaults
 const PRICE_IDS = {
-  [SubscriptionTier.Basic]: process.env.STRIPE_PRICE_BASIC_ID || 'price_basic',
-  [SubscriptionTier.Pro]: process.env.STRIPE_PRICE_PRO_ID || 'price_pro',
-  [SubscriptionTier.Power]: process.env.STRIPE_PRICE_POWER_ID || 'price_power'
+  [SubscriptionTier.Free]: process.env.STRIPE_PRICE_FREE_ID || 'price_free', // Usually not needed as free tier doesn't require payment
+  [SubscriptionTier.Tier1]: process.env.STRIPE_PRICE_TIER1_ID || 'price_tier1',
+  [SubscriptionTier.Tier2]: process.env.STRIPE_PRICE_TIER2_ID || 'price_tier2',
+  [SubscriptionTier.Tier3]: process.env.STRIPE_PRICE_TIER3_ID || 'price_tier3',
+  [SubscriptionTier.Tier4]: process.env.STRIPE_PRICE_TIER4_ID || 'price_tier4',
+  [SubscriptionTier.Tier5]: process.env.STRIPE_PRICE_TIER5_ID || 'price_tier5'
 };
 
 /**

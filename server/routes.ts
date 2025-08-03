@@ -26,7 +26,7 @@ const validateRequest = (schema: z.ZodType<any, any>) => {
   };
 };
 import { generateLatexSchema } from "@shared/schema";
-import { generateLatex, getAvailableModels } from "./services/aiProvider";
+import { generateLatex, getAvailableModels, callProviderWithModel } from "./services/aiProvider";
 import { compileLatex, compileAndFixLatex } from "./services/latexService";
 import { createCustomer, createSubscription, cancelSubscription, createPortalSession } from "./services/stripeService";
 import Stripe from "stripe";
@@ -485,8 +485,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create subscription
         const subscription = await createSubscription(customerId, tier);
         
+        // Get the client secret from the latest invoice's payment intent
+        const latestInvoice = subscription.latest_invoice as any;
+        const paymentIntent = latestInvoice?.payment_intent;
+        const clientSecret = paymentIntent?.client_secret;
+        
         return res.status(200).json({
-          clientSecret: subscription.latestInvoice.payment_intent.client_secret
+          clientSecret: clientSecret
         });
       } catch (error) {
         console.error("Create subscription error:", error);
@@ -589,12 +594,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Get tier from price ID
             const tierMapping: Record<string, string> = {
-              [process.env.STRIPE_PRICE_BASIC_ID || 'price_basic']: 'basic',
-              [process.env.STRIPE_PRICE_PRO_ID || 'price_pro']: 'pro',
-              [process.env.STRIPE_PRICE_POWER_ID || 'price_power']: 'power'
+              [process.env.STRIPE_PRICE_TIER1_ID || 'price_tier1']: 'tier1',
+              [process.env.STRIPE_PRICE_TIER2_ID || 'price_tier2']: 'tier2',
+              [process.env.STRIPE_PRICE_TIER3_ID || 'price_tier3']: 'tier3',
+              [process.env.STRIPE_PRICE_TIER4_ID || 'price_tier4']: 'tier4',
+              [process.env.STRIPE_PRICE_TIER5_ID || 'price_tier5']: 'tier5'
             };
             
-            const tier = tierMapping[priceId] || 'basic';
+            const tier = tierMapping[priceId] || 'tier1';
             
             // Update user subscription info
             await storage.updateUserSubscription(customerId, {

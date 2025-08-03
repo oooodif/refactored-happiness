@@ -304,7 +304,7 @@ export async function generateLatex(
 /**
  * Call a specific AI provider based on the model name
  */
-async function callProviderWithModel(model: string, prompt: string): Promise<string> {
+export async function callProviderWithModel(model: string, prompt: string): Promise<string> {
   // Find which provider owns this model
   for (const [providerName, provider] of Object.entries(providers)) {
     if (model in provider.models) {
