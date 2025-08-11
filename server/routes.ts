@@ -28,7 +28,13 @@ const validateRequest = (schema: z.ZodType<any, any>) => {
 import { generateLatexSchema } from "@shared/schema";
 import { generateLatex, getAvailableModels, callProviderWithModel } from "./services/aiProvider";
 import { compileLatex, compileAndFixLatex } from "./services/latexService";
-import { createCustomer, createSubscription, cancelSubscription, createPortalSession } from "./services/stripeService";
+import { 
+  createCustomer, 
+  createSubscription, 
+  cancelSubscription, 
+  createPortalSession,
+  createRefillPackCheckoutSession
+} from "./services/stripeService";
 import Stripe from "stripe";
 import session from "express-session";
 import pgSession from "connect-pg-simple";
@@ -53,9 +59,14 @@ declare module 'express-session' {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Simple health check endpoint for deployment
+  // Simple health check endpoints for deployment
   app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'Server is running' });
+  });
+  
+  // Root health check endpoint (required by some hosting providers)
+  app.get('/health', (req, res) => {
+    res.status(200).send('OK');
   });
 
   // Setup session middleware
@@ -561,6 +572,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Create portal session error:", error);
         return res.status(500).json({ message: "Failed to create portal session" });
+      }
+    }
+  );
+  
+  // Purchase refill pack endpoint
+  app.post("/api/subscription/refill", 
+    requireAuth,
+    async (req: Request, res: Response) => {
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe is not configured" });
+      }
+      
+      const userId = req.session.userId;
+      const quantity = req.body.quantity || 1;
+      
+      try {
+        const user = await storage.getUserById(userId);
+        
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        // Create or retrieve Stripe customer
+        let customerId = user.stripeCustomerId;
+        
+        if (!customerId) {
+          // Create a new customer
+          const customer = await createCustomer(user.email, user.username);
+          customerId = customer.id;
+          
+          // Update user with Stripe customer ID
+          await storage.updateUserStripeInfo(userId, {
+            stripeCustomerId: customerId
+          });
+        }
+        
+        // Create a checkout session for the refill pack
+        const session = await createRefillPackCheckoutSession(customerId, quantity);
+        
+        return res.status(200).json({
+          sessionId: session.id,
+          url: session.url
+        });
+      } catch (error) {
+        console.error("Create refill pack checkout error:", error);
+        return res.status(500).json({ message: "Failed to create checkout session for refill pack" });
       }
     }
   );

@@ -1,0 +1,71 @@
+Your container booted fine until it tried to start the compiled dist/index.js.
+Two separate problems are killing the run:
+
+⸻
+
+1  Missing environment variables
+
+* STRIPE_SECRET_KEY isn’t defined, so your Stripe wrapper prints the warning and then later returns undefined to whatever loader tries to path.resolve(<key‑file‑path>).
+* Whatever variable you feed to path.resolve() on line 1949 is coming through as undefined, triggering the Node “paths[0] must be of type string” throw.
+
+Fix
+	1.	In your host’s Deploy → Variables panel add the four keys your code expects:
+
+KEY	VALUE
+STRIPE_SECRET_KEY	sk_live_…
+STRIPE_PUBLISHABLE_KEY	pk_live_… (if you use it)
+OPENAI_KEY	…
+anything else referenced in process.env	…
+
+
+	2.	Redeploy. The health‑check will still fail if the second issue below is not fixed.
+
+⸻
+
+2  path.resolve(undefined) in dist/index.js:1949
+
+That file is transpiled, but the stack trace tells you exactly what’s wrong:
+
+// line numbers shifted after build, but logic looks like:
+const certPath = process.env.SSL_CERT_PATH;        // <-- undefined in prod
+const keyPath  = process.env.SSL_KEY_PATH;         // <-- undefined in prod
+...
+const credentials = {
+  key : fs.readFileSync(path.resolve(keyPath)),    // boom
+  cert: fs.readFileSync(path.resolve(certPath))
+};
+
+If you don’t actually run behind HTTPS in this micro‑container, wrap the HTTPS setup:
+
+if (keyPath && certPath) {
+  const credentials = {
+    key : fs.readFileSync(path.resolve(keyPath)),
+    cert: fs.readFileSync(path.resolve(certPath))
+  };
+  https.createServer(credentials, app).listen(PORT);
+} else {
+  app.listen(PORT);
+}
+
+Or set the two extra env vars (SSL_CERT_PATH, SSL_KEY_PATH) to real files you copy in during the build.
+
+⸻
+
+3  Health‑check route
+
+Your host pings / (or /health) right after the container reports “listening”.
+Make sure you respond quickly:
+
+app.get('/health', (_, res) => res.status(200).send('OK'));
+
+Then set Settings → Health Check URL to /health.
+
+⸻
+
+Quick re‑deployment checklist
+	1.	Add the missing environment variables.
+	2.	Guard the fs.readFileSync(path.resolve(...)) calls or supply the required file paths.
+	3.	Confirm the server listens on process.env.PORT || 3000 and implement /health.
+	4.	Commit, push, and redeploy.
+
+Follow those four steps and the “Network › Healthcheck” stage should flip to ✅ on the next build.

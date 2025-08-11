@@ -18,6 +18,9 @@ const PRICE_IDS = {
   [SubscriptionTier.Tier5]: process.env.STRIPE_PRICE_TIER5_ID || 'price_tier5'
 };
 
+// Refill pack price ID
+const REFILL_PACK_PRICE_ID = process.env.STRIPE_PRICE_REFILL_PACK_ID || 'price_refill_pack';
+
 /**
  * Create a new Stripe customer
  */
@@ -167,6 +170,47 @@ export async function createCheckoutSession(
     customer_update: {
       address: 'auto',
       name: 'auto',
+    },
+  });
+}
+
+/**
+ * Create a Checkout session for purchasing refill packs
+ */
+export async function createRefillPackCheckoutSession(
+  customerId: string,
+  quantity: number = 1
+): Promise<Stripe.Checkout.Session> {
+  if (!stripe) throw new Error('Stripe is not configured');
+  
+  // Create a checkout session for one-time purchase
+  return stripe.checkout.sessions.create({
+    customer: customerId,
+    payment_method_types: ['card'],
+    line_items: [
+      {
+        price: REFILL_PACK_PRICE_ID,
+        quantity: quantity,
+      },
+    ],
+    mode: 'payment',
+    success_url: process.env.DOMAIN ? `${process.env.DOMAIN}/account?refill=success` : 'http://localhost:5000/account?refill=success',
+    cancel_url: process.env.DOMAIN ? `${process.env.DOMAIN}/account?refill=canceled` : 'http://localhost:5000/account?refill=canceled',
+    // Enable Stripe Link for faster checkout
+    payment_method_options: {
+      card: {
+        setup_future_usage: 'off_session',
+      }
+    },
+    // Store payment details for future use
+    customer_update: {
+      address: 'auto',
+      name: 'auto',
+    },
+    // Add metadata to identify this is a refill pack purchase
+    metadata: {
+      type: 'refill_pack',
+      quantity: quantity.toString(),
     },
   });
 }
