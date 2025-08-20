@@ -88,6 +88,9 @@ export type GenerateLatexRequest = z.infer<typeof generateLatexSchema>;
 // Subscription tiers
 export enum SubscriptionTier {
   Free = "free",
+  Basic = "tier1", // Alias for Tier1
+  Pro = "tier3",   // Alias for Tier3
+  Power = "tier5", // Alias for Tier5
   Tier1 = "tier1",
   Tier2 = "tier2",
   Tier3 = "tier3",

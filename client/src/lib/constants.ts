@@ -50,13 +50,13 @@ export const SUBSCRIPTION_FEATURES = {
     "3 LaTeX generations/month"
   ],
   [SubscriptionTier.Basic]: [
-    "50 LaTeX generations/month"
+    "100 LaTeX generations/month"
   ],
   [SubscriptionTier.Pro]: [
-    "250 LaTeX generations/month"
+    "1,200 LaTeX generations/month"
   ],
   [SubscriptionTier.Power]: [
-    "1,000 LaTeX generations/month"
+    "5,000 LaTeX generations/month"
   ]
 };
 
