@@ -58,11 +58,6 @@ export async function createSubscription(
     payment_behavior: 'default_incomplete',
     payment_settings: { 
       save_default_payment_method: 'on_subscription',
-      payment_method_options: {
-        card: {
-          setup_future_usage: 'off_session',
-        },
-      },
       payment_method_types: ['link', 'card'],
     },
     expand: ['latest_invoice.payment_intent'],
