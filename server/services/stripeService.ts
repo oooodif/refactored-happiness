@@ -154,11 +154,6 @@ export async function createCheckoutSession(
     success_url: process.env.DOMAIN ? `${process.env.DOMAIN}/account?success=true` : 'http://localhost:5000/account?success=true',
     cancel_url: process.env.DOMAIN ? `${process.env.DOMAIN}/account?canceled=true` : 'http://localhost:5000/account?canceled=true',
     // Enable Stripe Link for faster checkout
-    payment_method_options: {
-      card: {
-        setup_future_usage: 'off_session',
-      }
-    },
     // Always show the Link UI option
     payment_method_configuration: process.env.STRIPE_LINK_CONFIG_ID,
     // Store payment details for future use
@@ -192,11 +187,6 @@ export async function createRefillPackCheckoutSession(
     success_url: process.env.DOMAIN ? `${process.env.DOMAIN}/account?refill=success` : 'http://localhost:5000/account?refill=success',
     cancel_url: process.env.DOMAIN ? `${process.env.DOMAIN}/account?refill=canceled` : 'http://localhost:5000/account?refill=canceled',
     // Enable Stripe Link for faster checkout
-    payment_method_options: {
-      card: {
-        setup_future_usage: 'off_session',
-      }
-    },
     // Store payment details for future use
     customer_update: {
       address: 'auto',
