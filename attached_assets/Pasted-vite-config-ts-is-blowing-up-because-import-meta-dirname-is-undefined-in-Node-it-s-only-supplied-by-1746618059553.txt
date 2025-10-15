@@ -1,0 +1,71 @@
+vite.config.ts is blowing up because import.meta.dirname is undefined in Node (it’s only supplied by Vite’s dev server / Replit’s polyfill).
+When Railway runs your build, Node executes the config file directly, hits
+
+path.resolve(import.meta.dirname, "db")
+
+…and passes undefined to path.resolve, giving the exact ERR_INVALID_ARG_TYPE you’re seeing.
+
+⸻
+
+Fix: create Node‑compatible __dirname in the config
+
+// vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
+import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+import { fileURLToPath } from "url";
+
+/* ---------- add these two lines ---------- */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = path.dirname(__filename);
+/* ----------------------------------------- */
+
+export default defineConfig({
+  plugins: [
+    react(),
+    runtimeErrorOverlay(),
+    ...(process.env.NODE_ENV !== "production" && process.env.REPL_ID
+      ? [await import("@replit/vite-plugin-cartographer").then((m) => m.cartographer())]
+      : []),
+  ],
+  resolve: {
+    alias: {
+      "@db":     path.resolve(__dirname, "db"),
+      "@":       path.resolve(__dirname, "client", "src"),
+      "@shared": path.resolve(__dirname, "shared"),
+      "@assets": path.resolve(__dirname, "attached_assets"),
+    },
+  },
+  root:  path.resolve(__dirname, "client"),
+  build: {
+    outDir:     path.resolve(__dirname, "dist/public"),
+    emptyOutDir:true,
+  },
+});
+
+Why this works
+
+fileURLToPath(import.meta.url) converts the module URL to /app/vite.config.ts, then path.dirname gives /app.
+Now every path.resolve call receives a real string, so Node (and Railway) stop complaining.
+
+⸻
+
+Deploy checklist
+	1.	Commit the updated vite.config.ts
+	2.	Ensure .railway.toml still runs:
+
+[build]
+buildCommand = "npm run build"
+
+[deploy]
+startCommand = "NODE_ENV=production tsx server/index.ts"
+
+
+	3.	In Railway → Deploy → Pre‑deploy command:
+
+npm run build && npm run db:push
+
+
+	4.	Redeploy. Health‑check should now pass.
+
