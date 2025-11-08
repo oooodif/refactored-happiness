@@ -7,10 +7,10 @@ buildCommand  = "npm run build"          # runs: vite build
 # 1. Push / migrate DB before starting
 preDeployCommand = "npm run db:push"
 
-# 2. Boot your server (tsx compiles TypeScript on‑the‑fly)
+# 2. Boot your server (tsx compiles TypeScript onthefly)
 startCommand  = "NODE_ENV=production tsx server/index.ts"
 
-# 3. Health‑check + restart policy
+# 3. Healthcheck + restart policy
 healthcheckPath        = "/health"
 healthcheckTimeout     = 180            # seconds
 restartPolicyType      = "ON_FAILURE"

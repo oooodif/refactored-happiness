@@ -1,7 +1,7 @@
 /**
- * vite.config.ts – Railway‑friendly version
+ * vite.config.ts  Railwayfriendly version
  * ------------------------------------------------
- * - Adds Node‑compatible __dirname / __filename
+ * - Adds Nodecompatible __dirname / __filename
  * - Leaves all existing plugins & aliases intact
  */
 
@@ -23,7 +23,7 @@ export default defineConfig({
   plugins: [
     react(),
     runtimeErrorOverlay(),
-    // Cartographer only in non‑prod Replit envs
+    // Cartographer only in nonprod Replit envs
     ...(process.env.NODE_ENV !== "production" && process.env.REPL_ID
       ? [
           await import("@replit/vite-plugin-cartographer").then((m) =>
@@ -42,7 +42,7 @@ export default defineConfig({
     },
   },
 
-  // Front‑end project root
+  // Frontend project root
   root: path.resolve(__dirname, "client"),
 
   build: {

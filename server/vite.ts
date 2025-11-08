@@ -1,7 +1,7 @@
 /**
- * server/vite.ts – production & dev helpers
+ * server/vite.ts production & dev helpers
  * ------------------------------------------
- * - Adds Node‑compatible __dirname / __filename
+ * - Adds Nodecompatible __dirname / __filename
  * - Fixes all path.resolve calls that crashed
  */
 
@@ -55,7 +55,7 @@ export async function setupVite(app: Express, server: Server) {
   // Use Vite’s connect middlewares
   app.use(vite.middlewares);
 
-  // Catch‑all for SPA in dev
+  // Catchall for SPA in dev
   app.use("*", async (req, res, next) => {
     try {
       const clientTemplate = path.resolve(
@@ -66,14 +66,14 @@ export async function setupVite(app: Express, server: Server) {
       );
 
       // Always reload template from disk
-      let template = await fs.promises.readFile(clientTemplate, "utf‑8");
+      let template = await fs.promises.readFile(clientTemplate, "utf-8");
       template = template.replace(
         'src="/src/main.tsx"',
         `src="/src/main.tsx?v=${nanoid()}"`,
       );
 
       const html = await vite.transformIndexHtml(req.originalUrl, template);
-      res.status(200).set({ "Content‑Type": "text/html" }).end(html);
+      res.status(200).set({ "Content-Type": "text/html" }).end(html);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);
       next(e);
@@ -82,7 +82,7 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 /**
- * serveStatic – production static handler
+ * serveStatic  production static handler
  * ---------------------------------------
  * Serves files from dist/public emitted by Vite build.
  */
