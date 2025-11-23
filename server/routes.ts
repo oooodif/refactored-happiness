@@ -81,9 +81,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     saveUninitialized: false,
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Set to false for development to work without HTTPS
       httpOnly: true,
-    }
+      sameSite: 'lax', // This helps with cross-site request issues
+    },
+    name: 'latex.sid' // Custom name to avoid conflicts
   }));
   // Authentication routes
   app.post("/api/auth/register", async (req: Request, res: Response) => {
@@ -135,7 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Logout failed" });
       }
       
-      res.clearCookie("connect.sid");
+      res.clearCookie("latex.sid"); // Use the same name we set for the session cookie
       return res.status(200).json({ message: "Logged out successfully" });
     });
   });
