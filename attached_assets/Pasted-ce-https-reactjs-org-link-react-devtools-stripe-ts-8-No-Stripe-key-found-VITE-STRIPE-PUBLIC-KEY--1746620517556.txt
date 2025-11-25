@@ -1,0 +1,44 @@
+ce: https://reactjs.org/link/react-devtools
+stripe.ts:8 No Stripe key found (VITE_STRIPE_PUBLIC_KEY). Payment features will be limited.
+(anonymous) @ stripe.ts:8
+App.tsx:85 Auth prompt state: false
+auth-required-dialog.tsx:55 Auth dialog render: Object
+auth-required-dialog.tsx:21 Auth dialog context state changed: false
+auth-required-dialog.tsx:35 Auth dialog is now CLOSED
+chunk-RPCDYKBN.js?v=575bf8c1:521 Warning: validateDOMNesting(...): <a> cannot appear as a descendant of <a>.
+    at a
+    at a
+    at https://7ecabbdb-6ad4-42cf-b5be-56f8cf278a27-00-p8vuqex6flz1.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=575bf8c1:294:18
+    at div
+    at div
+    at header
+    at Header (https://7ecabbdb-6ad4-42cf-b5be-56f8cf278a27-00-p8vuqex6flz1.spock.replit.dev/src/components/layout/header.tsx:30:32)
+    at div
+    at SiteLayout (https://7ecabbdb-6ad4-42cf-b5be-56f8cf278a27-00-p8vuqex6flz1.spock.replit.dev/src/components/layout/site-layout.tsx:18:38)
+    at Login (https://7ecabbdb-6ad4-42cf-b5be-56f8cf278a27-00-p8vuqex6flz1.spock.replit.dev/src/pages/login.tsx:48:37)
+    at Route (https://7ecabbdb-6ad4-42cf-b5be-56f8cf278a27-00-p8vuqex6flz1.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=575bf8c1:280:16)
+    at Switch (https://7ecabbdb-6ad4-42cf-b5be-56f8cf278a27-00-p8vuqex6flz1.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=575bf8c1:336:17)
+    at Router
+    at QueryClientProvider (https://7ecabbdb-6ad4-42cf-b5be-56f8cf278a27-00-p8vuqex6flz1.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=575bf8c1:2879:3)
+    at App (https://7ecabbdb-6ad4-42cf-b5be-56f8cf278a27-00-p8vuqex6flz1.spock.replit.dev/src/App.tsx?v=MXIqL-UOzVUmciGWRcZHr:101:33)
+printWarning @ chunk-RPCDYKBN.js?v=575bf8c1:521
+error @ chunk-RPCDYKBN.js?v=575bf8c1:505
+validateDOMNesting @ chunk-RPCDYKBN.js?v=575bf8c1:8256
+createInstance @ chunk-RPCDYKBN.js?v=575bf8c1:8328
+completeWork @ chunk-RPCDYKBN.js?v=575bf8c1:16290
+completeUnitOfWork @ chunk-RPCDYKBN.js?v=575bf8c1:19224
+performUnitOfWork @ chunk-RPCDYKBN.js?v=575bf8c1:19206
+workLoopSync @ chunk-RPCDYKBN.js?v=575bf8c1:19137
+renderRootSync @ chunk-RPCDYKBN.js?v=575bf8c1:19116
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=575bf8c1:18874
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=575bf8c1:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=575bf8c1:19432
+commitRoot @ chunk-RPCDYKBN.js?v=575bf8c1:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=575bf8c1:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=575bf8c1:18718
+workLoop @ chunk-RPCDYKBN.js?v=575bf8c1:197
+flushWork @ chunk-RPCDYKBN.js?v=575bf8c1:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=575bf8c1:384
+Show 18 more frames
+Show less
+auth-required-dialog.tsx:55 Auth dialog render: Object
