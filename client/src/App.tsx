@@ -86,32 +86,52 @@ function App() {
 
   useEffect(() => {
     // Check if user is logged in
-    fetch(API_ROUTES.auth.me, { credentials: "include" })
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw new Error("Not authenticated");
-      })
-      .then((data) => {
+    async function checkAuthStatus() {
+      try {
+        console.log("Checking authentication status...");
+        const response = await fetch(API_ROUTES.auth.me, { 
+          credentials: "include",
+          headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Not authenticated: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("Authentication successful:", data);
+        
+        if (!data.user) {
+          throw new Error("User data not found in response");
+        }
+        
         setSession({
           user: data.user,
           isAuthenticated: true,
           isLoading: false,
-          tier: data.user.subscriptionTier,
+          tier: data.user.subscriptionTier || "free",
           usage: {
-            current: data.user.monthlyUsage,
-            limit: data.usageLimit,
-            resetDate: data.user.usageResetDate,
+            current: data.user.monthlyUsage || 0,
+            limit: data.usageLimit || 3,
+            resetDate: data.user.usageResetDate || new Date().toISOString(),
           },
           refillPackCredits: data.user.refillPackCredits || 0,
         });
-      })
-      .catch((err) => {
+      } catch (err) {
         console.log("Not logged in:", err.message);
         setSession(prev => ({
           ...prev,
-          isLoading: false
+          isAuthenticated: false,
+          isLoading: false,
+          user: null
         }));
-      });
+      }
+    }
+    
+    checkAuthStatus();
   }, []);
 
   return (
