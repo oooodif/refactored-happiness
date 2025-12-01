@@ -8,13 +8,21 @@ import { storage } from '../storage';
  */
 export async function authenticateUser(req: Request, res: Response, next: NextFunction) {
   try {
-    if (req.session.userId) {
+    if (req.session && req.session.userId) {
+      console.log(`Looking up user ID ${req.session.userId} from session`);
       const user = await storage.getUserById(req.session.userId);
       
       if (user) {
+        console.log(`User found: ${user.username}`);
         // Add user to request object
         (req as any).user = user;
+      } else {
+        console.log(`No user found for ID ${req.session.userId}`);
+        // If user no longer exists, clear the session
+        req.session.userId = undefined;
       }
+    } else {
+      console.log('No userId in session');
     }
     
     next();

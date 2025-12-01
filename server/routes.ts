@@ -145,10 +145,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/auth/me", authenticateUser, async (req: Request, res: Response) => {
     const userId = req.session.userId;
     
+    if (!userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
     try {
       const user = await storage.getUserById(userId);
       
       if (!user) {
+        console.log(`User with ID ${userId} not found in database`);
+        // Clear invalid session
+        req.session.userId = undefined;
         return res.status(404).json({ message: "User not found" });
       }
       

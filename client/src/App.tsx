@@ -98,6 +98,13 @@ function App() {
         });
         
         if (!response.ok) {
+          if (response.status === 401) {
+            console.log("User not authenticated");
+          } else if (response.status === 404) {
+            console.log("User not found - may have been deleted");
+          } else {
+            console.log(`Auth check failed with status: ${response.status}`);
+          }
           throw new Error(`Not authenticated: ${response.status}`);
         }
         
@@ -108,6 +115,7 @@ function App() {
           throw new Error("User data not found in response");
         }
         
+        // Successfully authenticated
         setSession({
           user: data.user,
           isAuthenticated: true,
@@ -120,7 +128,7 @@ function App() {
           },
           refillPackCredits: data.user.refillPackCredits || 0,
         });
-      } catch (err) {
+      } catch (err: any) {
         console.log("Not logged in:", err.message);
         setSession(prev => ({
           ...prev,
