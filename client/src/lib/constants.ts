@@ -47,17 +47,58 @@ export const AI_MODELS = [
 
 export const SUBSCRIPTION_FEATURES = {
   [SubscriptionTier.Free]: [
-    "3 LaTeX generations/month"
+    "3 LaTeX generations/month",
+    "Basic AI models only",
+    "Basic templates"
   ],
-  [SubscriptionTier.Basic]: [
-    "100 LaTeX generations/month"
+  [SubscriptionTier.Tier1]: [
+    "100 LaTeX generations/month",
+    "Basic AI models",
+    "All templates"
   ],
-  [SubscriptionTier.Pro]: [
-    "1,200 LaTeX generations/month"
+  [SubscriptionTier.Tier2]: [
+    "500 LaTeX generations/month",
+    "Basic AI models",
+    "All templates",
+    "Priority support"
   ],
-  [SubscriptionTier.Power]: [
-    "5,000 LaTeX generations/month"
+  [SubscriptionTier.Tier3]: [
+    "1,200 LaTeX generations/month",
+    "Pro AI models",
+    "All templates",
+    "Priority support"
+  ],
+  [SubscriptionTier.Tier4]: [
+    "2,500 LaTeX generations/month",
+    "Pro AI models",
+    "All templates",
+    "Priority support"
+  ],
+  [SubscriptionTier.Tier5]: [
+    "5,000 LaTeX generations/month",
+    "All AI models including GPT-4o",
+    "All templates",
+    "Priority support"
   ]
+};
+
+// For display in the UI (uses friendly names)
+export const SUBSCRIPTION_DISPLAY_NAMES = {
+  [SubscriptionTier.Free]: "Free",
+  [SubscriptionTier.Tier1]: "Basic Plan",
+  [SubscriptionTier.Tier2]: "Standard Plan",
+  [SubscriptionTier.Tier3]: "Pro Plan",
+  [SubscriptionTier.Tier4]: "Max Plan",
+  [SubscriptionTier.Tier5]: "Pro Max Plan"
+};
+
+export const SUBSCRIPTION_PRICES = {
+  [SubscriptionTier.Free]: 0,
+  [SubscriptionTier.Tier1]: 0.99,
+  [SubscriptionTier.Tier2]: 2.99, 
+  [SubscriptionTier.Tier3]: 6.99,
+  [SubscriptionTier.Tier4]: 11.99,
+  [SubscriptionTier.Tier5]: 19.99
 };
 
 export const API_ROUTES = {
