@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { AuthRequiredContext } from '@/App';
 import {
@@ -13,49 +13,31 @@ import { Button } from '@/components/ui/button';
 
 export default function AuthRequiredDialog() {
   const { showAuthPrompt, setShowAuthPrompt } = useContext(AuthRequiredContext);
-  const [open, setOpen] = useState(false);
   const [, navigate] = useLocation();
 
-  // Sync the local state with the context state
+  // Reset dialog state if context is not controlling it
   useEffect(() => {
-    console.log("Auth dialog context state changed:", showAuthPrompt);
-    setOpen(showAuthPrompt);
+    // This log remains to help debug if needed in the future
+    console.log("Auth dialog rendered, current state:", showAuthPrompt);
   }, [showAuthPrompt]);
 
-  // When local state changes, update the context
-  useEffect(() => {
-    if (open !== showAuthPrompt) {
-      console.log("Updating context state from local:", open);
-      setShowAuthPrompt(open);
-    }
-  }, [open, setShowAuthPrompt, showAuthPrompt]);
-
-  // Debug effect to monitor dialog visibility
-  useEffect(() => {
-    console.log(`Auth dialog is now ${open ? 'OPEN' : 'CLOSED'}`);
-  }, [open]);
-
   const handleSignUp = () => {
-    console.log("Sign up clicked");
-    setOpen(false);
+    setShowAuthPrompt(false);
     navigate('/register');
   };
 
   const handleLogin = () => {
-    console.log("Login clicked");
-    setOpen(false);
+    setShowAuthPrompt(false);
     navigate('/login');
   };
 
   const handleClose = () => {
-    console.log("Dialog closed");
-    setOpen(false);
+    setShowAuthPrompt(false);
   };
 
-  console.log("Auth dialog render:", { contextState: showAuthPrompt, localState: open });
-
+  // Only use the context state, no local state
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={showAuthPrompt} onOpenChange={setShowAuthPrompt}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Account Required</DialogTitle>
