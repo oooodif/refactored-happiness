@@ -120,7 +120,7 @@ function App() {
           user: data.user,
           isAuthenticated: true,
           isLoading: false,
-          tier: data.user.subscriptionTier || "free",
+          tier: data.user.subscriptionTier || SubscriptionTier.Free,
           usage: {
             current: data.user.monthlyUsage || 0,
             limit: data.usageLimit || 3,
@@ -134,12 +134,18 @@ function App() {
           ...prev,
           isAuthenticated: false,
           isLoading: false,
-          user: null
+          user: null,
+          tier: SubscriptionTier.Free,
         }));
       }
     }
     
     checkAuthStatus();
+    
+    // Set up a periodic check every minute to keep session fresh
+    const interval = setInterval(checkAuthStatus, 60000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   return (

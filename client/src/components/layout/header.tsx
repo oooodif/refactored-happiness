@@ -15,6 +15,8 @@ export default function Header() {
   const { toast } = useToast();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  
+  console.log("Header rendering with session:", session);
 
   const handleLogout = async () => {
     try {
@@ -22,12 +24,14 @@ export default function Header() {
       setSession({
         user: null,
         isAuthenticated: false,
-        tier: "free",
+        isLoading: false,
+        tier: SubscriptionTier.Free,
         usage: {
           current: 0,
           limit: 3,
           resetDate: new Date().toISOString(),
         },
+        refillPackCredits: 0
       });
       toast({
         title: "Logged out",
