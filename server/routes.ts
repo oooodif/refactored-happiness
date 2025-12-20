@@ -74,19 +74,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(session({
     store: new PostgresStore({
       pool: pool,
-      tableName: 'user_sessions'
+      tableName: 'user_sessions',
+      createTableIfMissing: true
     }),
     secret: process.env.SESSION_SECRET || 'latex-generator-session-secret',
-    resave: false,
+    resave: true,
     saveUninitialized: false,
+    rolling: true,
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      secure: false, // Set to false for development to work without HTTPS
+      secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       sameSite: 'lax', // This helps with cross-site request issues
+      path: '/'
     },
     name: 'latex.sid' // Custom name to avoid conflicts
   }));
+  
+  // Debugging middleware for sessions
+  app.use((req, res, next) => {
+    console.debug(`Session ID: ${req.sessionID}`);
+    console.debug(`Session user ID: ${req.session?.userId}`);
+    next();
+  });
   // Authentication routes
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     const { username, email, password } = req.body;
@@ -115,8 +125,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const result = await storage.validateUser(email, password);
       
-      if (result.success) {
+      if (result.success && result.user) {
         req.session.userId = result.user.id;
+        await req.session.save();
+        
+        console.log(`User logged in: ${result.user.username} (ID: ${result.user.id}), session ID: ${req.sessionID}`);
+        
         return res.status(200).json({
           user: result.user,
           usageLimit: result.usageLimit

@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import LoginModal from "@/components/dialogs/login-modal";
 import SubscriptionModal from "@/components/dialogs/subscription-modal";
 import { getUsageColor } from "@/lib/utils";
+import { SubscriptionTier } from "@shared/schema";
 
 export default function Header() {
   const [location, navigate] = useLocation();
@@ -109,9 +110,9 @@ export default function Header() {
               </div>
               <Button 
                 onClick={() => setShowSubscriptionModal(true)}
-                className={session.tier === "free" ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"}
+                className={session.tier === SubscriptionTier.Free ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"}
               >
-                {session.tier === "free" ? "Upgrade" : "Manage Plan"}
+                {session.tier === SubscriptionTier.Free ? "Upgrade" : "Manage Plan"}
               </Button>
             </>
           ) : (
