@@ -89,10 +89,14 @@ function App() {
     async function checkAuthStatus() {
       try {
         console.log("Checking authentication status...");
-        const response = await fetch(API_ROUTES.auth.me, { 
+        
+        // Using native fetch with credentials included
+        const response = await fetch('/api/auth/me', { 
+          method: 'GET',
           credentials: "include",
           headers: {
             'Accept': 'application/json',
+            'Content-Type': 'application/json',
             'Cache-Control': 'no-cache'
           }
         });
@@ -140,10 +144,11 @@ function App() {
       }
     }
     
+    // Call immediately
     checkAuthStatus();
     
-    // Set up a periodic check every minute to keep session fresh
-    const interval = setInterval(checkAuthStatus, 60000);
+    // Set up a periodic check every 30 seconds to keep session fresh
+    const interval = setInterval(checkAuthStatus, 30000);
     
     return () => clearInterval(interval);
   }, []);
