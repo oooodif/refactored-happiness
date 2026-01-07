@@ -129,18 +129,26 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     
     console.log("Updating session with:", data);
     
-    setSession({
-      user: data.user,
-      isAuthenticated: true,
-      isLoading: false,
-      tier: data.user.subscriptionTier || "free",
-      usage: {
-        current: data.user.monthlyUsage || 0,
-        limit: data.usageLimit || 3,
-        resetDate: data.user.usageResetDate || new Date().toISOString(),
-      },
-      refillPackCredits: data.user.refillPackCredits || 0,
-    });
+    // Set the session with a small delay to ensure state updates properly 
+    setTimeout(() => {
+      setSession({
+        user: data.user,
+        isAuthenticated: true,
+        isLoading: false,
+        tier: data.user.subscriptionTier || "free",
+        usage: {
+          current: data.user.monthlyUsage || 0,
+          limit: data.usageLimit || 3,
+          resetDate: data.user.usageResetDate || new Date().toISOString(),
+        },
+        refillPackCredits: data.user.refillPackCredits || 0,
+      });
+      
+      // Force a page reload after successful login to ensure session is recognized
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
+    }, 100);
   };
 
   const toggleRegister = () => {

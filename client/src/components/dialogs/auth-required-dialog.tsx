@@ -23,12 +23,28 @@ export default function AuthRequiredDialog() {
 
   const handleSignUp = () => {
     setShowAuthPrompt(false);
-    navigate('/register');
+    // Use our login modal with register tab instead of separate page
+    // This helps with consistent session handling
+    const loginModal = document.getElementById('login-modal-trigger');
+    if (loginModal) {
+      (loginModal as HTMLButtonElement).click();
+    } else {
+      // Fallback to the register page if we can't find the login modal trigger
+      navigate('/register');
+    }
   };
 
   const handleLogin = () => {
     setShowAuthPrompt(false);
-    navigate('/login');
+    // Use our login modal instead of separate page
+    // This helps with consistent session handling
+    const loginModal = document.getElementById('login-modal-trigger');
+    if (loginModal) {
+      (loginModal as HTMLButtonElement).click();
+    } else {
+      // Fallback to the login page if we can't find the login modal trigger
+      navigate('/login');
+    }
   };
 
   const handleClose = () => {

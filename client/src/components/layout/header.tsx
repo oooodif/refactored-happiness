@@ -21,7 +21,19 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      await apiRequest("POST", API_ROUTES.auth.logout, {});
+      // Use native fetch for consistency with our login implementation
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Logout failed');
+      }
+      
       setSession({
         user: null,
         isAuthenticated: false,
@@ -34,12 +46,16 @@ export default function Header() {
         },
         refillPackCredits: 0
       });
+      
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
       });
-      navigate("/");
+      
+      // Force a page reload to ensure all state is cleared
+      window.location.href = '/';
     } catch (error) {
+      console.error('Logout error:', error);
       toast({
         title: "Error",
         description: "Failed to log out. Please try again.",
@@ -121,6 +137,7 @@ export default function Header() {
                 3 generations left
               </span>
               <Button
+                id="login-modal-trigger"
                 variant="ghost"
                 className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                 onClick={() => setShowLoginModal(true)}
