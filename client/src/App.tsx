@@ -11,6 +11,7 @@ import Register from "@/pages/register";
 import Account from "@/pages/account";
 import Subscribe from "@/pages/subscribe";
 import DocumentHistory from "@/pages/document-history";
+import DirectLogin from "@/pages/direct-login";
 import NotFound from "@/pages/not-found";
 
 // Components
@@ -56,6 +57,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
+      <Route path="/direct-login" component={DirectLogin} />
       <Route path="/register" component={Register} />
       <Route path="/account" component={Account} />
       <Route path="/subscribe" component={Subscribe} />
