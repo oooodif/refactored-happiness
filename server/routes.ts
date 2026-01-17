@@ -4,6 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { authenticateUser, requireAuth } from "./middleware/auth";
 import { checkSubscription } from "./middleware/subscription";
+import { setupAuth } from "./auth";
 
 // Import validation middleware
 import { z } from "zod";
@@ -69,120 +70,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).send('OK');
   });
 
-  // Setup session middleware
-  const PostgresStore = pgSession(session);
-  app.use(session({
-    store: new PostgresStore({
-      pool: pool,
-      tableName: 'user_sessions',
-      createTableIfMissing: true
-    }),
-    secret: process.env.SESSION_SECRET || 'latex-generator-session-secret',
-    resave: true,
-    saveUninitialized: false,
-    rolling: true,
-    cookie: {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      sameSite: 'lax', // This helps with cross-site request issues
-      path: '/'
-    },
-    name: 'latex.sid' // Custom name to avoid conflicts
-  }));
+  // Setup authentication with Passport.js
+  setupAuth(app);
   
   // Debugging middleware for sessions
   app.use((req, res, next) => {
     console.debug(`Session ID: ${req.sessionID}`);
-    console.debug(`Session user ID: ${req.session?.userId}`);
+    console.debug(`Session user ID: ${req.user?.id}`);
     next();
-  });
-  // Authentication routes
-  app.post("/api/auth/register", async (req: Request, res: Response) => {
-    const { username, email, password } = req.body;
-    
-    try {
-      const result = await storage.createUser(username, email, password);
-      
-      if (result.success) {
-        req.session.userId = result.user.id;
-        return res.status(201).json({
-          user: result.user,
-          usageLimit: result.usageLimit
-        });
-      } else {
-        return res.status(400).json({ message: result.error });
-      }
-    } catch (error) {
-      console.error("Registration error:", error);
-      return res.status(500).json({ message: "Registration failed" });
-    }
-  });
-
-  app.post("/api/auth/login", async (req: Request, res: Response) => {
-    const { email, password } = req.body;
-    
-    try {
-      const result = await storage.validateUser(email, password);
-      
-      if (result.success && result.user) {
-        req.session.userId = result.user.id;
-        await req.session.save();
-        
-        console.log(`User logged in: ${result.user.username} (ID: ${result.user.id}), session ID: ${req.sessionID}`);
-        
-        return res.status(200).json({
-          user: result.user,
-          usageLimit: result.usageLimit
-        });
-      } else {
-        return res.status(401).json({ message: result.error });
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      return res.status(500).json({ message: "Login failed" });
-    }
-  });
-
-  app.post("/api/auth/logout", (req: Request, res: Response) => {
-    req.session.destroy((err) => {
-      if (err) {
-        console.error("Logout error:", err);
-        return res.status(500).json({ message: "Logout failed" });
-      }
-      
-      res.clearCookie("latex.sid"); // Use the same name we set for the session cookie
-      return res.status(200).json({ message: "Logged out successfully" });
-    });
-  });
-
-  app.get("/api/auth/me", authenticateUser, async (req: Request, res: Response) => {
-    const userId = req.session.userId;
-    
-    if (!userId) {
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-    
-    try {
-      const user = await storage.getUserById(userId);
-      
-      if (!user) {
-        console.log(`User with ID ${userId} not found in database`);
-        // Clear invalid session
-        req.session.userId = undefined;
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      const usageLimit = await storage.getUserUsageLimit(user);
-      
-      return res.status(200).json({
-        user,
-        usageLimit
-      });
-    } catch (error) {
-      console.error("Get user error:", error);
-      return res.status(500).json({ message: "Failed to get user data" });
-    }
   });
 
   // LaTeX Generation Routes
