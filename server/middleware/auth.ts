@@ -3,33 +3,18 @@ import { storage } from '../storage';
 
 /**
  * Middleware to authenticate the user from session
- * If user is logged in, adds user to req.user
+ * If user is logged in, req.user is already set by Passport
  * If not, passes through (doesn't require authentication)
  */
-export async function authenticateUser(req: Request, res: Response, next: NextFunction) {
-  try {
-    if (req.session && req.session.userId) {
-      console.log(`Looking up user ID ${req.session.userId} from session`);
-      const user = await storage.getUserById(req.session.userId);
-      
-      if (user) {
-        console.log(`User found: ${user.username}`);
-        // Add user to request object
-        (req as any).user = user;
-      } else {
-        console.log(`No user found for ID ${req.session.userId}`);
-        // If user no longer exists, clear the session
-        req.session.userId = undefined;
-      }
-    } else {
-      console.log('No userId in session');
-    }
-    
-    next();
-  } catch (error) {
-    console.error('Authentication error:', error);
-    next();
+export function authenticateUser(req: Request, res: Response, next: NextFunction) {
+  // Passport.js already sets req.user if authenticated
+  console.log(`Authentication status: ${req.isAuthenticated() ? 'Authenticated' : 'Not authenticated'}`);
+  if (req.isAuthenticated()) {
+    console.log(`User found: ${req.user.username}`);
+  } else {
+    console.log('No authenticated user');
   }
+  next();
 }
 
 /**
@@ -37,10 +22,9 @@ export async function authenticateUser(req: Request, res: Response, next: NextFu
  * If user is not logged in, returns 401 Unauthorized
  */
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.userId) {
+  if (!req.isAuthenticated()) {
     return res.status(401).json({ message: 'Authentication required' });
   }
-  
   next();
 }
 
@@ -48,13 +32,13 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
  * Middleware to require admin role
  * If user is not admin, returns 403 Forbidden
  */
-export async function requireAdmin(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.userId) {
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated()) {
     return res.status(401).json({ message: 'Authentication required' });
   }
   
   try {
-    const user = await storage.getUserById(req.session.userId);
+    const user = req.user;
     
     if (!user || user.role !== 'admin') {
       return res.status(403).json({ message: 'Admin access required' });
@@ -72,6 +56,11 @@ export async function requireAdmin(req: Request, res: Response, next: NextFuncti
  * Alternative to session-based authentication for API clients
  */
 export async function authenticateJWT(req: Request, res: Response, next: NextFunction) {
+  // Skip if already authenticated via session
+  if (req.isAuthenticated()) {
+    return next();
+  }
+
   const authHeader = req.headers.authorization;
   
   if (authHeader) {
@@ -82,8 +71,10 @@ export async function authenticateJWT(req: Request, res: Response, next: NextFun
       const user = await storage.getUserById(decoded.id);
       
       if (user) {
+        // In Passport, we would normally use req.login
+        // But that requires a callback, so we'll manually set it
         (req as any).user = user;
-        req.session.userId = user.id;
+        // No need to set session.userId as Passport handles this
       }
     } catch (error) {
       // Invalid token, continue without authentication

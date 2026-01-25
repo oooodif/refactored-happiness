@@ -87,8 +87,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     validateRequest(generateLatexSchema),
     async (req: Request, res: Response) => {
       const { content, documentType, options } = req.body;
-      const userId = req.session.userId; // May be undefined for guest users
-      const isAuthenticated = !!userId; // Check if user is authenticated
+      const userId = req.user?.id; // Get user ID from Passport
+      const isAuthenticated = req.isAuthenticated(); // Check if user is authenticated
       const shouldCompile = req.body.compile === true; // Optional flag to compile or not
       
       try {
@@ -195,7 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/documents", 
     requireAuth,
     async (req: Request, res: Response) => {
-      const userId = req.session.userId;
+      const userId = req.user.id;
       
       try {
         const documents = await storage.getUserDocuments(userId);
@@ -211,7 +211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: Request, res: Response) => {
       const documentId = parseInt(req.params.id);
-      const userId = req.session.userId;
+      const userId = req.user.id;
       
       if (isNaN(documentId)) {
         return res.status(400).json({ message: "Invalid document ID" });
@@ -240,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: Request, res: Response) => {
       const documentId = parseInt(req.params.id);
-      const userId = req.session.userId;
+      const userId = req.user.id;
       
       if (isNaN(documentId)) {
         return res.status(400).json({ message: "Invalid document ID" });
@@ -281,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/documents", 
     requireAuth,
     async (req: Request, res: Response) => {
-      const userId = req.session.userId;
+      const userId = req.user.id;
       const { title, inputContent, latexContent, documentType, compilationSuccessful, compilationError } = req.body;
       
       try {
@@ -307,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: Request, res: Response) => {
       const documentId = parseInt(req.params.id);
-      const userId = req.session.userId;
+      const userId = req.user.id;
       
       if (isNaN(documentId)) {
         return res.status(400).json({ message: "Invalid document ID" });
@@ -347,7 +347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: Request, res: Response) => {
       const documentId = parseInt(req.params.id);
-      const userId = req.session.userId;
+      const userId = req.user.id;
       
       if (isNaN(documentId)) {
         return res.status(400).json({ message: "Invalid document ID" });
