@@ -383,7 +383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { tier } = req.body;
-      const userId = req.session.userId;
+      const userId = req.user.id;
       
       try {
         const user = await storage.getUserById(userId);
@@ -436,7 +436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Stripe is not configured" });
       }
       
-      const userId = req.session.userId;
+      const userId = req.user.id;
       
       try {
         const user = await storage.getUserById(userId);
@@ -742,4 +742,51 @@ function getDocumentTitle(content: string): string {
   }
   
   return "Untitled Document";
+}
+
+/**
+ * Temporary migration endpoint - to be removed after all users are migrated 
+ */
+import { migrateUserPassword, migrateAllUsersToNewPasswordFormat } from "./utils/password-migration";
+
+export function addMigrationEndpoints(app: Express) {
+  // Add this endpoint for individual password migration
+  app.post("/api/auth/migrate-password", async (req: Request, res: Response) => {
+    try {
+      const { userId, password } = req.body;
+      
+      if (!userId || !password) {
+        return res.status(400).json({ message: "Missing userId or password" });
+      }
+      
+      const success = await migrateUserPassword(userId, password);
+      
+      if (success) {
+        return res.status(200).json({ message: "Password migrated successfully" });
+      } else {
+        return res.status(500).json({ message: "Failed to migrate password" });
+      }
+    } catch (error) {
+      console.error('Password migration error:', error);
+      return res.status(500).json({ message: "Server error during password migration" });
+    }
+  });
+
+  // Add this endpoint for bulk password migration
+  app.post("/api/auth/migrate-all-passwords", async (req: Request, res: Response) => {
+    try {
+      const { adminPassword } = req.body;
+      
+      if (!adminPassword) {
+        return res.status(400).json({ message: "Missing admin password" });
+      }
+      
+      const result = await migrateAllUsersToNewPasswordFormat(adminPassword);
+      
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error('Bulk password migration error:', error);
+      return res.status(500).json({ message: "Server error during bulk password migration" });
+    }
+  });
 }

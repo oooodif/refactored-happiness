@@ -25,24 +25,30 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  // Check if the stored password is in the correct format (hash.salt)
+  if (!stored.includes('.')) {
+    console.log('Password in old format detected - migration required');
+    return false; // Can't compare passwords in different formats
+  }
+
+  try {
+    const [hashed, salt] = stored.split(".");
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error('Error comparing passwords:', error);
+    return false; // Return false instead of throwing an error
+  }
 }
 
 export function setupAuth(app: Express) {
-  const sessionStore = new PostgresSessionStore({ 
-    pool,
-    tableName: 'session',
-    createTableIfMissing: true
-  });
-
+  // We're moving from session-based auth to token-based auth
+  // so we'll keep this simple to avoid session table errors
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || 'development-secret-key',
     resave: false,
     saveUninitialized: false,
-    store: sessionStore,
     cookie: {
       secure: false, // set to true in production with HTTPS
       httpOnly: true,
