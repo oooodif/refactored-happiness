@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
+import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -8,6 +8,7 @@ import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import connectPg from "connect-pg-simple";
 import { pool } from "../db";
+import { authenticateJWT, addJwtToResponse } from "./middleware/jwt-auth";
 
 declare global {
   namespace Express {
@@ -77,6 +78,29 @@ export function setupAuth(app: Express) {
             return done(null, false, { message: 'Invalid email or password' });
           }
           
+          // Check if password is in old format (no dot separator)
+          if (!user.password.includes('.')) {
+            console.log('Old password format detected, attempting transparent migration');
+            
+            // Import password migration utility
+            const { migrateUserPassword } = await import('./utils/password-migration');
+            
+            // Try to migrate the user's password
+            const success = await migrateUserPassword(user.id, password);
+            if (success) {
+              console.log(`Migrated password for user: ${email}`);
+              // Get updated user and proceed with login
+              const updatedUser = await storage.getUserById(user.id);
+              if (updatedUser) {
+                return done(null, updatedUser);
+              }
+            }
+            
+            // If migration failed, return invalid password
+            return done(null, false, { message: 'Invalid email or password' });
+          }
+          
+          // Normal password check
           const passwordValid = await comparePasswords(password, user.password);
           if (!passwordValid) {
             console.log(`Invalid password for user: ${email}`);
@@ -129,12 +153,24 @@ export function setupAuth(app: Express) {
 
       // Create the user
       const hashedPassword = await hashPassword(password);
-      const user = await storage.createUser(username, email, hashedPassword);
+      const result = await storage.createUser(username, email, hashedPassword);
+
+      if (!result.success || !result.user) {
+        return res.status(400).json({ message: result.error || "Failed to create user" });
+      }
 
       // Log the user in
-      req.login(user, (err) => {
+      req.login(result.user, (err) => {
         if (err) return next(err);
-        res.status(201).json({ user, usageLimit: 3 });
+        
+        // Generate JWT token for the user
+        const jwtData = addJwtToResponse(res, result.user.id);
+        
+        res.status(201).json({ 
+          user: result.user, 
+          usageLimit: result.usageLimit || 3,
+          token: jwtData.token 
+        });
       });
     } catch (error) {
       console.error('Registration error:', error);
@@ -153,7 +189,16 @@ export function setupAuth(app: Express) {
       req.login(user, (err) => {
         if (err) return next(err);
         console.log(`User logged in: ${user.username} (ID: ${user.id}), session ID: ${req.sessionID}`);
-        return res.json({ user, usageLimit: 3 });
+        
+        // Generate JWT token for the user
+        const jwtData = addJwtToResponse(res, user.id);
+        
+        // Include token in response
+        return res.json({ 
+          user, 
+          usageLimit: 3,
+          token: jwtData.token
+        });
       });
     })(req, res, next);
   });
@@ -179,17 +224,18 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/auth/me", (req, res) => {
+  app.get("/api/auth/me", authenticateJWT, (req, res) => {
     console.log(`Session ID: ${req.sessionID}`);
-    console.log(`Session user ID: ${req.session.passport?.user}`);
     
-    if (!req.isAuthenticated()) {
-      console.log(`No userId in session`);
+    // After authenticateJWT runs, it may have set req.user from JWT token
+    // Otherwise, check session authentication
+    if (!req.user && !req.isAuthenticated()) {
+      console.log(`No userId in session or JWT token`);
       return res.status(401).json({ message: "Not authenticated" });
     }
     
-    console.log(`Looking up user ID ${req.user.id} from session`);
-    console.log(`User found: ${req.user.username}`);
+    // By this point, req.user should be set either by session or JWT
+    console.log(`User authenticated: ${req.user?.username} (ID: ${req.user?.id})`);
     res.json({ user: req.user, usageLimit: 3 });
   });
   
