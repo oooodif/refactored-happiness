@@ -92,20 +92,40 @@ function App() {
       try {
         console.log("Checking authentication status...");
         
-        // Using native fetch with credentials included
+        // Get JWT token if it exists in localStorage
+        const token = localStorage.getItem('jwt_token');
+        
+        // Prepare headers
+        const headers: Record<string, string> = {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        };
+        
+        // Add JWT token if it exists
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+          console.log("Including JWT token in auth check");
+        } else {
+          console.log("No JWT token found in localStorage");
+        }
+        
+        // Using fetch with credentials included for session cookies
+        // and headers for JWT token
         const response = await fetch('/api/auth/me', { 
           method: 'GET',
-          credentials: "include",
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache'
-          }
+          credentials: "include", // For backward compatibility with session cookies
+          headers
         });
         
         if (!response.ok) {
           if (response.status === 401) {
             console.log("User not authenticated");
+            // If token exists but auth failed, clear it
+            if (token) {
+              console.log("Clearing invalid JWT token");
+              localStorage.removeItem('jwt_token');
+            }
           } else if (response.status === 404) {
             console.log("User not found - may have been deleted");
           } else {
