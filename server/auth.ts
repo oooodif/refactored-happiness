@@ -28,8 +28,16 @@ async function hashPassword(password: string) {
 async function comparePasswords(supplied: string, stored: string) {
   // Check if the stored password is in the correct format (hash.salt)
   if (!stored.includes('.')) {
-    console.log('Password in old format detected - migration required');
-    return false; // Can't compare passwords in different formats
+    console.log('Password in old format detected - trying old format comparison');
+    // For old format passwords (just plain MD5 or other hash without salt)
+    try {
+      // If it's a plain MD5 hash (32 characters), just compare directly
+      // This is a simple fallback for backward compatibility
+      return stored === supplied;
+    } catch (error) {
+      console.error('Old format password comparison error:', error);
+      return false;
+    }
   }
 
   try {
@@ -80,24 +88,32 @@ export function setupAuth(app: Express) {
           
           // Check if password is in old format (no dot separator)
           if (!user.password.includes('.')) {
-            console.log('Old password format detected, attempting transparent migration');
+            console.log('Old password format detected, attempting direct comparison');
             
-            // Import password migration utility
-            const { migrateUserPassword } = await import('./utils/password-migration');
-            
-            // Try to migrate the user's password
-            const success = await migrateUserPassword(user.id, password);
-            if (success) {
-              console.log(`Migrated password for user: ${email}`);
-              // Get updated user and proceed with login
-              const updatedUser = await storage.getUserById(user.id);
-              if (updatedUser) {
-                return done(null, updatedUser);
+            // First try direct comparison for old format passwords
+            if (user.password === password) {
+              console.log(`Old format password match for user: ${email}`);
+              
+              // Now migrate the password to new format for future logins
+              const { migrateUserPassword } = await import('./utils/password-migration');
+              
+              // Try to migrate the user's password
+              const success = await migrateUserPassword(user.id, password);
+              if (success) {
+                console.log(`Migrated password for user: ${email}`);
+                // Get updated user and proceed with login
+                const updatedUser = await storage.getUserById(user.id);
+                if (updatedUser) {
+                  return done(null, updatedUser);
+                }
               }
+              
+              // Even if migration fails, allow login since direct comparison passed
+              return done(null, user);
+            } else {
+              console.log(`Old format password mismatch for user: ${email}`);
+              return done(null, false, { message: 'Invalid email or password' });
             }
-            
-            // If migration failed, return invalid password
-            return done(null, false, { message: 'Invalid email or password' });
           }
           
           // Normal password check
