@@ -129,6 +129,14 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     
     console.log("Updating session with:", data);
     
+    // Store JWT token if it exists
+    if (data.token) {
+      console.log("Storing JWT token in localStorage");
+      localStorage.setItem('jwt_token', data.token);
+    } else {
+      console.warn("No JWT token received from server");
+    }
+    
     // Set the session with a small delay to ensure state updates properly 
     setTimeout(() => {
       setSession({

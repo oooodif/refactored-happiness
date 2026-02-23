@@ -43,6 +43,28 @@ export default function DirectLogin() {
 
       const userData = await response.json();
       console.log('Login successful:', userData);
+      
+      // Store JWT token in localStorage if it exists
+      if (userData.token) {
+        console.log('Storing JWT token in localStorage');
+        localStorage.setItem('jwt_token', userData.token);
+      } else {
+        console.warn('No JWT token received from server');
+      }
+      
+      // Update session data
+      setSession({
+        user: userData.user,
+        isAuthenticated: true,
+        isLoading: false,
+        tier: userData.user.subscriptionTier,
+        usage: {
+          current: userData.user.monthlyUsage || 0,
+          limit: userData.usageLimit || 3,
+          resetDate: userData.user.usageResetDate || new Date().toISOString(),
+        },
+        refillPackCredits: userData.user.refillPackCredits || 0,
+      });
 
       // Force a complete page reload to ensure session is recognized
       window.location.href = '/';
