@@ -26,13 +26,18 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
+  // Defensive check - handle null or undefined inputs
+  if (!supplied || !stored) {
+    console.log('Invalid password input detected');
+    return false;
+  }
+
   // Check if the stored password is in the correct format (hash.salt)
   if (!stored.includes('.')) {
     console.log('Password in old format detected - trying old format comparison');
-    // For old format passwords (just plain MD5 or other hash without salt)
+    // For old format passwords (just plain text or MD5 hash without salt)
     try {
-      // If it's a plain MD5 hash (32 characters), just compare directly
-      // This is a simple fallback for backward compatibility
+      // Direct comparison for plain text passwords
       return stored === supplied;
     } catch (error) {
       console.error('Old format password comparison error:', error);
@@ -41,9 +46,22 @@ async function comparePasswords(supplied: string, stored: string) {
   }
 
   try {
+    // New format password with hash and salt
     const [hashed, salt] = stored.split(".");
+    
+    // More defensive coding - verify we have both parts
+    if (!hashed || !salt) {
+      console.error('Invalid password format - missing hash or salt');
+      return false;
+    }
+    
+    // Convert hash to buffer for comparison
     const hashedBuf = Buffer.from(hashed, "hex");
+    
+    // Hash the supplied password with the same salt
     const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    
+    // Use timing-safe comparison to prevent timing attacks
     return timingSafeEqual(hashedBuf, suppliedBuf);
   } catch (error) {
     console.error('Error comparing passwords:', error);
