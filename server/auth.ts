@@ -25,47 +25,53 @@ async function hashPassword(password: string) {
   return `${buf.toString("hex")}.${salt}`;
 }
 
+// Always use the same password comparison method
 async function comparePasswords(supplied: string, stored: string) {
-  // Defensive check - handle null or undefined inputs
-  if (!supplied || !stored) {
-    console.log('Invalid password input detected');
-    return false;
-  }
-
-  // Check if the stored password is in the correct format (hash.salt)
+  // If we have a password in old format, just do direct comparison
   if (!stored.includes('.')) {
-    console.log('Password in old format detected - trying old format comparison');
-    // For old format passwords (just plain text or MD5 hash without salt)
-    try {
-      // Direct comparison for plain text passwords
-      return stored === supplied;
-    } catch (error) {
-      console.error('Old format password comparison error:', error);
-      return false;
-    }
+    return stored === supplied;
   }
-
+  
+  // New format with salt
   try {
-    // New format password with hash and salt
     const [hashed, salt] = stored.split(".");
-    
-    // More defensive coding - verify we have both parts
-    if (!hashed || !salt) {
-      console.error('Invalid password format - missing hash or salt');
-      return false;
-    }
-    
-    // Convert hash to buffer for comparison
     const hashedBuf = Buffer.from(hashed, "hex");
-    
-    // Hash the supplied password with the same salt
     const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-    
-    // Use timing-safe comparison to prevent timing attacks
     return timingSafeEqual(hashedBuf, suppliedBuf);
   } catch (error) {
     console.error('Error comparing passwords:', error);
-    return false; // Return false instead of throwing an error
+    // If comparison fails, try direct comparison as fallback
+    return stored === supplied;
+  }
+}
+
+// Admin function to reset a user's password
+export async function resetPassword(userId: number, newPassword: string): Promise<boolean> {
+  try {
+    const hashedPassword = await hashPassword(newPassword);
+    await db.update(users)
+      .set({ 
+        password: hashedPassword,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+    return true;
+  } catch (error) {
+    console.error('Password reset error:', error);
+    return false;
+  }
+}
+
+// Function to delete a user account
+export async function deleteUserAccount(userId: number): Promise<boolean> {
+  try {
+    // Delete the user
+    await db.delete(users)
+      .where(eq(users.id, userId));
+    return true;
+  } catch (error) {
+    console.error('User deletion error:', error);
+    return false;
   }
 }
 
@@ -104,35 +110,7 @@ export function setupAuth(app: Express) {
             return done(null, false, { message: 'Invalid email or password' });
           }
           
-          // Check if password is in old format (no dot separator)
-          if (!user.password.includes('.')) {
-            console.log('Old password format detected, attempting direct comparison');
-            
-            // First try direct comparison for old format passwords
-            if (user.password === password) {
-              console.log(`Old format password match for user: ${email}`);
-              
-              // Now migrate the password to new format for future logins
-              const { migrateUserPassword } = await import('./utils/password-migration');
-              
-              // Try to migrate the user's password
-              const success = await migrateUserPassword(user.id, password);
-              if (success) {
-                console.log(`Migrated password for user: ${email}`);
-                // Get updated user and proceed with login
-                const updatedUser = await storage.getUserById(user.id);
-                if (updatedUser) {
-                  return done(null, updatedUser);
-                }
-              }
-              
-              // Even if migration fails, allow login since direct comparison passed
-              return done(null, user);
-            } else {
-              console.log(`Old format password mismatch for user: ${email}`);
-              return done(null, false, { message: 'Invalid email or password' });
-            }
-          }
+          // We handle both old and new password formats in comparePasswords function now
           
           // Normal password check
           const passwordValid = await comparePasswords(password, user.password);
