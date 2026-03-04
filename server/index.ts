@@ -13,6 +13,10 @@ app.get('/health', (req, res) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Add test auth route
+import testAuthRouter from './test-auth.js';
+app.use('/test-auth', testAuthRouter);
+
 // Add JWT authentication middleware to all routes
 app.use(authenticateJWT);
 
