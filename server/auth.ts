@@ -5,10 +5,11 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User as SelectUser } from "@shared/schema";
+import { User as SelectUser, users } from "@shared/schema";
 import connectPg from "connect-pg-simple";
-import { pool } from "../db";
+import { pool, db } from "../db";
 import { authenticateJWT, addJwtToResponse } from "./middleware/jwt-auth";
+import { eq } from "drizzle-orm";
 
 declare global {
   namespace Express {
@@ -76,14 +77,23 @@ export async function deleteUserAccount(userId: number): Promise<boolean> {
 }
 
 export function setupAuth(app: Express) {
-  // We're moving from session-based auth to token-based auth
-  // so we'll keep this simple to avoid session table errors
+  // Session store using PostgreSQL
+  const sessionStore = new PostgresSessionStore({
+    pool,
+    tableName: 'sessions',
+    createTableIfMissing: true,
+    schemaName: 'public',
+    pruneSessionInterval: 60 * 15 // Prune expired sessions every 15 minutes
+  });
+
+  // Session settings with the PostgreSQL store
   const sessionSettings: session.SessionOptions = {
+    store: sessionStore,
     secret: process.env.SESSION_SECRET || 'development-secret-key',
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // set to true in production with HTTPS
+      secure: process.env.NODE_ENV === 'production', // only set to true in production with HTTPS
       httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
     }

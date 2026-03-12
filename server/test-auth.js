@@ -29,14 +29,25 @@ router.get('/login', async (req, res) => {
     // Generate token
     const token = generateToken(user.id);
     
-    // Log in the user (this sets up the session)
-    req.login(user, (err) => {
+    // Set up session data for debugging
+    if (!req.session.passport) {
+      req.session.passport = { user: user.id };
+      await new Promise((resolve) => req.session.save(resolve));
+      console.log('Manually set passport user in session:', req.session);
+    }
+    
+    // Log in the user through passport (this sets up the session)
+    req.login(user, async (err) => {
       if (err) {
         console.error('Login error:', err);
         return res.status(500).send('Error logging in: ' + err.message);
       }
       
       console.log('User logged in via session. Session ID:', req.sessionID);
+      console.log('Session data:', req.session);
+      
+      // Force session save
+      await new Promise((resolve) => req.session.save(resolve));
       
       // HTML page with link to homepage
       res.send(`
@@ -64,16 +75,16 @@ router.get('/login', async (req, res) => {
               .then(response => response.json())
               .then(data => {
                 console.log('Auth check response:', data);
-                // Redirect to homepage
+                // Redirect to homepage 
                 setTimeout(() => {
-                  window.location.href = '/';
+                  window.location.href = '/auth-test';
                 }, 2000);
               })
               .catch(error => {
                 console.error('Auth check failed:', error);
                 // Redirect anyway
                 setTimeout(() => {
-                  window.location.href = '/';
+                  window.location.href = '/auth-test';
                 }, 2000);
               });
             </script>
@@ -82,8 +93,9 @@ router.get('/login', async (req, res) => {
             <h1>Login Successful!</h1>
             <p>Logged in as ${user.username} (ID: ${user.id})</p>
             <p>JWT Token has been saved to localStorage.</p>
-            <p>Redirecting to homepage in 2 seconds...</p>
-            <p><a href="/">Click here if not redirected automatically</a></p>
+            <p>Session ID: ${req.sessionID}</p>
+            <p>Redirecting to the auth test page in 2 seconds...</p>
+            <p><a href="/auth-test">Click here if not redirected automatically</a></p>
           </body>
         </html>
       `);

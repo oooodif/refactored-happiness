@@ -52,6 +52,9 @@ export const AuthRequiredContext = createContext<{
   setShowAuthPrompt: () => {},
 });
 
+// Import auth test page
+import AuthTest from "@/pages/auth-test";
+
 function Router() {
   return (
     <Switch>
@@ -62,6 +65,7 @@ function Router() {
       <Route path="/account" component={Account} />
       <Route path="/subscribe" component={Subscribe} />
       <Route path="/history" component={DocumentHistory} />
+      <Route path="/auth-test" component={AuthTest} />
       <Route component={NotFound} />
     </Switch>
   );

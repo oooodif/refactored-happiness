@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { apiRequest } from "@/lib/queryClient";
+import { SubscriptionTier } from "@shared/schema";
 
 export default function AuthTest() {
   const { session, setSession } = useContext(UserContext);
@@ -101,7 +102,7 @@ export default function AuthTest() {
       user: null,
       isAuthenticated: false,
       isLoading: false,
-      tier: "free",
+      tier: SubscriptionTier.Free,
       usage: {
         current: 0,
         limit: 3, 
