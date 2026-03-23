@@ -77,13 +77,12 @@ export async function deleteUserAccount(userId: number): Promise<boolean> {
 }
 
 export function setupAuth(app: Express) {
-  // Session store using PostgreSQL
+  // Session store using PostgreSQL - use existing table without trying to create it
   const sessionStore = new PostgresSessionStore({
     pool,
-    tableName: 'sessions',
-    createTableIfMissing: true,
-    schemaName: 'public',
-    pruneSessionInterval: 60 * 15 // Prune expired sessions every 15 minutes
+    tableName: 'session', // Use the existing table name
+    createTableIfMissing: false, // Don't try to create the table, it already exists
+    schemaName: 'public'
   });
 
   // Session settings with the PostgreSQL store
