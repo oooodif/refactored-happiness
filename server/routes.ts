@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { authenticateUser, requireAuth } from "./middleware/auth";
 import { checkSubscription } from "./middleware/subscription";
 import { setupAuth } from "./auth";
+import { generateToken } from "./middleware/jwt-auth";
 
 // Import validation middleware
 import { z } from "zod";
@@ -72,6 +73,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Setup authentication with Passport.js
   setupAuth(app);
+  
+  // Add direct JWT login endpoint that doesn't rely on sessions
+  app.post("/api/auth/direct-login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password required" });
+      }
+      
+      // Manually validate user
+      const result = await storage.validateUser(email, password);
+      
+      if (!result.success || !result.user) {
+        return res.status(401).json({ message: result.error || "Invalid credentials" });
+      }
+      
+      // Generate JWT token
+      const token = generateToken(result.user.id);
+      
+      // Get user's usage limit
+      const usageLimit = await storage.getUserUsageLimit(result.user);
+      
+      // Return user data with token
+      return res.status(200).json({
+        user: result.user,
+        token,
+        usageLimit,
+        message: "Login successful"
+      });
+    } catch (error) {
+      console.error("Direct login error:", error);
+      return res.status(500).json({ message: "Server error during login" });
+    }
+  });
   
   // Debugging middleware for sessions
   app.use((req, res, next) => {

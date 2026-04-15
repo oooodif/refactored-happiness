@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { UserContext } from "@/App";
 import { API_ROUTES } from "@/lib/constants";
@@ -17,7 +17,65 @@ export default function Header() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   
-  console.log("Header rendering with session:", session);
+  console.log("Header rendering with session:", JSON.stringify(session, null, 2));
+  
+  // Try updating the session state from localStorage
+  useEffect(() => {
+    const checkLocalAuth = async () => {
+      try {
+        // Get JWT token if it exists in localStorage
+        const token = localStorage.getItem('jwt_token');
+        const isAuthenticated = localStorage.getItem('is_authenticated');
+        
+        console.log("Local storage auth check:", { token: !!token, isAuthenticated });
+        
+        if (token && isAuthenticated === 'true' && !session.isAuthenticated) {
+          console.log("Local storage indicates we should be logged in but session doesn't match");
+          
+          // Force a new authentication check
+          const headers: Record<string, string> = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          };
+          
+          const response = await fetch('/api/auth/me', { 
+            method: 'GET',
+            credentials: "include",
+            headers
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log("Got fresh user data:", data);
+            
+            if (data.user) {
+              setSession({
+                user: data.user,
+                isAuthenticated: true,
+                isLoading: false,
+                tier: data.user.subscriptionTier || SubscriptionTier.Free,
+                usage: {
+                  current: data.user.monthlyUsage || 0,
+                  limit: data.usageLimit || 3,
+                  resetDate: data.user.usageResetDate || new Date().toISOString(),
+                },
+                refillPackCredits: data.user.refillPackCredits || 0,
+              });
+            }
+          } else {
+            console.log("Failed to get user data, clearing local storage");
+            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('is_authenticated');
+          }
+        }
+      } catch (error) {
+        console.error("Error checking local auth:", error);
+      }
+    };
+    
+    checkLocalAuth();
+  }, [session.isAuthenticated]);
 
   const handleLogout = async () => {
     try {

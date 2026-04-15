@@ -76,10 +76,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         return;
       }
       
-      // No valid session, proceed with login
-      console.log("Attempting login with:", { email: values.email });
+      // No valid session, proceed with direct login using JWT
+      console.log("Attempting direct login with:", { email: values.email });
       
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/auth/direct-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,8 +87,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         body: JSON.stringify({
           email: values.email,
           password: values.password,
-        }),
-        credentials: 'include'
+        })
       });
       
       if (!response.ok) {
@@ -180,8 +179,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           username: values.email.split('@')[0], // Default username from email
           email: values.email,
           password: values.password,
-        }),
-        credentials: 'include'
+        })
       });
       
       if (!response.ok) {
