@@ -29,8 +29,9 @@ export default function Header() {
         
         console.log("Local storage auth check:", { token: !!token, isAuthenticated });
         
-        if (token && isAuthenticated === 'true' && !session.isAuthenticated) {
-          console.log("Local storage indicates we should be logged in but session doesn't match");
+        if (token && !session.isAuthenticated) {
+          console.log("Local storage contains JWT token but session doesn't show authenticated");
+          localStorage.setItem('is_authenticated', 'true');
           
           // Force a new authentication check
           const headers: Record<string, string> = {
@@ -41,7 +42,6 @@ export default function Header() {
           
           const response = await fetch('/api/auth/me', { 
             method: 'GET',
-            credentials: "include",
             headers
           });
           
@@ -84,14 +84,19 @@ export default function Header() {
         method: 'POST',
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          // Include the token if it exists
+          ...localStorage.getItem('jwt_token') ? {
+            'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
+          } : {}
         }
       });
       
-      if (!response.ok) {
-        throw new Error('Logout failed');
-      }
+      // Clear local storage auth items
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('is_authenticated');
       
+      // Reset session state
       setSession({
         user: null,
         isAuthenticated: false,
@@ -114,6 +119,11 @@ export default function Header() {
       window.location.href = '/';
     } catch (error) {
       console.error('Logout error:', error);
+      
+      // Even if server-side logout fails, clear local state
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('is_authenticated');
+      
       toast({
         title: "Error",
         description: "Failed to log out. Please try again.",

@@ -245,7 +245,7 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/auth/me", authenticateJWT, (req, res) => {
+  app.get("/api/auth/me", authenticateJWT, async (req, res) => {
     console.log(`Session ID: ${req.sessionID}`);
     
     // After authenticateJWT runs, it may have set req.user from JWT token
@@ -257,7 +257,15 @@ export function setupAuth(app: Express) {
     
     // By this point, req.user should be set either by session or JWT
     console.log(`User authenticated: ${req.user?.username} (ID: ${req.user?.id})`);
-    res.json({ user: req.user, usageLimit: 3 });
+    
+    // Get the user's latest usage limit - important for subscription changes
+    const usageLimit = req.user ? await storage.getUserUsageLimit(req.user) : 3;
+    
+    res.json({ 
+      user: req.user, 
+      usageLimit,
+      token: req.user ? addJwtToResponse(res, req.user.id).token : ''
+    });
   });
   
   // Debug endpoint
