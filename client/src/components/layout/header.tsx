@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext } from "react";
 import { Link, useLocation } from "wouter";
 import { UserContext } from "@/App";
 import { API_ROUTES } from "@/lib/constants";
@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import LoginModal from "@/components/dialogs/login-modal";
 import SubscriptionModal from "@/components/dialogs/subscription-modal";
 import { getUsageColor } from "@/lib/utils";
-import { SubscriptionTier } from "@shared/schema";
 
 export default function Header() {
   const [location, navigate] = useLocation();
@@ -16,114 +15,26 @@ export default function Header() {
   const { toast } = useToast();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-  
-  console.log("Header rendering with session:", JSON.stringify(session, null, 2));
-  
-  // Try updating the session state from localStorage
-  useEffect(() => {
-    const checkLocalAuth = async () => {
-      try {
-        // Get JWT token if it exists in localStorage
-        const token = localStorage.getItem('jwt_token');
-        const isAuthenticated = localStorage.getItem('is_authenticated');
-        
-        console.log("Local storage auth check:", { token: !!token, isAuthenticated });
-        
-        if (token && !session.isAuthenticated) {
-          console.log("Local storage contains JWT token but session doesn't show authenticated");
-          localStorage.setItem('is_authenticated', 'true');
-          
-          // Force a new authentication check
-          const headers: Record<string, string> = {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          };
-          
-          const response = await fetch('/api/auth/me', { 
-            method: 'GET',
-            headers
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            console.log("Got fresh user data:", data);
-            
-            if (data.user) {
-              setSession({
-                user: data.user,
-                isAuthenticated: true,
-                isLoading: false,
-                tier: data.user.subscriptionTier || SubscriptionTier.Free,
-                usage: {
-                  current: data.user.monthlyUsage || 0,
-                  limit: data.usageLimit || 3,
-                  resetDate: data.user.usageResetDate || new Date().toISOString(),
-                },
-                refillPackCredits: data.user.refillPackCredits || 0,
-              });
-            }
-          } else {
-            console.log("Failed to get user data, clearing local storage");
-            localStorage.removeItem('jwt_token');
-            localStorage.removeItem('is_authenticated');
-          }
-        }
-      } catch (error) {
-        console.error("Error checking local auth:", error);
-      }
-    };
-    
-    checkLocalAuth();
-  }, [session.isAuthenticated]);
 
   const handleLogout = async () => {
     try {
-      // Use native fetch for consistency with our login implementation
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          // Include the token if it exists
-          ...localStorage.getItem('jwt_token') ? {
-            'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
-          } : {}
-        }
-      });
-      
-      // Clear local storage auth items
-      localStorage.removeItem('jwt_token');
-      localStorage.removeItem('is_authenticated');
-      
-      // Reset session state
+      await apiRequest("POST", API_ROUTES.auth.logout, {});
       setSession({
         user: null,
         isAuthenticated: false,
-        isLoading: false,
-        tier: SubscriptionTier.Free,
+        tier: "free",
         usage: {
           current: 0,
           limit: 3,
           resetDate: new Date().toISOString(),
         },
-        refillPackCredits: 0
       });
-      
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
       });
-      
-      // Force a page reload to ensure all state is cleared
-      window.location.href = '/';
+      navigate("/");
     } catch (error) {
-      console.error('Logout error:', error);
-      
-      // Even if server-side logout fails, clear local state
-      localStorage.removeItem('jwt_token');
-      localStorage.removeItem('is_authenticated');
-      
       toast({
         title: "Error",
         description: "Failed to log out. Please try again.",
@@ -194,9 +105,9 @@ export default function Header() {
               </div>
               <Button 
                 onClick={() => setShowSubscriptionModal(true)}
-                className={session.tier === SubscriptionTier.Free ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"}
+                className={session.tier === "free" ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"}
               >
-                {session.tier === SubscriptionTier.Free ? "Upgrade" : "Manage Plan"}
+                {session.tier === "free" ? "Upgrade" : "Manage Plan"}
               </Button>
             </>
           ) : (
@@ -205,7 +116,6 @@ export default function Header() {
                 3 generations left
               </span>
               <Button
-                id="login-modal-trigger"
                 variant="ghost"
                 className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                 onClick={() => setShowLoginModal(true)}

@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { AuthRequiredContext } from '@/App';
 import {
@@ -13,47 +13,49 @@ import { Button } from '@/components/ui/button';
 
 export default function AuthRequiredDialog() {
   const { showAuthPrompt, setShowAuthPrompt } = useContext(AuthRequiredContext);
+  const [open, setOpen] = useState(false);
   const [, navigate] = useLocation();
 
-  // Reset dialog state if context is not controlling it
+  // Sync the local state with the context state
   useEffect(() => {
-    // This log remains to help debug if needed in the future
-    console.log("Auth dialog rendered, current state:", showAuthPrompt);
+    console.log("Auth dialog context state changed:", showAuthPrompt);
+    setOpen(showAuthPrompt);
   }, [showAuthPrompt]);
 
-  const handleSignUp = () => {
-    setShowAuthPrompt(false);
-    // Use our login modal with register tab instead of separate page
-    // This helps with consistent session handling
-    const loginModal = document.getElementById('login-modal-trigger');
-    if (loginModal) {
-      (loginModal as HTMLButtonElement).click();
-    } else {
-      // Fallback to the register page if we can't find the login modal trigger
-      navigate('/register');
+  // When local state changes, update the context
+  useEffect(() => {
+    if (open !== showAuthPrompt) {
+      console.log("Updating context state from local:", open);
+      setShowAuthPrompt(open);
     }
+  }, [open, setShowAuthPrompt, showAuthPrompt]);
+
+  // Debug effect to monitor dialog visibility
+  useEffect(() => {
+    console.log(`Auth dialog is now ${open ? 'OPEN' : 'CLOSED'}`);
+  }, [open]);
+
+  const handleSignUp = () => {
+    console.log("Sign up clicked");
+    setOpen(false);
+    navigate('/register');
   };
 
   const handleLogin = () => {
-    setShowAuthPrompt(false);
-    // Use our login modal instead of separate page
-    // This helps with consistent session handling
-    const loginModal = document.getElementById('login-modal-trigger');
-    if (loginModal) {
-      (loginModal as HTMLButtonElement).click();
-    } else {
-      // Fallback to the login page if we can't find the login modal trigger
-      navigate('/login');
-    }
+    console.log("Login clicked");
+    setOpen(false);
+    navigate('/login');
   };
 
   const handleClose = () => {
-    setShowAuthPrompt(false);
+    console.log("Dialog closed");
+    setOpen(false);
   };
 
-  // Only use the context state, no local state
+  console.log("Auth dialog render:", { contextState: showAuthPrompt, localState: open });
+
   return (
-    <Dialog open={showAuthPrompt} onOpenChange={setShowAuthPrompt}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Account Required</DialogTitle>

@@ -62,43 +62,23 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     try {
-      // First check if there's already a session with a fetch to /api/auth/me
-      const checkSession = await fetch('/api/auth/me', {
-        method: 'GET',
-        credentials: 'include'
+      const response = await apiRequest("POST", API_ROUTES.auth.login, {
+        email: values.email,
+        password: values.password,
       });
-      
-      if (checkSession.ok) {
-        console.log("Already have a valid session");
-        const sessionData = await checkSession.json();
-        updateSessionState(sessionData);
-        onClose();
-        return;
-      }
-      
-      // No valid session, proceed with direct login using JWT
-      console.log("Attempting direct login with:", { email: values.email });
-      
-      const response = await fetch('/api/auth/direct-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: values.email,
-          password: values.password,
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Login failed");
-      }
       
       const data = await response.json();
-      console.log("Login successful, received data:", data);
       
-      updateSessionState(data);
+      setSession({
+        user: data.user,
+        isAuthenticated: true,
+        tier: data.user.subscriptionTier,
+        usage: {
+          current: data.user.monthlyUsage,
+          limit: data.usageLimit,
+          resetDate: data.user.usageResetDate,
+        },
+      });
       
       toast({
         title: "Welcome back!",
@@ -118,97 +98,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       setIsLoading(false);
     }
   };
-  
-  // Helper function to update session state with consistent formatting
-  const updateSessionState = (data: any) => {
-    if (!data || !data.user) {
-      console.error("Invalid data received:", data);
-      return;
-    }
-    
-    console.log("Updating session with:", data);
-    
-    // Store JWT token if it exists
-    if (data.token) {
-      console.log("Storing JWT token in localStorage");
-      localStorage.setItem('jwt_token', data.token);
-    } else {
-      console.warn("No JWT token received from server");
-    }
-    
-    // Set the session with a small delay to ensure state updates properly 
-    setTimeout(() => {
-      setSession({
-        user: data.user,
-        isAuthenticated: true,
-        isLoading: false,
-        tier: data.user.subscriptionTier || "free",
-        usage: {
-          current: data.user.monthlyUsage || 0,
-          limit: data.usageLimit || 3,
-          resetDate: data.user.usageResetDate || new Date().toISOString(),
-        },
-        refillPackCredits: data.user.refillPackCredits || 0,
-      });
-      
-      // Force a page reload after successful login to ensure session is recognized
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 500);
-    }, 100);
-  };
 
   const toggleRegister = () => {
     form.reset();
     setShowRegister(!showRegister);
-  };
-
-  // Handle registration
-  const handleRegister = async (values: z.infer<typeof loginSchema>) => {
-    setIsLoading(true);
-    try {
-      // No valid session, proceed with registration
-      console.log("Attempting registration with:", { email: values.email });
-      
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: values.email.split('@')[0], // Default username from email
-          email: values.email,
-          password: values.password,
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Registration failed");
-      }
-      
-      const data = await response.json();
-      console.log("Registration successful, received data:", data);
-      
-      updateSessionState(data);
-      
-      toast({
-        title: "Account created!",
-        description: "You have successfully created an account.",
-      });
-      
-      onClose();
-      navigate("/");
-    } catch (error) {
-      console.error("Registration error:", error);
-      toast({
-        title: "Registration failed",
-        description: error instanceof Error ? error.message : "Could not create account",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -226,10 +119,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         </DialogHeader>
 
         <Form {...form}>
-          <form 
-            onSubmit={form.handleSubmit(showRegister ? handleRegister : onSubmit)} 
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="email"

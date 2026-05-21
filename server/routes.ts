@@ -4,8 +4,6 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { authenticateUser, requireAuth } from "./middleware/auth";
 import { checkSubscription } from "./middleware/subscription";
-import { setupAuth } from "./auth";
-import { generateToken } from "./middleware/jwt-auth";
 
 // Import validation middleware
 import { z } from "zod";
@@ -71,49 +69,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).send('OK');
   });
 
-  // Setup authentication with Passport.js
-  setupAuth(app);
-  
-  // Add direct JWT login endpoint that doesn't rely on sessions
-  app.post("/api/auth/direct-login", async (req, res) => {
+  // Setup session middleware
+  const PostgresStore = pgSession(session);
+  app.use(session({
+    store: new PostgresStore({
+      pool: pool,
+      tableName: 'user_sessions'
+    }),
+    secret: process.env.SESSION_SECRET || 'latex-generator-session-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      secure: false, // Set to false for development to work without HTTPS
+      httpOnly: true,
+      sameSite: 'lax', // This helps with cross-site request issues
+    },
+    name: 'latex.sid' // Custom name to avoid conflicts
+  }));
+  // Authentication routes
+  app.post("/api/auth/register", async (req: Request, res: Response) => {
+    const { username, email, password } = req.body;
+    
     try {
-      const { email, password } = req.body;
+      const result = await storage.createUser(username, email, password);
       
-      if (!email || !password) {
-        return res.status(400).json({ message: "Email and password required" });
+      if (result.success) {
+        req.session.userId = result.user.id;
+        return res.status(201).json({
+          user: result.user,
+          usageLimit: result.usageLimit
+        });
+      } else {
+        return res.status(400).json({ message: result.error });
       }
-      
-      // Manually validate user
-      const result = await storage.validateUser(email, password);
-      
-      if (!result.success || !result.user) {
-        return res.status(401).json({ message: result.error || "Invalid credentials" });
-      }
-      
-      // Generate JWT token
-      const token = generateToken(result.user.id);
-      
-      // Get user's usage limit
-      const usageLimit = await storage.getUserUsageLimit(result.user);
-      
-      // Return user data with token
-      return res.status(200).json({
-        user: result.user,
-        token,
-        usageLimit,
-        message: "Login successful"
-      });
     } catch (error) {
-      console.error("Direct login error:", error);
-      return res.status(500).json({ message: "Server error during login" });
+      console.error("Registration error:", error);
+      return res.status(500).json({ message: "Registration failed" });
     }
   });
-  
-  // Debugging middleware for sessions
-  app.use((req, res, next) => {
-    console.debug(`Session ID: ${req.sessionID}`);
-    console.debug(`Session user ID: ${req.user?.id}`);
-    next();
+
+  app.post("/api/auth/login", async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+    
+    try {
+      const result = await storage.validateUser(email, password);
+      
+      if (result.success) {
+        req.session.userId = result.user.id;
+        return res.status(200).json({
+          user: result.user,
+          usageLimit: result.usageLimit
+        });
+      } else {
+        return res.status(401).json({ message: result.error });
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      return res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req: Request, res: Response) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      
+      res.clearCookie("latex.sid"); // Use the same name we set for the session cookie
+      return res.status(200).json({ message: "Logged out successfully" });
+    });
+  });
+
+  app.get("/api/auth/me", authenticateUser, async (req: Request, res: Response) => {
+    const userId = req.session.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    try {
+      const user = await storage.getUserById(userId);
+      
+      if (!user) {
+        console.log(`User with ID ${userId} not found in database`);
+        // Clear invalid session
+        req.session.userId = undefined;
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const usageLimit = await storage.getUserUsageLimit(user);
+      
+      return res.status(200).json({
+        user,
+        usageLimit
+      });
+    } catch (error) {
+      console.error("Get user error:", error);
+      return res.status(500).json({ message: "Failed to get user data" });
+    }
   });
 
   // LaTeX Generation Routes
@@ -123,8 +178,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     validateRequest(generateLatexSchema),
     async (req: Request, res: Response) => {
       const { content, documentType, options } = req.body;
-      const userId = req.user?.id; // Get user ID from Passport
-      const isAuthenticated = req.isAuthenticated(); // Check if user is authenticated
+      const userId = req.session.userId; // May be undefined for guest users
+      const isAuthenticated = !!userId; // Check if user is authenticated
       const shouldCompile = req.body.compile === true; // Optional flag to compile or not
       
       try {
@@ -231,7 +286,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/documents", 
     requireAuth,
     async (req: Request, res: Response) => {
-      const userId = req.user.id;
+      const userId = req.session.userId;
       
       try {
         const documents = await storage.getUserDocuments(userId);
@@ -247,7 +302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: Request, res: Response) => {
       const documentId = parseInt(req.params.id);
-      const userId = req.user.id;
+      const userId = req.session.userId;
       
       if (isNaN(documentId)) {
         return res.status(400).json({ message: "Invalid document ID" });
@@ -276,7 +331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: Request, res: Response) => {
       const documentId = parseInt(req.params.id);
-      const userId = req.user.id;
+      const userId = req.session.userId;
       
       if (isNaN(documentId)) {
         return res.status(400).json({ message: "Invalid document ID" });
@@ -317,7 +372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/documents", 
     requireAuth,
     async (req: Request, res: Response) => {
-      const userId = req.user.id;
+      const userId = req.session.userId;
       const { title, inputContent, latexContent, documentType, compilationSuccessful, compilationError } = req.body;
       
       try {
@@ -343,7 +398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: Request, res: Response) => {
       const documentId = parseInt(req.params.id);
-      const userId = req.user.id;
+      const userId = req.session.userId;
       
       if (isNaN(documentId)) {
         return res.status(400).json({ message: "Invalid document ID" });
@@ -383,7 +438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: Request, res: Response) => {
       const documentId = parseInt(req.params.id);
-      const userId = req.user.id;
+      const userId = req.session.userId;
       
       if (isNaN(documentId)) {
         return res.status(400).json({ message: "Invalid document ID" });
@@ -419,7 +474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { tier } = req.body;
-      const userId = req.user.id;
+      const userId = req.session.userId;
       
       try {
         const user = await storage.getUserById(userId);
@@ -472,7 +527,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Stripe is not configured" });
       }
       
-      const userId = req.user.id;
+      const userId = req.session.userId;
       
       try {
         const user = await storage.getUserById(userId);
@@ -778,51 +833,4 @@ function getDocumentTitle(content: string): string {
   }
   
   return "Untitled Document";
-}
-
-/**
- * Temporary migration endpoint - to be removed after all users are migrated 
- */
-import { migrateUserPassword, migrateAllUsersToNewPasswordFormat } from "./utils/password-migration";
-
-export function addMigrationEndpoints(app: Express) {
-  // Add this endpoint for individual password migration
-  app.post("/api/auth/migrate-password", async (req: Request, res: Response) => {
-    try {
-      const { userId, password } = req.body;
-      
-      if (!userId || !password) {
-        return res.status(400).json({ message: "Missing userId or password" });
-      }
-      
-      const success = await migrateUserPassword(userId, password);
-      
-      if (success) {
-        return res.status(200).json({ message: "Password migrated successfully" });
-      } else {
-        return res.status(500).json({ message: "Failed to migrate password" });
-      }
-    } catch (error) {
-      console.error('Password migration error:', error);
-      return res.status(500).json({ message: "Server error during password migration" });
-    }
-  });
-
-  // Add this endpoint for bulk password migration
-  app.post("/api/auth/migrate-all-passwords", async (req: Request, res: Response) => {
-    try {
-      const { adminPassword } = req.body;
-      
-      if (!adminPassword) {
-        return res.status(400).json({ message: "Missing admin password" });
-      }
-      
-      const result = await migrateAllUsersToNewPasswordFormat(adminPassword);
-      
-      return res.status(200).json(result);
-    } catch (error) {
-      console.error('Bulk password migration error:', error);
-      return res.status(500).json({ message: "Server error during bulk password migration" });
-    }
-  });
 }

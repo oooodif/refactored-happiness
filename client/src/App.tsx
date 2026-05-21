@@ -11,7 +11,6 @@ import Register from "@/pages/register";
 import Account from "@/pages/account";
 import Subscribe from "@/pages/subscribe";
 import DocumentHistory from "@/pages/document-history";
-import DirectLogin from "@/pages/direct-login";
 import NotFound from "@/pages/not-found";
 
 // Components
@@ -52,20 +51,15 @@ export const AuthRequiredContext = createContext<{
   setShowAuthPrompt: () => {},
 });
 
-// Import auth test page
-import AuthTest from "@/pages/auth-test";
-
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
-      <Route path="/direct-login" component={DirectLogin} />
       <Route path="/register" component={Register} />
       <Route path="/account" component={Account} />
       <Route path="/subscribe" component={Subscribe} />
       <Route path="/history" component={DocumentHistory} />
-      <Route path="/auth-test" component={AuthTest} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -95,41 +89,17 @@ function App() {
     async function checkAuthStatus() {
       try {
         console.log("Checking authentication status...");
-        
-        // Get JWT token if it exists in localStorage
-        const token = localStorage.getItem('jwt_token');
-        
-        // Prepare headers
-        const headers: Record<string, string> = {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
-        };
-        
-        // Add JWT token if it exists
-        if (token) {
-          headers["Authorization"] = `Bearer ${token}`;
-          console.log("Including JWT token in auth check");
-        } else {
-          console.log("No JWT token found in localStorage");
-        }
-        
-        // Using fetch with credentials included for session cookies
-        // and headers for JWT token
-        const response = await fetch('/api/auth/me', { 
-          method: 'GET',
-          credentials: "include", // For backward compatibility with session cookies
-          headers
+        const response = await fetch(API_ROUTES.auth.me, { 
+          credentials: "include",
+          headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+          }
         });
         
         if (!response.ok) {
           if (response.status === 401) {
             console.log("User not authenticated");
-            // If token exists but auth failed, clear it
-            if (token) {
-              console.log("Clearing invalid JWT token");
-              localStorage.removeItem('jwt_token');
-            }
           } else if (response.status === 404) {
             console.log("User not found - may have been deleted");
           } else {
@@ -150,7 +120,7 @@ function App() {
           user: data.user,
           isAuthenticated: true,
           isLoading: false,
-          tier: data.user.subscriptionTier || SubscriptionTier.Free,
+          tier: data.user.subscriptionTier || "free",
           usage: {
             current: data.user.monthlyUsage || 0,
             limit: data.usageLimit || 3,
@@ -164,19 +134,12 @@ function App() {
           ...prev,
           isAuthenticated: false,
           isLoading: false,
-          user: null,
-          tier: SubscriptionTier.Free,
+          user: null
         }));
       }
     }
     
-    // Call immediately
     checkAuthStatus();
-    
-    // Set up a periodic check every 30 seconds to keep session fresh
-    const interval = setInterval(checkAuthStatus, 30000);
-    
-    return () => clearInterval(interval);
   }, []);
 
   return (

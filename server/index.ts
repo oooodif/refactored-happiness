@@ -1,7 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { authenticateJWT } from "./middleware/jwt-auth";
 
 const app = express();
 
@@ -12,13 +11,6 @@ app.get('/health', (req, res) => {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// Add test auth route
-import testAuthRouter from './test-auth.js';
-app.use('/test-auth', testAuthRouter);
-
-// Add JWT authentication middleware to all routes
-app.use(authenticateJWT);
 
 app.use((req, res, next) => {
   const start = Date.now();

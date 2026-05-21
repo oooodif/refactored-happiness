@@ -12,26 +12,11 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Get JWT token if it exists in localStorage
-  const token = localStorage.getItem('jwt_token');
-  
-  // Prepare headers with content type if we have data
-  const headers: Record<string, string> = {};
-  
-  if (data) {
-    headers["Content-Type"] = "application/json";
-  }
-  
-  // Add JWT token if it exists
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  
   const res = await fetch(url, {
     method,
-    headers,
+    headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include", // Still include cookies for backward compatibility
+    credentials: "include",
   });
 
   await throwIfResNotOk(res);
@@ -44,20 +29,8 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Get JWT token if it exists in localStorage
-    const token = localStorage.getItem('jwt_token');
-    
-    // Prepare headers
-    const headers: Record<string, string> = {};
-    
-    // Add JWT token if it exists
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-    
     const res = await fetch(queryKey[0] as string, {
-      headers,
-      credentials: "include", // Still include cookies for backward compatibility
+      credentials: "include",
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

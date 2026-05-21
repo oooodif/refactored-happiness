@@ -66,14 +66,6 @@ export default function Login() {
       
       const data = await response.json();
       
-      // Store JWT token in localStorage if it's provided in the response
-      if (data.token) {
-        console.log("Storing JWT token in localStorage");
-        localStorage.setItem('jwt_token', data.token);
-      } else {
-        console.log("No JWT token received from server");
-      }
-      
       setSession({
         user: data.user,
         isAuthenticated: true,

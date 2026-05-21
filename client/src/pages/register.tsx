@@ -70,14 +70,6 @@ export default function Register() {
       
       const data = await response.json();
       
-      // Store JWT token in localStorage if it's provided in the response
-      if (data.token) {
-        console.log("Storing JWT token from registration in localStorage");
-        localStorage.setItem('jwt_token', data.token);
-      } else {
-        console.log("No JWT token received from server during registration");
-      }
-      
       setSession({
         user: data.user,
         isAuthenticated: true,

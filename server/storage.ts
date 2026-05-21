@@ -10,7 +10,7 @@ import {
   tierLimits
 } from "@shared/schema";
 import { hashPassword, comparePassword } from "./services/authService";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 
 /**
  * Storage interface for database operations
@@ -76,12 +76,9 @@ export const storage = {
     usageLimit?: number;
   }> {
     try {
-      // Convert email to lowercase to make login case-insensitive
-      const normalizedEmail = email.toLowerCase();
-      
-      // Find user by email (case-insensitive)
+      // Find user by email
       const user = await db.query.users.findFirst({
-        where: (users) => eq(sql`LOWER(${users.email})`, normalizedEmail)
+        where: (users) => eq(users.email, email)
       });
       
       if (!user) {
@@ -133,10 +130,8 @@ export const storage = {
   
   async getUserByEmail(email: string): Promise<User | null> {
     try {
-      // Make email lookup case-insensitive as well
-      const normalizedEmail = email.toLowerCase();
       const user = await db.query.users.findFirst({
-        where: (users) => eq(sql`LOWER(${users.email})`, normalizedEmail)
+        where: (users) => eq(users.email, email)
       });
       
       return user || null;
