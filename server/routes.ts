@@ -74,7 +74,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(session({
     store: new PostgresStore({
       pool: pool,
-      tableName: 'user_sessions'
+      tableName: 'sessions',  // Changed from user_sessions to sessions
+      createTableIfMissing: true  // Auto-create the table if it doesn't exist
     }),
     secret: process.env.SESSION_SECRET || 'latex-generator-session-secret',
     resave: false,
