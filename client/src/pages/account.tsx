@@ -35,11 +35,30 @@ export default function Account() {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!session.isAuthenticated) {
+    console.log("Account page session:", session);
+    if (!session.isLoading && !session.isAuthenticated) {
+      console.log("Not authenticated, redirecting to login");
       navigate("/login");
     }
-  }, [session.isAuthenticated, navigate]);
+  }, [session.isLoading, session.isAuthenticated, navigate]);
 
+  // Show loading state while checking authentication
+  if (session.isLoading) {
+    return (
+      <SiteLayout fullHeight={false}>
+        <div className="flex h-[50vh] items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-e-transparent align-[-0.125em]" role="status">
+              <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+            </div>
+            <p className="mt-2 text-gray-600">Loading your account information...</p>
+          </div>
+        </div>
+      </SiteLayout>
+    );
+  }
+
+  // Return null if not authenticated
   if (!session.isAuthenticated || !session.user) {
     return null;
   }

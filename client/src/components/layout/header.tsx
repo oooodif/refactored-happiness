@@ -22,12 +22,14 @@ export default function Header() {
       setSession({
         user: null,
         isAuthenticated: false,
-        tier: "free",
+        isLoading: false,
+        tier: SubscriptionTier.Free,
         usage: {
           current: 0,
           limit: 3,
           resetDate: new Date().toISOString(),
         },
+        refillPackCredits: 0,
       });
       toast({
         title: "Logged out",

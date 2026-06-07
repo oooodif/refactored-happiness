@@ -72,12 +72,14 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       setSession({
         user: data.user,
         isAuthenticated: true,
-        tier: data.user.subscriptionTier,
+        isLoading: false,
+        tier: data.user.subscriptionTier || "free",
         usage: {
-          current: data.user.monthlyUsage,
-          limit: data.usageLimit,
-          resetDate: data.user.usageResetDate,
+          current: data.user.monthlyUsage || 0,
+          limit: data.usageLimit || 3,
+          resetDate: data.user.usageResetDate || new Date().toISOString(),
         },
+        refillPackCredits: data.user.refillPackCredits || 0,
       });
       
       toast({
