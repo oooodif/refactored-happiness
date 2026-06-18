@@ -89,47 +89,74 @@ function App() {
     async function checkAuthStatus() {
       try {
         console.log("Checking authentication status...");
-        const response = await fetch(API_ROUTES.auth.me, { 
-          credentials: "include",
-          headers: {
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache'
-          }
-        });
         
-        if (!response.ok) {
-          if (response.status === 401) {
-            console.log("User not authenticated");
-          } else if (response.status === 404) {
-            console.log("User not found - may have been deleted");
-          } else {
-            console.log(`Auth check failed with status: ${response.status}`);
-          }
-          throw new Error(`Not authenticated: ${response.status}`);
-        }
+        // Use XMLHttpRequest instead of fetch to ensure cookies are sent properly
+        const xhr = new XMLHttpRequest();
+        xhr.withCredentials = true;
         
-        const data = await response.json();
-        console.log("Authentication successful:", data);
-        
-        if (!data.user) {
-          throw new Error("User data not found in response");
-        }
-        
-        // Successfully authenticated
-        setSession({
-          user: data.user,
-          isAuthenticated: true,
-          isLoading: false,
-          tier: data.user.subscriptionTier || "free",
-          usage: {
-            current: data.user.monthlyUsage || 0,
-            limit: data.usageLimit || 3,
-            resetDate: data.user.usageResetDate || new Date().toISOString(),
-          },
-          refillPackCredits: data.user.refillPackCredits || 0,
+        return new Promise<void>((resolve) => {
+          xhr.onreadystatechange = function() {
+            if (xhr.readyState !== 4) return;
+            
+            if (xhr.status === 200) {
+              try {
+                const data = JSON.parse(xhr.responseText);
+                console.log("Authentication successful:", data);
+                
+                if (!data.user) {
+                  console.error("User data not found in response");
+                  throw new Error("User data not found in response");
+                }
+                
+                // Successfully authenticated
+                setSession({
+                  user: data.user,
+                  isAuthenticated: true,
+                  isLoading: false,
+                  tier: data.user.subscriptionTier || SubscriptionTier.Free,
+                  usage: {
+                    current: data.user.monthlyUsage || 0,
+                    limit: data.usageLimit || 3,
+                    resetDate: data.user.usageResetDate || new Date().toISOString(),
+                  },
+                  refillPackCredits: data.user.refillPackCredits || 0,
+                });
+              } catch (parseError) {
+                console.error("Error parsing auth response:", parseError);
+                setSession(prev => ({
+                  ...prev,
+                  isAuthenticated: false,
+                  isLoading: false,
+                  user: null
+                }));
+              }
+            } else {
+              if (xhr.status === 401) {
+                console.log("User not authenticated");
+              } else if (xhr.status === 404) {
+                console.log("User not found - may have been deleted");
+              } else {
+                console.log(`Auth check failed with status: ${xhr.status}`);
+              }
+              
+              setSession(prev => ({
+                ...prev,
+                isAuthenticated: false,
+                isLoading: false,
+                user: null
+              }));
+            }
+            
+            resolve();
+          };
+          
+          xhr.open("GET", API_ROUTES.auth.me, true);
+          xhr.setRequestHeader("Accept", "application/json");
+          xhr.setRequestHeader("Cache-Control", "no-cache");
+          xhr.send();
         });
       } catch (err: any) {
-        console.log("Not logged in:", err.message);
+        console.log("Auth check error:", err.message);
         setSession(prev => ({
           ...prev,
           isAuthenticated: false,

@@ -43,6 +43,12 @@ const loginSchema = z.object({
   rememberMe: z.boolean().default(false),
 });
 
+const registerSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -50,30 +56,54 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [, navigate] = useLocation();
   const [showRegister, setShowRegister] = useState(false);
 
-  const form = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      rememberMe: false,
-    },
+  // Use the appropriate schema based on whether we're showing the register form
+  const currentSchema = showRegister ? registerSchema : loginSchema;
+  
+  // Form with dynamic schema resolution
+  const form = useForm<z.infer<typeof currentSchema>>({
+    resolver: zodResolver(currentSchema),
+    defaultValues: showRegister 
+      ? {
+          username: "",
+          email: "",
+          password: "",
+        }
+      : {
+          email: "",
+          password: "",
+          rememberMe: false,
+        },
   });
 
-  const onSubmit = async (values: z.infer<typeof loginSchema>) => {
+  // Type-safe onSubmit that handles both login and register forms
+  const onSubmit = async (values: any) => {
     setIsLoading(true);
     try {
-      const response = await apiRequest("POST", API_ROUTES.auth.login, {
-        email: values.email,
-        password: values.password,
-      });
+      // Choose the endpoint based on whether we're registering or logging in
+      const endpoint = showRegister ? API_ROUTES.auth.register : API_ROUTES.auth.login;
       
+      // Prepare the data we'll send to the server
+      const requestData = showRegister 
+        ? {
+            username: values.username,
+            email: values.email,
+            password: values.password
+          }
+        : {
+            email: values.email,
+            password: values.password
+          };
+      
+      // Make the API request
+      const response = await apiRequest("POST", endpoint, requestData);
       const data = await response.json();
       
+      // Set the session with the user data
       setSession({
         user: data.user,
         isAuthenticated: true,
         isLoading: false,
-        tier: data.user.subscriptionTier || "free",
+        tier: data.user.subscriptionTier || SubscriptionTier.Free,
         usage: {
           current: data.user.monthlyUsage || 0,
           limit: data.usageLimit || 3,
@@ -82,18 +112,22 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         refillPackCredits: data.user.refillPackCredits || 0,
       });
       
+      // Show a success message
       toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in.",
+        title: showRegister ? "Account Created!" : "Welcome back!",
+        description: showRegister 
+          ? "Your account has been created successfully." 
+          : "You have successfully logged in.",
       });
       
+      // Close the modal and navigate to the home page
       onClose();
       navigate("/");
     } catch (error) {
-      console.error("Login error:", error);
+      console.error(showRegister ? "Registration error:" : "Login error:", error);
       toast({
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "Invalid email or password",
+        title: showRegister ? "Registration failed" : "Login failed",
+        description: error instanceof Error ? error.message : "Invalid credentials",
         variant: "destructive",
       });
     } finally {
@@ -122,6 +156,28 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Username field - only show when registering */}
+            {showRegister && (
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="yourname"
+                        type="text"
+                        autoComplete="username"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            
             <FormField
               control={form.control}
               name="email"
