@@ -7,7 +7,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { UserContext } from "@/App";
 import { useLocation } from "wouter";
 import { API_ROUTES } from "@/lib/constants";
-import { LoginCredentials } from "@shared/schema";
+import { LoginCredentials, SubscriptionTier } from "@shared/schema";
 
 import {
   Dialog,

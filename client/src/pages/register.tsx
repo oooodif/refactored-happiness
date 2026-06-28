@@ -7,6 +7,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { UserContext } from "@/App";
 import { useLocation } from "wouter";
 import { API_ROUTES } from "@/lib/constants";
+import { SubscriptionTier } from "@shared/schema";
 import SiteLayout from "@/components/layout/site-layout";
 
 import {
@@ -70,15 +71,19 @@ export default function Register() {
       
       const data = await response.json();
       
+      if (!data.user) {
+        throw new Error("Registration failed: Invalid response from server");
+      }
+      
       setSession({
         user: data.user,
         isAuthenticated: true,
         isLoading: false,
-        tier: data.user.subscriptionTier,
+        tier: data.user.subscriptionTier || SubscriptionTier.Free,
         usage: {
-          current: data.user.monthlyUsage,
-          limit: data.usageLimit,
-          resetDate: data.user.usageResetDate,
+          current: data.user.monthlyUsage || 0,
+          limit: data.usageLimit || 3,
+          resetDate: data.user.usageResetDate || null,
         },
         refillPackCredits: data.user.refillPackCredits || 0,
       });

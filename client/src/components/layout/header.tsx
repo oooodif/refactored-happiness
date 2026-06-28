@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import LoginModal from "@/components/dialogs/login-modal";
 import SubscriptionModal from "@/components/dialogs/subscription-modal";
 import { getUsageColor } from "@/lib/utils";
+import { SubscriptionTier } from "@shared/schema";
 
 export default function Header() {
   const [location, navigate] = useLocation();
