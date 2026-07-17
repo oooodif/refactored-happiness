@@ -7,7 +7,7 @@ async function createSessionTable() {
   try {
     // SQL for creating session table based on connect-pg-simple
     const createTableSQL = `
-      CREATE TABLE IF NOT EXISTS "user_sessions" (
+      CREATE TABLE IF NOT EXISTS "session" (
         "sid" varchar NOT NULL COLLATE "default",
         "sess" json NOT NULL,
         "expire" timestamp(6) NOT NULL,
@@ -17,7 +17,7 @@ async function createSessionTable() {
     
     // Create index on expire field
     const createIndexSQL = `
-      CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "user_sessions" ("expire")
+      CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire")
     `;
     
     // Execute queries
