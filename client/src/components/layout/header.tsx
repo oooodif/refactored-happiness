@@ -16,6 +16,13 @@ export default function Header() {
   const { toast } = useToast();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  
+  // Debug log to check authentication state
+  console.log("Header authentication state:", {
+    isAuthenticated: session.isAuthenticated,
+    user: session.user,
+    tier: session.tier
+  });
 
   const handleLogout = async () => {
     try {
