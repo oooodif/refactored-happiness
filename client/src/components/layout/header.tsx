@@ -17,12 +17,54 @@ export default function Header() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   
-  // Debug log to check authentication state
-  console.log("Header authentication state:", {
-    isAuthenticated: session.isAuthenticated,
-    user: session.user,
-    tier: session.tier
-  });
+  // Force authentication check on component mount
+  useEffect(() => {
+    // Log current authentication state
+    console.log("Header authentication state:", {
+      isAuthenticated: session.isAuthenticated,
+      user: session.user,
+      tier: session.tier
+    });
+
+    // If not authenticated but should be, trigger a re-fetch from the server
+    if (!session.isAuthenticated) {
+      console.log("Triggering authentication check from header");
+      const checkAuth = async () => {
+        try {
+          const response = await fetch('/api/auth/me', {
+            credentials: 'include',
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.user) {
+              console.log("Successfully reloaded auth state:", data);
+              setSession({
+                user: data.user,
+                isAuthenticated: true,
+                isLoading: false,
+                tier: data.user.subscriptionTier || SubscriptionTier.Free,
+                usage: {
+                  current: data.user.monthlyUsage || 0,
+                  limit: data.usageLimit || 3,
+                  resetDate: data.user.usageResetDate || new Date().toISOString(),
+                },
+                refillPackCredits: data.user.refillPackCredits || 0,
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Error checking auth:", error);
+        }
+      };
+
+      checkAuth();
+    }
+  }, []);
 
   const handleLogout = async () => {
     try {
