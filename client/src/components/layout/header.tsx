@@ -93,7 +93,9 @@ export default function Header() {
                 >
                   {session.user?.username}
                 </Button>
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 hidden group-hover:block">
+                {/* Add a transparent padding area to connect the button and dropdown */}
+                <div className="absolute right-0 top-full h-2 w-full"></div>
+                <div className="absolute right-0 top-[calc(100%+2px)] w-48 bg-white rounded-md shadow-lg z-10 hidden group-hover:block">
                   <div className="py-1">
                     <Link href="/account" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                       Account
