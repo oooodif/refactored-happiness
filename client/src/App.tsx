@@ -88,75 +88,51 @@ function App() {
     // Check if user is logged in
     async function checkAuthStatus() {
       try {
-        console.log("Checking authentication status...");
-        
-        // Use XMLHttpRequest instead of fetch to ensure cookies are sent properly
-        const xhr = new XMLHttpRequest();
-        xhr.withCredentials = true;
-        
-        return new Promise<void>((resolve) => {
-          xhr.onreadystatechange = function() {
-            if (xhr.readyState !== 4) return;
-            
-            if (xhr.status === 200) {
-              try {
-                const data = JSON.parse(xhr.responseText);
-                console.log("Authentication successful:", data);
-                
-                if (!data.user) {
-                  console.error("User data not found in response");
-                  throw new Error("User data not found in response");
-                }
-                
-                // Successfully authenticated
-                setSession({
-                  user: data.user,
-                  isAuthenticated: true,
-                  isLoading: false,
-                  tier: data.user.subscriptionTier || SubscriptionTier.Free,
-                  usage: {
-                    current: data.user.monthlyUsage || 0,
-                    limit: data.usageLimit || 3,
-                    resetDate: data.user.usageResetDate || new Date().toISOString(),
-                  },
-                  refillPackCredits: data.user.refillPackCredits || 0,
-                });
-              } catch (parseError) {
-                console.error("Error parsing auth response:", parseError);
-                setSession(prev => ({
-                  ...prev,
-                  isAuthenticated: false,
-                  isLoading: false,
-                  user: null
-                }));
-              }
-            } else {
-              if (xhr.status === 401) {
-                console.log("User not authenticated");
-              } else if (xhr.status === 404) {
-                console.log("User not found - may have been deleted");
-              } else {
-                console.log(`Auth check failed with status: ${xhr.status}`);
-              }
-              
-              setSession(prev => ({
-                ...prev,
-                isAuthenticated: false,
-                isLoading: false,
-                user: null
-              }));
-            }
-            
-            resolve();
-          };
-          
-          xhr.open("GET", API_ROUTES.auth.me, true);
-          xhr.setRequestHeader("Accept", "application/json");
-          xhr.setRequestHeader("Cache-Control", "no-cache");
-          xhr.send();
+        // Use standard fetch with proper credentials
+        const response = await fetch(API_ROUTES.auth.me, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+          }
         });
+
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.user) {
+            console.log("Authentication successful, user:", data.user.username);
+            
+            // Successfully authenticated - set the session data
+            setSession({
+              user: data.user,
+              isAuthenticated: true,
+              isLoading: false,
+              tier: data.user.subscriptionTier || SubscriptionTier.Free,
+              usage: {
+                current: data.user.monthlyUsage || 0,
+                limit: data.usageLimit || 3,
+                resetDate: data.user.usageResetDate || new Date().toISOString(),
+              },
+              refillPackCredits: data.user.refillPackCredits || 0,
+            });
+            
+            // IMPORTANT: Set a cookie directly in case the server cookie isn't working
+            // This is a backup to keep track of login state client-side
+            document.cookie = `userLoggedIn=true; path=/; max-age=${30*24*60*60}`;
+            localStorage.setItem('userLoggedIn', 'true');
+          }
+        } else {
+          setSession(prev => ({
+            ...prev,
+            isAuthenticated: false,
+            isLoading: false,
+            user: null
+          }));
+        }
       } catch (err: any) {
-        console.log("Auth check error:", err.message);
+        console.error("Auth check error:", err);
         setSession(prev => ({
           ...prev,
           isAuthenticated: false,
@@ -166,7 +142,22 @@ function App() {
       }
     }
     
+    // Check for backup login indicators
+    const hasBackupCookie = document.cookie.includes('userLoggedIn=true');
+    const hasLocalStorage = localStorage.getItem('userLoggedIn') === 'true';
+    
+    // If we have a backup indicator but aren't currently authenticated, force a check
+    if ((hasBackupCookie || hasLocalStorage) && !session.isAuthenticated && !session.isLoading) {
+      console.log("Backup login state detected, rechecking authentication");
+    }
+    
+    // Always check authentication on load
     checkAuthStatus();
+    
+    // Set up a refresh interval to periodically verify auth status
+    const refreshInterval = setInterval(checkAuthStatus, 60000); // Check every minute
+    
+    return () => clearInterval(refreshInterval);
   }, []);
 
   return (
