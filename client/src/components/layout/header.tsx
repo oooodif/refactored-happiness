@@ -26,7 +26,7 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      await apiRequest("POST", API_ROUTES.auth.logout, {});
+      // Clear client-side state first for immediate feedback
       setSession({
         user: null,
         isAuthenticated: false,
@@ -39,15 +39,26 @@ export default function Header() {
         },
         refillPackCredits: 0,
       });
+      
+      // Clear all backup login state
+      document.cookie = "userLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      localStorage.removeItem('userLoggedIn');
+      
+      // Tell the server to clear its session
+      await apiRequest("POST", API_ROUTES.auth.logout, {});
+      
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
       });
+      
+      // Navigate to home page
       navigate("/");
     } catch (error) {
+      console.error("Logout error:", error);
       toast({
         title: "Error",
-        description: "Failed to log out. Please try again.",
+        description: "There was an issue logging out, but your local session has been cleared.",
         variant: "destructive",
       });
     }
@@ -86,20 +97,23 @@ export default function Header() {
                   History
                 </Link>
               )}
-              {/* Simpler dropdown that doesn't rely on hover */}
-              <div className="relative">
-                <div className="flex items-center">
+              {/* Standard buttons instead of dropdown */}
+              <div className="flex items-center gap-2">
+                <Link href="/account">
                   <Button
                     variant="ghost"
-                    className="text-sm text-gray-600 hover:text-gray-800 font-medium flex items-center"
-                    onClick={() => {
-                      // Just go directly to account page
-                      navigate("/account");
-                    }}
+                    className="text-sm text-gray-600 hover:text-gray-800 font-medium"
                   >
                     {session.user?.username}
                   </Button>
-                </div>
+                </Link>
+                <Button
+                  variant="ghost"
+                  className="text-sm text-red-600 hover:text-red-800 font-medium"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
               </div>
               <Button 
                 onClick={() => setShowSubscriptionModal(true)}
