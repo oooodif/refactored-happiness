@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import LoginModal from "@/components/dialogs/login-modal";
 import SubscriptionModal from "@/components/dialogs/subscription-modal";
 import { getUsageColor } from "@/lib/utils";
-import { SubscriptionTier } from "@shared/schema";
+import { SubscriptionTier } from "@shared/schema.ts";
 
 export default function Header() {
   const [location, navigate] = useLocation();
@@ -86,27 +86,19 @@ export default function Header() {
                   History
                 </Link>
               )}
-              <div className="relative group">
-                <Button
-                  variant="ghost"
-                  className="text-sm text-gray-600 hover:text-gray-800 font-medium"
-                >
-                  {session.user?.username}
-                </Button>
-                {/* Add a transparent padding area to connect the button and dropdown */}
-                <div className="absolute right-0 top-full h-2 w-full"></div>
-                <div className="absolute right-0 top-[calc(100%+2px)] w-48 bg-white rounded-md shadow-lg z-10 hidden group-hover:block">
-                  <div className="py-1">
-                    <Link href="/account" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      Account
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Sign out
-                    </button>
-                  </div>
+              {/* Simpler dropdown that doesn't rely on hover */}
+              <div className="relative">
+                <div className="flex items-center">
+                  <Button
+                    variant="ghost"
+                    className="text-sm text-gray-600 hover:text-gray-800 font-medium flex items-center"
+                    onClick={() => {
+                      // Just go directly to account page
+                      navigate("/account");
+                    }}
+                  >
+                    {session.user?.username}
+                  </Button>
                 </div>
               </div>
               <Button 
