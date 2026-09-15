@@ -69,24 +69,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).send('OK');
   });
 
-  // Setup session middleware
+  // Enhanced session middleware configuration
   const PostgresStore = pgSession(session);
   app.use(session({
     store: new PostgresStore({
       pool: pool,
       tableName: 'session',
-      createTableIfMissing: false  // Don't try to create the table, it already exists
+      createTableIfMissing: true,  // Ensure the table exists
+      pruneSessionInterval: 60     // Clean old sessions every minute
     }),
     secret: process.env.SESSION_SECRET || 'latex-generator-session-secret',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,                   // Save session even if unmodified
+    rolling: true,                  // Reset expiration with each request
+    saveUninitialized: false,       // Don't save empty sessions
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      secure: false, // Set to false for development to work without HTTPS
+      secure: false,                // Set to false for development to work without HTTPS
       httpOnly: true,
-      sameSite: 'lax', // This helps with cross-site request issues
+      sameSite: 'lax',             // This helps with cross-site request issues
+      path: '/'                     // Ensure cookies are sent with all requests
     },
-    name: 'latex.sid' // Custom name to avoid conflicts
+    name: 'latex.sid'              // Custom name to avoid conflicts
   }));
   // Authentication routes
   app.post("/api/auth/register", async (req: Request, res: Response) => {

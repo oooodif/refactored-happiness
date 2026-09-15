@@ -97,24 +97,23 @@ export default function Header() {
                   History
                 </Link>
               )}
-              {/* Standard buttons instead of dropdown */}
-              <div className="flex items-center gap-2">
-                <Link href="/account">
-                  <Button
-                    variant="ghost"
-                    className="text-sm text-gray-600 hover:text-gray-800 font-medium"
-                  >
-                    {session.user?.username}
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  className="text-sm text-red-600 hover:text-red-800 font-medium"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </Button>
-              </div>
+              {/* Simple buttons for logged-in user actions */}
+              <Button
+                variant="ghost"
+                className="text-sm text-gray-600 hover:text-gray-800 font-medium"
+                onClick={() => navigate("/account")}
+              >
+                {session.user?.username || "My Account"}
+              </Button>
+              
+              <Button
+                type="button" 
+                variant="ghost"
+                className="text-sm text-red-600 hover:text-red-800 font-medium"
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
               <Button 
                 onClick={() => setShowSubscriptionModal(true)}
                 className={session.tier === "free" ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"}

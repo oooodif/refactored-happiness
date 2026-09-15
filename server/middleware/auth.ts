@@ -8,6 +8,23 @@ import { storage } from '../storage';
  */
 export async function authenticateUser(req: Request, res: Response, next: NextFunction) {
   try {
+    // Create a function to set auth cookie directly
+    res.locals.setAuthCookie = (userId: number) => {
+      req.session.userId = userId;
+      req.session.save((err) => {
+        if (err) console.error('Session save error:', err);
+      });
+    };
+
+    // Create a function to clear auth cookie directly
+    res.locals.clearAuthCookie = () => {
+      req.session.destroy((err) => {
+        if (err) console.error('Session destroy error:', err);
+        res.clearCookie('latex.sid');
+      });
+    };
+
+    // Check the session for user ID
     if (req.session && req.session.userId) {
       console.log(`Looking up user ID ${req.session.userId} from session`);
       const user = await storage.getUserById(req.session.userId);
@@ -16,10 +33,13 @@ export async function authenticateUser(req: Request, res: Response, next: NextFu
         console.log(`User found: ${user.username}`);
         // Add user to request object
         (req as any).user = user;
+        
+        // Touch the session to keep it alive (resets expiration)
+        req.session.touch();
       } else {
         console.log(`No user found for ID ${req.session.userId}`);
         // If user no longer exists, clear the session
-        req.session.userId = undefined;
+        res.locals.clearAuthCookie();
       }
     } else {
       console.log('No userId in session');
