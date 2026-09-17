@@ -119,14 +119,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const result = await storage.validateUser(email, password);
       
-      if (result.success) {
+      if (result.success && result.user) {
+        // Set the user ID in the session
         req.session.userId = result.user.id;
-        return res.status(200).json({
-          user: result.user,
-          usageLimit: result.usageLimit
+        
+        // Explicitly save the session to ensure it's persisted
+        req.session.save((err) => {
+          if (err) {
+            console.error("Session save error:", err);
+            return res.status(500).json({ message: "Failed to save session" });
+          }
+          
+          // Set a cookie with a 30-day expiration
+          res.cookie('userLoggedIn', 'true', { 
+            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+            httpOnly: false, // Allow JavaScript access
+            path: '/',
+            sameSite: 'lax'
+          });
+          
+          console.log(`User ${result.user.username} logged in successfully, session ID saved`);
+          
+          return res.status(200).json({
+            user: result.user,
+            usageLimit: result.usageLimit
+          });
         });
       } else {
-        return res.status(401).json({ message: result.error });
+        return res.status(401).json({ message: result.error || "Invalid credentials" });
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -135,13 +155,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/auth/logout", (req: Request, res: Response) => {
+    // Clear the backup cookie first
+    res.clearCookie('userLoggedIn', { 
+      path: '/', 
+      httpOnly: false 
+    });
+    
+    // Then destroy the session
     req.session.destroy((err) => {
       if (err) {
         console.error("Logout error:", err);
         return res.status(500).json({ message: "Logout failed" });
       }
       
-      res.clearCookie("latex.sid"); // Use the same name we set for the session cookie
+      // Clear the session cookie
+      res.clearCookie("latex.sid", { 
+        path: '/' 
+      });
+      
+      console.log("User logged out successfully, session destroyed");
       return res.status(200).json({ message: "Logged out successfully" });
     });
   });

@@ -85,119 +85,97 @@ function App() {
   console.log("Auth prompt state:", showAuthPrompt);
 
   useEffect(() => {
-    // Enhanced authentication check
+    // Simple, direct authentication check
     async function checkAuthStatus() {
       try {
         console.log("Checking authentication status...");
         
-        // Try backup auth first for immediate feedback
-        const hasBackupCookie = document.cookie.includes('userLoggedIn=true');
-        const hasLocalStorage = localStorage.getItem('userLoggedIn') === 'true';
-        const hasSessionStorage = sessionStorage.getItem('userLoggedIn') === 'true';
+        // Set loading state
+        setSession(prev => ({
+          ...prev,
+          isLoading: true
+        }));
         
-        if ((hasBackupCookie || hasLocalStorage || hasSessionStorage) && !session.isAuthenticated) {
-          console.log("Backup login state detected, using temporary session while validating");
-          
-          // Load stored user data if available
-          const savedUser = localStorage.getItem('userData');
-          if (savedUser) {
+        // Direct server check using XMLHttpRequest for maximum compatibility
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', API_ROUTES.auth.me, true);
+        xhr.withCredentials = true;
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('Cache-Control', 'no-cache');
+        
+        xhr.onload = function() {
+          if (xhr.status === 200) {
             try {
-              const parsedUser = JSON.parse(savedUser);
-              setSession({
-                user: parsedUser,
-                isAuthenticated: true,
-                isLoading: true, // Still loading from server
-                tier: parsedUser.subscriptionTier || SubscriptionTier.Free,
-                usage: {
-                  current: parsedUser.monthlyUsage || 0,
-                  limit: parsedUser.usageLimit || 3,
-                  resetDate: parsedUser.usageResetDate || new Date().toISOString(),
-                },
-                refillPackCredits: parsedUser.refillPackCredits || 0,
-              });
+              const data = JSON.parse(xhr.responseText);
+              
+              if (data.user) {
+                console.log("User authenticated:", data.user.username);
+                
+                // Set session data
+                setSession({
+                  user: data.user,
+                  isAuthenticated: true,
+                  isLoading: false,
+                  tier: data.user.subscriptionTier || SubscriptionTier.Free,
+                  usage: {
+                    current: data.user.monthlyUsage || 0,
+                    limit: data.usageLimit || 3,
+                    resetDate: data.user.usageResetDate || new Date().toISOString(),
+                  },
+                  refillPackCredits: data.user.refillPackCredits || 0,
+                });
+              }
             } catch (e) {
-              console.error("Error parsing saved user data:", e);
+              console.error("Error parsing auth response:", e);
+              setSession(prev => ({
+                ...prev,
+                isAuthenticated: false,
+                isLoading: false,
+                user: null
+              }));
             }
-          }
-        }
-        
-        // Always verify with server
-        const response = await fetch(API_ROUTES.auth.me, {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          },
-          // Force fetch to bypass cache
-          cache: 'no-store'
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data.user) {
-            console.log("Authentication successful, server confirmed user:", data.user.username);
-            
-            // Store the user data for backup
-            localStorage.setItem('userData', JSON.stringify(data.user));
-            
-            // Successfully authenticated - set the session data from server
-            setSession({
-              user: data.user,
-              isAuthenticated: true,
+          } else if (xhr.status === 401) {
+            // Not authenticated
+            console.log("User not authenticated");
+            setSession(prev => ({
+              ...prev,
+              isAuthenticated: false,
               isLoading: false,
-              tier: data.user.subscriptionTier || SubscriptionTier.Free,
-              usage: {
-                current: data.user.monthlyUsage || 0,
-                limit: data.usageLimit || 3,
-                resetDate: data.user.usageResetDate || new Date().toISOString(),
-              },
-              refillPackCredits: data.user.refillPackCredits || 0,
-            });
-            
-            // Set all backup login indicators
-            document.cookie = `userLoggedIn=true; path=/; max-age=${30*24*60*60}`;
-            localStorage.setItem('userLoggedIn', 'true');
-            sessionStorage.setItem('userLoggedIn', 'true');
-            
-            return; // Success - exit early
+              user: null
+            }));
+          } else {
+            // Other error
+            console.warn("Auth check error:", xhr.status);
+            setSession(prev => ({
+              ...prev,
+              isLoading: false
+            }));
           }
-        }
+        };
         
-        // Only clear session if we got an explicit 401 Unauthorized
-        if (response.status === 401) {
-          console.log("Server confirmed user is NOT authenticated");
-          
-          // Clear all backup indicators
-          document.cookie = "userLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-          localStorage.removeItem('userLoggedIn');
-          localStorage.removeItem('userData');
-          sessionStorage.removeItem('userLoggedIn');
-          
+        xhr.onerror = function() {
+          console.error("Network error during auth check");
           setSession(prev => ({
             ...prev,
-            isAuthenticated: false,
-            isLoading: false,
-            user: null
+            isLoading: false
           }));
-        } else if (!response.ok) {
-          // Non-401 error, might be temporary server issue
-          // Don't clear session in this case
-          console.warn(`Auth check server error: ${response.status} ${response.statusText}`);
-        }
-      } catch (err: any) {
-        console.error("Auth check network error:", err);
-        // Don't clear session for network errors
+        };
+        
+        xhr.send();
+      } catch (err) {
+        console.error("Auth check error:", err);
+        setSession(prev => ({
+          ...prev,
+          isLoading: false
+        }));
       }
     }
     
-    // Always check authentication on load
+    // Check on load
     checkAuthStatus();
     
-    // Check auth every 15 seconds - more aggressive to prevent session loss
-    const refreshInterval = setInterval(checkAuthStatus, 15000);
+    // Check every 5 seconds
+    const refreshInterval = setInterval(checkAuthStatus, 5000);
     
     return () => clearInterval(refreshInterval);
   }, []);
