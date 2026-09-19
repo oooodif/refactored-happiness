@@ -69,28 +69,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).send('OK');
   });
 
-  // Enhanced session middleware configuration
+  // Enhanced session middleware configuration with maximum reliability
   const PostgresStore = pgSession(session);
+  
+  // Create the session store
+  const sessionStore = new PostgresStore({
+    pool: pool,
+    tableName: 'session',
+    createTableIfMissing: true,  // Ensure the table exists
+    pruneSessionInterval: 60,    // Clean old sessions every minute
+    // Lower error threshold for session store errors
+    errorLog: console.error
+  });
+  
+  // Set up session with robust configuration
   app.use(session({
-    store: new PostgresStore({
-      pool: pool,
-      tableName: 'session',
-      createTableIfMissing: true,  // Ensure the table exists
-      pruneSessionInterval: 60     // Clean old sessions every minute
-    }),
+    store: sessionStore,
     secret: process.env.SESSION_SECRET || 'latex-generator-session-secret',
-    resave: true,                   // Save session even if unmodified
+    resave: true,                   // Always save session with every request
     rolling: true,                  // Reset expiration with each request
     saveUninitialized: false,       // Don't save empty sessions
+    // Use the most reliable cookie configuration
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      secure: false,                // Set to false for development to work without HTTPS
-      httpOnly: true,
-      sameSite: 'lax',             // This helps with cross-site request issues
+      secure: false,                // Set to false for development
+      httpOnly: true,               // Prevent JavaScript access
+      sameSite: 'lax',             // Allow cross-site requests in specific cases
       path: '/'                     // Ensure cookies are sent with all requests
     },
     name: 'latex.sid'              // Custom name to avoid conflicts
   }));
+  
+  // Add development middleware to help debug session issues
+  if (process.env.NODE_ENV !== 'production') {
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      if (req.method === 'GET' && req.path.startsWith('/api/')) {
+        console.log('Session ID:', req.sessionID);
+        console.log('Session data:', req.session);
+      }
+      next();
+    });
+  }
   // Authentication routes
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     const { username, email, password } = req.body;

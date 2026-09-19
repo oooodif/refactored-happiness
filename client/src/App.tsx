@@ -66,6 +66,7 @@ function Router() {
 }
 
 function App() {
+  // Initialize with a loading session
   const [session, setSession] = useState<UserSession>({
     user: null,
     isAuthenticated: false,
@@ -79,91 +80,72 @@ function App() {
     refillPackCredits: 0,
   });
   
-  // State for auth prompt modal
+  // Auth prompt modal state
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   
-  console.log("Auth prompt state:", showAuthPrompt);
-
+  // Cleanup function to ensure we clear timers
+  const [authCheckTimer, setAuthCheckTimer] = useState<number | null>(null);
+  
+  // Ultra-simple authentication check
   useEffect(() => {
-    // Simple, direct authentication check
+    // Define the auth check function
     async function checkAuthStatus() {
       try {
-        console.log("Checking authentication status...");
-        
-        // Set loading state
-        setSession(prev => ({
-          ...prev,
-          isLoading: true
-        }));
-        
-        // Direct server check using XMLHttpRequest for maximum compatibility
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', API_ROUTES.auth.me, true);
-        xhr.withCredentials = true;
-        xhr.setRequestHeader('Accept', 'application/json');
-        xhr.setRequestHeader('Cache-Control', 'no-cache');
-        
-        xhr.onload = function() {
-          if (xhr.status === 200) {
-            try {
-              const data = JSON.parse(xhr.responseText);
-              
-              if (data.user) {
-                console.log("User authenticated:", data.user.username);
-                
-                // Set session data
-                setSession({
-                  user: data.user,
-                  isAuthenticated: true,
-                  isLoading: false,
-                  tier: data.user.subscriptionTier || SubscriptionTier.Free,
-                  usage: {
-                    current: data.user.monthlyUsage || 0,
-                    limit: data.usageLimit || 3,
-                    resetDate: data.user.usageResetDate || new Date().toISOString(),
-                  },
-                  refillPackCredits: data.user.refillPackCredits || 0,
-                });
-              }
-            } catch (e) {
-              console.error("Error parsing auth response:", e);
-              setSession(prev => ({
-                ...prev,
-                isAuthenticated: false,
-                isLoading: false,
-                user: null
-              }));
-            }
-          } else if (xhr.status === 401) {
-            // Not authenticated
-            console.log("User not authenticated");
-            setSession(prev => ({
-              ...prev,
-              isAuthenticated: false,
-              isLoading: false,
-              user: null
-            }));
-          } else {
-            // Other error
-            console.warn("Auth check error:", xhr.status);
-            setSession(prev => ({
-              ...prev,
-              isLoading: false
-            }));
+        // Simple fetch with all proper headers
+        const response = await fetch(API_ROUTES.auth.me, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json'
           }
-        };
-        
-        xhr.onerror = function() {
-          console.error("Network error during auth check");
+        });
+
+        if (response.ok) {
+          // Successful auth
+          const data = await response.json();
+          console.log("Auth success:", data.user?.username);
+          
+          // Update session with user data
+          setSession({
+            user: data.user,
+            isAuthenticated: true,
+            isLoading: false,
+            tier: data.user.subscriptionTier || SubscriptionTier.Free, 
+            usage: {
+              current: data.user.monthlyUsage || 0,
+              limit: data.usageLimit || 3,
+              resetDate: data.user.usageResetDate || new Date().toISOString()
+            },
+            refillPackCredits: data.user.refillPackCredits || 0
+          });
+        } else if (response.status === 401) {
+          // Not authenticated
+          console.log("Not authenticated");
+          
+          setSession({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+            tier: SubscriptionTier.Free,
+            usage: {
+              current: 0,
+              limit: 3,
+              resetDate: new Date().toISOString()
+            },
+            refillPackCredits: 0
+          });
+        } else {
+          // Server error
+          console.warn("Auth check server error:", response.status);
+          
+          // Just mark as not loading, preserve other state
           setSession(prev => ({
             ...prev,
             isLoading: false
           }));
-        };
-        
-        xhr.send();
-      } catch (err) {
-        console.error("Auth check error:", err);
+        }
+      } catch (error) {
+        console.error("Auth check fetch error:", error);
         setSession(prev => ({
           ...prev,
           isLoading: false
@@ -171,13 +153,19 @@ function App() {
       }
     }
     
-    // Check on load
+    // Check immediately
     checkAuthStatus();
     
-    // Check every 5 seconds
-    const refreshInterval = setInterval(checkAuthStatus, 5000);
+    // Set up interval check
+    const intervalId = window.setInterval(checkAuthStatus, 3000);
+    setAuthCheckTimer(intervalId);
     
-    return () => clearInterval(refreshInterval);
+    // Cleanup when component unmounts
+    return () => {
+      if (authCheckTimer) {
+        window.clearInterval(authCheckTimer);
+      }
+    };
   }, []);
 
   return (
