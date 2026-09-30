@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { UserContext } from "@/App";
 import { API_ROUTES } from "@/lib/constants";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import LoginModal from "@/components/dialogs/login-modal";
 import SubscriptionModal from "@/components/dialogs/subscription-modal";
@@ -17,16 +16,62 @@ export default function Header() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   
-  // Simple debug log (no useEffect)
-  console.log("Current auth state:", {
-    isAuthenticated: session.isAuthenticated,
-    user: session.user?.username,
-    tier: session.tier
-  });
+  // Debug information
+  useEffect(() => {
+    console.log("HEADER AUTH STATE:", {
+      isAuthenticated: session.isAuthenticated,
+      user: session.user?.username,
+      tier: session.tier,
+      isLoading: session.isLoading
+    });
+  }, [session]);
+  
+  // This function forces a check of auth status immediately
+  const forceAuthCheck = async () => {
+    try {
+      console.log("FORCE CHECKING AUTH STATUS");
+      const response = await fetch(API_ROUTES.auth.me, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log("FORCE AUTH CHECK SUCCESS:", data);
+        
+        // Update session with user data
+        setSession({
+          user: data.user,
+          isAuthenticated: true,
+          isLoading: false,
+          tier: data.user.subscriptionTier || SubscriptionTier.Free,
+          usage: {
+            current: data.user.monthlyUsage || 0,
+            limit: data.usageLimit || 3,
+            resetDate: data.user.usageResetDate || new Date().toISOString()
+          },
+          refillPackCredits: data.user.refillPackCredits || 0
+        });
+      } else {
+        console.log("FORCE AUTH CHECK FAILED:", response.status);
+      }
+    } catch (error) {
+      console.error("FORCE AUTH CHECK ERROR:", error);
+    }
+  };
+
+  // Perform a force check when the header mounts
+  useEffect(() => {
+    forceAuthCheck();
+  }, []);
 
   const handleLogout = async () => {
     try {
-      console.log("Starting logout process");
+      console.log("LOGOUT STARTED");
       
       // Tell the server to clear its session first
       const logoutResponse = await fetch(API_ROUTES.auth.logout, {
@@ -34,14 +79,14 @@ export default function Header() {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
         }
       });
       
       if (!logoutResponse.ok) {
-        console.error("Server logout failed:", await logoutResponse.text());
+        console.error("SERVER LOGOUT FAILED:", await logoutResponse.text());
       } else {
-        console.log("Server logout successful");
+        console.log("SERVER LOGOUT SUCCESS");
       }
       
       // Clear all backup cookies and storage
@@ -52,7 +97,7 @@ export default function Header() {
       localStorage.removeItem('userData');
       sessionStorage.removeItem('userLoggedIn');
       
-      // Clear client-side state last (after server communication)
+      // Clear client-side state
       setSession({
         user: null,
         isAuthenticated: false,
@@ -71,15 +116,10 @@ export default function Header() {
         description: "You have been successfully logged out.",
       });
       
-      // Navigate to home page
-      navigate("/");
-      
-      // Force reload the page to ensure clean state
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
+      // Hard reload to clear any state
+      window.location.href = '/';
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("LOGOUT ERROR:", error);
       
       // Even if there's an error, clear client state
       setSession({
@@ -101,10 +141,8 @@ export default function Header() {
         variant: "destructive",
       });
       
-      // Force reload as a last resort
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
+      // Hard reload
+      window.location.href = '/';
     }
   };
 

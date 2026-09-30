@@ -86,26 +86,43 @@ function App() {
   // Cleanup function to ensure we clear timers
   const [authCheckTimer, setAuthCheckTimer] = useState<number | null>(null);
   
-  // Ultra-simple authentication check
+  // Add a debug effect to log relevant factors (window.fetch available, etc.)
   useEffect(() => {
-    // Define the auth check function
+    console.log("Debug info:", {
+      fetchAvailable: typeof window.fetch === 'function',
+      localStorage: typeof localStorage !== 'undefined',
+      apiAuthMe: API_ROUTES.auth.me
+    });
+  }, []);
+
+  // Immediately mark the auth check as started
+  useEffect(() => {
+    console.log("AUTH CHECK STARTED");
+    
+    // Function to check auth status
     async function checkAuthStatus() {
       try {
-        // Simple fetch with all proper headers
+        console.log("AUTH CHECK RUNNING");
+        
+        // Make the fetch with specific no-cache headers
         const response = await fetch(API_ROUTES.auth.me, {
           method: 'GET',
           credentials: 'include',
           headers: {
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
           }
         });
 
+        console.log("AUTH CHECK STATUS:", response.status);
+        
         if (response.ok) {
-          // Successful auth
+          // Successful auth response
           const data = await response.json();
-          console.log("Auth success:", data.user?.username);
+          console.log("AUTH SUCCESS:", data.user?.username);
           
-          // Update session with user data
+          // Update user session state
           setSession({
             user: data.user,
             isAuthenticated: true,
@@ -119,9 +136,9 @@ function App() {
             refillPackCredits: data.user.refillPackCredits || 0
           });
         } else if (response.status === 401) {
-          // Not authenticated
-          console.log("Not authenticated");
+          console.log("USER NOT AUTHENTICATED");
           
+          // Reset to unauthenticated state
           setSession({
             user: null,
             isAuthenticated: false,
@@ -135,36 +152,25 @@ function App() {
             refillPackCredits: 0
           });
         } else {
-          // Server error
-          console.warn("Auth check server error:", response.status);
-          
-          // Just mark as not loading, preserve other state
-          setSession(prev => ({
-            ...prev,
-            isLoading: false
-          }));
+          console.warn("AUTH CHECK ERROR:", response.status);
+          setSession(prev => ({...prev, isLoading: false}));
         }
       } catch (error) {
-        console.error("Auth check fetch error:", error);
-        setSession(prev => ({
-          ...prev,
-          isLoading: false
-        }));
+        console.error("AUTH CHECK EXCEPTION:", error);
+        setSession(prev => ({...prev, isLoading: false}));
       }
     }
     
-    // Check immediately
+    // Run immediately and set up interval
     checkAuthStatus();
     
-    // Set up interval check
-    const intervalId = window.setInterval(checkAuthStatus, 3000);
+    // Use a more reliable interval setup
+    const intervalId = window.setInterval(checkAuthStatus, 2000);
     setAuthCheckTimer(intervalId);
     
-    // Cleanup when component unmounts
+    // Proper cleanup
     return () => {
-      if (authCheckTimer) {
-        window.clearInterval(authCheckTimer);
-      }
+      if (intervalId) window.clearInterval(intervalId);
     };
   }, []);
 
