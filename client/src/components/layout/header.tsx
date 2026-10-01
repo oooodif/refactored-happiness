@@ -8,6 +8,7 @@ import LoginModal from "@/components/dialogs/login-modal";
 import SubscriptionModal from "@/components/dialogs/subscription-modal";
 import { getUsageColor } from "@/lib/utils";
 import { SubscriptionTier } from "@shared/schema.ts";
+import { Loader2 } from "lucide-react";
 
 export default function Header() {
   const [location, navigate] = useLocation();
