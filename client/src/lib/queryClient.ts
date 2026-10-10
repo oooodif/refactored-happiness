@@ -7,6 +7,29 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+// Helper to check if user session exists and is valid
+export async function checkAuthStatus(): Promise<any> {
+  try {
+    const res = await fetch('/api/auth/me', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    });
+    
+    if (res.ok) {
+      return await res.json();
+    }
+    return { isAuthenticated: false };
+  } catch (error) {
+    console.error('Session check failed:', error);
+    return { isAuthenticated: false };
+  }
+}
+
 export async function apiRequest(
   method: string,
   url: string,
@@ -14,7 +37,11 @@ export async function apiRequest(
 ): Promise<Response> {
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: {
+      ...(data ? { "Content-Type": "application/json" } : {}),
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache'
+    },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -23,7 +50,7 @@ export async function apiRequest(
   return res;
 }
 
-type UnauthorizedBehavior = "returnNull" | "throw";
+type UnauthorizedBehavior = "returnNull" | "throw" | "recheck";
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
@@ -31,10 +58,38 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const res = await fetch(queryKey[0] as string, {
       credentials: "include",
+      headers: {
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
     });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+    if (res.status === 401) {
+      if (unauthorizedBehavior === "returnNull") {
+        return null;
+      } else if (unauthorizedBehavior === "recheck") {
+        // Try a second time to verify the session
+        const sessionCheck = await checkAuthStatus();
+        if (sessionCheck.isAuthenticated) {
+          // Try the original request again
+          const retryRes = await fetch(queryKey[0] as string, {
+            credentials: "include",
+            headers: {
+              'Accept': 'application/json',
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache'
+            }
+          });
+          
+          if (retryRes.ok) {
+            return await retryRes.json();
+          }
+        }
+        return null;
+      }
+      // Default is "throw"
+      throw new Error("Unauthorized");
     }
 
     await throwIfResNotOk(res);
@@ -44,14 +99,14 @@ export const getQueryFn: <T>(options: {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
+      queryFn: getQueryFn({ on401: "recheck" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      refetchOnWindowFocus: true, // Enable this to refresh on focus
+      staleTime: 10 * 1000, // 10 seconds, not Infinity
+      retry: 1, // Allow one retry
     },
     mutations: {
-      retry: false,
+      retry: 1, // Allow one retry for mutations too
     },
   },
 });
