@@ -7,6 +7,7 @@ import { API_ROUTES } from "@/lib/constants";
 import { createBillingPortalSession, cancelSubscription } from "@/lib/stripe";
 import { formatDate, getUsageColor } from "@/lib/utils";
 import { tierLimits, tierPrices, SubscriptionTier } from "@shared/schema";
+import { checkAuthStatus } from "@/lib/queryClient";
 
 import {
   Card,
@@ -28,10 +29,48 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
 export default function Account() {
-  const { session } = useContext(UserContext);
+  const { session, setSession } = useContext(UserContext);
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [pageIsLoading, setPageIsLoading] = useState(true);
+
+  // Force a session check when the component mounts
+  useEffect(() => {
+    const verifySession = async () => {
+      try {
+        console.log("Account page: Verifying session...");
+        const authData = await checkAuthStatus();
+        
+        if (authData.isAuthenticated && authData.user) {
+          console.log("Account page: Session verified, user:", authData.user.username);
+          
+          // Update the session with fresh data
+          setSession({
+            user: authData.user,
+            isAuthenticated: true,
+            isLoading: false,
+            tier: authData.user.subscriptionTier || SubscriptionTier.Free,
+            usage: {
+              current: authData.user.monthlyUsage || 0,
+              limit: authData.usageLimit || 3,
+              resetDate: authData.user.usageResetDate || new Date().toISOString()
+            },
+            refillPackCredits: authData.user.refillPackCredits || 0
+          });
+        } else {
+          console.log("Account page: Not authenticated");
+          navigate("/login");
+        }
+      } catch (error) {
+        console.error("Account page: Error verifying session:", error);
+      } finally {
+        setPageIsLoading(false);
+      }
+    };
+    
+    verifySession();
+  }, []);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -43,7 +82,7 @@ export default function Account() {
   }, [session.isLoading, session.isAuthenticated, navigate]);
 
   // Show loading state while checking authentication
-  if (session.isLoading) {
+  if (pageIsLoading || session.isLoading) {
     return (
       <SiteLayout fullHeight={false}>
         <div className="flex h-[50vh] items-center justify-center">

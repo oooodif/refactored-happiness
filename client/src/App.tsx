@@ -1,8 +1,8 @@
 import { Switch, Route } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { queryClient } from "./lib/queryClient";
-import { useState, useEffect } from "react";
+import { queryClient, checkAuthStatus } from "./lib/queryClient";
+import { useState, useEffect, useCallback } from "react";
 
 // Pages
 import Home from "@/pages/home";
@@ -26,6 +26,7 @@ import { createContext } from "react";
 export const UserContext = createContext<{
   session: UserSession;
   setSession: React.Dispatch<React.SetStateAction<UserSession>>;
+  checkAndUpdateSession: () => Promise<void>;
 }>({
   session: {
     user: null,
@@ -40,6 +41,7 @@ export const UserContext = createContext<{
     refillPackCredits: 0,
   },
   setSession: () => {},
+  checkAndUpdateSession: async () => {},
 });
 
 // Create an Auth Required context to control the signup/login prompt
@@ -83,8 +85,75 @@ function App() {
   // Auth prompt modal state
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   
-  // Cleanup function to ensure we clear timers
-  const [authCheckTimer, setAuthCheckTimer] = useState<number | null>(null);
+  // Create a reusable function to check and update session that can be passed down via context
+  const checkAndUpdateSession = useCallback(async () => {
+    try {
+      console.log("MANUAL SESSION CHECK TRIGGERED");
+      const authData = await checkAuthStatus();
+      
+      if (authData.isAuthenticated && authData.user) {
+        console.log("SESSION CHECK SUCCESS:", authData.user.username);
+        
+        // Update the session with fresh data
+        setSession({
+          user: authData.user,
+          isAuthenticated: true,
+          isLoading: false,
+          tier: authData.user.subscriptionTier || SubscriptionTier.Free,
+          usage: {
+            current: authData.user.monthlyUsage || 0,
+            limit: authData.usageLimit || 3,
+            resetDate: authData.user.usageResetDate || new Date().toISOString()
+          },
+          refillPackCredits: authData.user.refillPackCredits || 0
+        });
+        return;
+      }
+      
+      // Not authenticated
+      console.log("SESSION CHECK - NOT AUTHENTICATED");
+      setSession({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        tier: SubscriptionTier.Free,
+        usage: {
+          current: 0,
+          limit: 3,
+          resetDate: new Date().toISOString()
+        },
+        refillPackCredits: 0
+      });
+    } catch (error) {
+      console.error("SESSION CHECK ERROR:", error);
+      setSession(prev => ({...prev, isLoading: false}));
+    }
+  }, []);
+  
+  // Add event listeners for focus and visibility changes to refresh auth status
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log("Page became visible, checking auth status");
+        checkAndUpdateSession();
+      }
+    };
+    
+    const handleFocus = () => {
+      console.log("Window focused, checking auth status");
+      checkAndUpdateSession();
+    };
+    
+    // Add event listeners
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    // Remove event listeners on cleanup
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [checkAndUpdateSession]);
   
   // Add a debug effect to log relevant factors (window.fetch available, etc.)
   useEffect(() => {
@@ -95,88 +164,26 @@ function App() {
     });
   }, []);
 
-  // Immediately mark the auth check as started
+  // Initial auth check on app start
   useEffect(() => {
-    console.log("AUTH CHECK STARTED");
+    console.log("INITIAL AUTH CHECK STARTED");
     
-    // Function to check auth status
-    async function checkAuthStatus() {
-      try {
-        console.log("AUTH CHECK RUNNING");
-        
-        // Make the fetch with specific no-cache headers
-        const response = await fetch(API_ROUTES.auth.me, {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache'
-          }
-        });
-
-        console.log("AUTH CHECK STATUS:", response.status);
-        
-        if (response.ok) {
-          // Successful auth response
-          const data = await response.json();
-          console.log("AUTH SUCCESS:", data.user?.username);
-          
-          // Update user session state
-          setSession({
-            user: data.user,
-            isAuthenticated: true,
-            isLoading: false,
-            tier: data.user.subscriptionTier || SubscriptionTier.Free, 
-            usage: {
-              current: data.user.monthlyUsage || 0,
-              limit: data.usageLimit || 3,
-              resetDate: data.user.usageResetDate || new Date().toISOString()
-            },
-            refillPackCredits: data.user.refillPackCredits || 0
-          });
-        } else if (response.status === 401) {
-          console.log("USER NOT AUTHENTICATED");
-          
-          // Reset to unauthenticated state
-          setSession({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-            tier: SubscriptionTier.Free,
-            usage: {
-              current: 0,
-              limit: 3,
-              resetDate: new Date().toISOString()
-            },
-            refillPackCredits: 0
-          });
-        } else {
-          console.warn("AUTH CHECK ERROR:", response.status);
-          setSession(prev => ({...prev, isLoading: false}));
-        }
-      } catch (error) {
-        console.error("AUTH CHECK EXCEPTION:", error);
-        setSession(prev => ({...prev, isLoading: false}));
-      }
-    }
+    // Perform initial check
+    checkAndUpdateSession();
     
-    // Run immediately and set up interval
-    checkAuthStatus();
-    
-    // Use a more reliable interval setup
-    const intervalId = window.setInterval(checkAuthStatus, 2000);
-    setAuthCheckTimer(intervalId);
+    // Setup polling for auth status (backup mechanism)
+    const checkIntervalMs = 10000; // 10 seconds
+    const intervalId = window.setInterval(checkAndUpdateSession, checkIntervalMs);
     
     // Proper cleanup
     return () => {
-      if (intervalId) window.clearInterval(intervalId);
+      window.clearInterval(intervalId);
     };
-  }, []);
+  }, [checkAndUpdateSession]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <UserContext.Provider value={{ session, setSession }}>
+      <UserContext.Provider value={{ session, setSession, checkAndUpdateSession }}>
         <AuthRequiredContext.Provider value={{ showAuthPrompt, setShowAuthPrompt }}>
           <Router />
           <AuthRequiredDialog />
