@@ -229,7 +229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // LaTeX Generation Routes
   app.post("/api/latex/generate", 
     authenticateUser, // Allow anonymous users
-    checkSubscription,
+    checkSubscription, // Already set to allow unlimited for testing
     validateRequest(generateLatexSchema),
     async (req: Request, res: Response) => {
       const { content, documentType, options } = req.body;
@@ -237,7 +237,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isAuthenticated = !!userId; // Check if user is authenticated
       const shouldCompile = req.body.compile === true; // Optional flag to compile or not
       
+      // GUEST MODE ENABLED - for testing purposes
+      const GUEST_MODE = true;
+      
       try {
+        console.log(`LaTeX generation request - Auth: ${isAuthenticated ? 'Yes' : 'No (Guest)'}, Type: ${documentType}`);
+        
         // Generate LaTeX using AI
         const latexResult = await generateLatex(content, documentType, options);
         
@@ -255,6 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Only compile if explicitly requested
         if (shouldCompile) {
+          console.log("Compiling LaTeX (requested)");
           compilationResult = await compileLatex(latexResult.latex);
         }
         
@@ -292,9 +298,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   app.post("/api/latex/compile", 
-    authenticateUser,
+    authenticateUser, // Allow guest users 
     async (req: Request, res: Response) => {
       const { latex } = req.body;
+      const isAuthenticated = !!req.session.userId;
+      
+      console.log(`LaTeX compilation request - Auth: ${isAuthenticated ? 'Yes' : 'No (Guest)'}`);
       
       if (!latex) {
         return res.status(400).json({ message: "LaTeX content is required" });

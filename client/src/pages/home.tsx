@@ -184,8 +184,11 @@ export default function Home() {
       user: session.user
     });
     
-    // If user is not authenticated, show auth prompt
-    if (!session.isAuthenticated) {
+    // GUEST MODE ENABLED - Allow non-authenticated users to generate content
+    const GUEST_MODE = true;
+    
+    // If user is not authenticated and guest mode is disabled, show auth prompt
+    if (!session.isAuthenticated && !GUEST_MODE) {
       // Stop the generating animation if it was started
       setEditorState(prev => ({ ...prev, isGenerating: false }));
       
@@ -216,6 +219,14 @@ export default function Home() {
         console.error("Error showing auth prompt:", err);
       }
       return;
+    }
+    
+    if (!session.isAuthenticated && GUEST_MODE) {
+      console.log("Guest mode enabled - allowing generation without authentication");
+      toast({
+        title: "Guest Mode",
+        description: "You're using guest mode. Create an account to save your documents.",
+      });
     }
     
     console.log("User is authenticated, proceeding with generation");
@@ -301,8 +312,11 @@ export default function Home() {
       return;
     }
     
-    // If user is not authenticated, show auth prompt
-    if (!session.isAuthenticated) {
+    // GUEST MODE ENABLED - Allow non-authenticated users to download PDFs
+    const GUEST_MODE = true;
+    
+    // If user is not authenticated and guest mode is disabled, show auth prompt
+    if (!session.isAuthenticated && !GUEST_MODE) {
       console.log("User not authenticated, showing auth prompt for PDF download");
       
       try {
@@ -328,6 +342,14 @@ export default function Home() {
         console.error("Error showing auth prompt:", err);
       }
       return;
+    }
+    
+    if (!session.isAuthenticated && GUEST_MODE) {
+      console.log("Guest mode enabled - allowing PDF download without authentication");
+      toast({
+        title: "Guest Mode",
+        description: "You're using guest mode. Create an account to save your documents.",
+      });
     }
 
     try {
