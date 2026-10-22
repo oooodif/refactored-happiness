@@ -446,8 +446,11 @@ export default function Home() {
       return;
     }
     
-    // If user is not authenticated, show auth prompt
-    if (!session.isAuthenticated) {
+    // GUEST MODE ENABLED - Allow non-authenticated users to compile PDFs
+    const GUEST_MODE = true;
+    
+    // If user is not authenticated and guest mode is disabled, show auth prompt
+    if (!session.isAuthenticated && !GUEST_MODE) {
       console.log("User not authenticated, showing auth prompt for PDF compilation");
       
       try {
@@ -473,6 +476,14 @@ export default function Home() {
         console.error("Error showing auth prompt:", err);
       }
       return;
+    }
+    
+    if (!session.isAuthenticated && GUEST_MODE) {
+      console.log("Guest mode enabled - allowing PDF compilation without authentication");
+      toast({
+        title: "Guest Mode",
+        description: "You're using guest mode. Create an account to save your documents.",
+      });
     }
 
     try {
