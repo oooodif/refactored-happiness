@@ -65,6 +65,9 @@ Your job is to return clean, fully compilable LaTeX code based on user input. Th
 🎞 SLIDE PRESENTATION MODE
         •       If user asks for slides, presentation, lecture, keynote, or deck:
         •       Use \\documentclass{beamer}
+        •       DO NOT use fontspec for Beamer presentations as it causes compatibility issues
+        •       DO NOT attempt to use Helvetica or other custom fonts
+        •       Use default themes like \\usetheme{Madrid} or \\usetheme{Berlin} instead of custom font settings
         •       Structure slides with:
         •       \\begin{frame}...\\end{frame}
         •       \\frametitle{} for slide titles
@@ -228,6 +231,13 @@ Common errors to watch for:
 - Syntax errors in TikZ/PGF code
 - Misuse of special characters
 - Errors in table formatting
+- Font availability issues
+
+For font errors:
+- If using fontspec with Helvetica and getting "Font cannot be found" errors, replace fontspec with standard LaTeX font packages
+- For beamer presentations with font issues, modify theme configuration to use only default fonts
+- Instead of "\\usepackage{fontspec}\\setmainfont{Helvetica}", use "\\usepackage{helvet}\\renewcommand{\\familydefault}{\\sfdefault}"
+- Or completely remove font specification and let the system use default fonts
 
 Fix all errors while making minimal changes to preserve the original document structure and content.
 `;
