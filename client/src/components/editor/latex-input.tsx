@@ -126,7 +126,7 @@ export default function LatexInput({
           >
             <span className="font-mono">•</span> List
           </Button>
-          {documentType === 'beamer' && (
+          {documentType === 'presentation' && (
             <Button
               variant="outline"
               size="sm"
@@ -142,7 +142,7 @@ export default function LatexInput({
         <textarea
           ref={textareaRef}
           className="w-full h-full p-3 rounded-md border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-none"
-          placeholder={documentType === 'beamer' 
+          placeholder={documentType === 'presentation' 
             ? "Describe your slide show here, paste report or paper here, or design your slides using the buttons above. Use the 'New Slide' button to add slides."
             : "Enter your content here. Use the buttons above to insert templates, or use tags like <MATHEQ>E = mc^2</MATHEQ> for math equations. No LaTeX knowledge required!"}
           value={value}
